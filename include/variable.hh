@@ -14,10 +14,23 @@ static const Int_t adc_min = 0;
 static const Int_t adc_max = 4096;
 
 // TDCのbin設定
-static const Int_t tdc_bin_num = 0x80000;
+static const Int_t tdc_bin_num = 0x10000;
 static const Int_t tdc_min = 0;
 static const Int_t tdc_max = 0x200000;
-static const Double_t tdc_ticks_size = tdc_max/tdc_bin_num;
+static const Double_t tdc_ticks_size = (tdc_max-tdc_min)/tdc_bin_num;
+
+// TDCをfillするときのthreshold(SACでありえないところにピークがあったりする)
+static const Double_t TdcCutThreshold = 100000;
+
+
+// triggerのTDCのfill範囲とbin数
+static const Double_t TdcRangeT1[3] = {150, 129000, 132000};
+static const Double_t TdcRangeT2[3] = {450, 125000, 134000};
+static const Double_t TdcRangeT3[3] = {450, 125000, 134000};
+static const Double_t TdcRangeT4[3] = {450, 123000, 132000};
+static const Double_t TdcRangeSACSUM[3] = {500, 100000, 150000};
+static const Double_t TdcRangeBACSUM[3] = {500, 100000, 150000};
+static const Double_t TdcRangeKVCSUM[3] = {500, 100000, 150000};
 
 // TDCのgate設定
 static const Double_t TdcGateT1[2] = {120000, 140000};
@@ -35,8 +48,8 @@ static const Double_t npe_min = -5.;
 static const Double_t npe_max = 415.;
 
 // triggerの範囲の設定
-static const Int_t tdc_n_sigma = 3;
-static const Int_t adc_n_sigma = 10;
+static const Int_t tdc_n_sigma = 5;
+static const Int_t adc_n_sigma = 7;
 
 // pedestalの値
 // --- SAC ----------------------------------------------------

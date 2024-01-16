@@ -57,11 +57,13 @@ void fit_TDC(TH1D *h, Double_t *par, TCanvas *c, Int_t n_c) {
     TF1 *fit_f = new TF1( "gauss", "gausn", bin_info[1], bin_info[3]  );
     fit_f->SetParameter(1, h->GetMaximumBin()*tdc_ticks_size);
     fit_f->SetParameter(2, 5);
-    std::cout << h->GetMaximumBin()*tdc_ticks_size << "," << bin_info[1] << ", " << bin_info[3] <<  "-------------------" << std::endl;
-    h->Fit(fit_f, "0", "", bin_info[1], bin_info[3] );
+    std::cout << h->GetMaximumBin()*tdc_ticks_size << "," << bin_info[1] << ", " << bin_info[3] <<  "\n-------------------" << std::endl;
+    TString fit_option = '0';
+    if ( h->GetBinContent( h->GetMaximumBin() ) < 100 ) fit_option += 'L';
+    h->Fit(fit_f, fit_option.Data(), "", bin_info[1], bin_info[3] );
     for (Int_t i = 0; i < 3; i++) par[i] = fit_f->GetParameter(i);
     c->cd(n_c);
-    h->GetXaxis()->SetRangeUser(par[1] - 5*par[2], par[1] + 5*par[2]);
+    h->GetXaxis()->SetRangeUser(par[1] - (tdc_n_sigma+2)*par[2], par[1] + (tdc_n_sigma+2)*par[2]);
     h->Draw();
     fit_f->SetNpx(1000);
     fit_f->SetLineColor(kOrange);
@@ -99,14 +101,14 @@ void fit_ADC(TH1D *h, Double_t *par, TCanvas *c, Int_t n_c, Int_t peak_index = 0
     functions->Remove(pm);
     delete pm;
 
-    TF1 *fit_f = new TF1( "landau", "landaun", peak_pos[peak_index]-20, peak_pos[peak_index]+50  );
+    TF1 *fit_f = new TF1( "landau", "landaun", peak_pos[peak_index]-25, peak_pos[peak_index]+75  );
     fit_f->SetParameter(1, peak_pos[peak_index]);
     fit_f->SetParameter(2, 1.);
-    h->Fit(fit_f, "0", "",  peak_pos[peak_index]-20, peak_pos[peak_index]+50 );
+    h->Fit(fit_f, "0", "",  peak_pos[peak_index]-25, peak_pos[peak_index]+75 );
     for (int i = 0; i < 3; i++) par[i] = fit_f->GetParameter(i);
 
     gPad->SetLogy(1);
-    h->GetXaxis()->SetRangeUser(par[1] - adc_n_sigma*par[2] - 50, peak_pos[peak_index]+150);
+    h->GetXaxis()->SetRangeUser(par[1] - adc_n_sigma*par[2] - 50, peak_pos[peak_index]+200);
     h->Draw();
     fit_f->SetNpx(1000);
     fit_f->SetLineColor(kOrange);
@@ -115,7 +117,7 @@ void fit_ADC(TH1D *h, Double_t *par, TCanvas *c, Int_t n_c, Int_t peak_index = 0
 
     auto gr = new TGraph(5);
 	Double_t x1 = par[1] - adc_n_sigma*par[2];
-	Double_t x2 = peak_pos[peak_index]+300;
+	Double_t x2 = peak_pos[peak_index]+500;
 	Double_t y1 = 0;
 	Double_t y2 = h->GetBinContent( h->GetMaximumBin() );
 	gr->SetPoint(0,x1, y1);
