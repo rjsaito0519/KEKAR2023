@@ -29,16 +29,19 @@ plt.rcParams["ytick.minor.size"] = 5                 #y軸補助目盛り線の�
 
 def plot(data, ax, isEff = True):
 
-    ax.plot( data[0], data[1], "o", ms = 7, color = "C1", label = "top" )
-    ax.plot( data[0], data[2], "^", ms = 7, color = "C0", label = "middle" )
-    ax.plot( data[0], data[3], "s", ms = 7, color = "C2", label = "low" )
+    ax.plot( data[0], data[1]*100, "o", ms = 7, color = "C1", label = "high" )
+    ax.plot( data[0], data[2]*100, "^", ms = 7, color = "C0", label = "middle" )
+    ax.plot( data[0], data[3]*100, "s", ms = 7, color = "C2", label = "low" )
 
     ax.set_xlabel("threshold [mV]")
     if isEff:
         ax.set_ylabel("Efficiency")
+        ax.legend(borderaxespad=0.1, handletextpad = 0.5, handlelength=1., fontsize = 18, loc = "lower left")
     else:
+        # ax.yaxis.set_major_formatter(ScalarFormatter(useMathText=True))
+        # ax.ticklabel_format(style="sci",  axis="y",scilimits=(0,0))
         ax.set_ylabel("Ped. Efficiency")
-    # ax.legend(borderaxespad=0.1, handletextpad = 0.5, handlelength=1., fontsize = 18)
+    
 
 
 SAC_eff = np.array([
@@ -101,5 +104,5 @@ plot(KVC_ineff, ax6, False)
 # plt.subplots_adjust(hspace=.5)
 # plt.legend()
 # plt.savefig("./img/gas/oxygen.svg", dpi=150, transparent=True)
-plt.savefig("../img/Eff.jpg", dpi=600)
+# plt.savefig("../img/Eff.jpg", dpi=600)
 plt.show()
