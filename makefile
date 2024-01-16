@@ -9,7 +9,8 @@ TARGET  = $(basename $(NAME))
 # (4)コンパイル対象のソースコード
 SRCS    = $(NAME)
 # (5)オブジェクトファイル名
-OBJS    = $(SRCS:.C=.o)
+OBJDIR = ./obj/
+OBJS    = $(patsubst %.C,$(OBJDIR)%.o,$(SRCS))
 
 # (6)インクルードファイルのあるディレクトリパス
 INCDIR  = -I./include
@@ -22,9 +23,15 @@ CXXFLAGS = -Wall $(ROOTFLAGS)
 CXXLIBS = $(ROOTLIBS)
 
 .PHONY: all
-all: $(TARGET)
+all: $(OBJDIR) $(TARGET)
 
-$(TARGET):$(OBJS)
+$(OBJDIR):
+	mkdir -p $(OBJDIR)
+
+$(OBJDIR)%.o: %.C
+	$(CXX) $(CFLAGS) $(INCLUDE) -c -o $@ $< $(CXXLIBS) $(CXXFLAGS) -lcurses -lSpectrum
+
+$(TARGET): $(OBJS)
 	$(CXX) $(CFLAGS) $(INCLUDE) -o $@ $^ src/macro.cc src/nagao_macro.cc $(CXXLIBS) $(CXXFLAGS) -lcurses -lSpectrum
 
 # -lcursesは #include <ncurses.h> 用のライブラリ
@@ -32,4 +39,4 @@ $(TARGET):$(OBJS)
 
 .PHONY: clean
 clean:
-	rm -f *.d *.o $(TARGET1) $(TARGET2)
+	rm -f *.d $(OBJDIR)*.o $(TARGET)

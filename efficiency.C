@@ -179,7 +179,7 @@ void analyze(Int_t run_num, Bool_t isSave = false) {
     for (Int_t i = 0; i < tot_num; i++ ){
         t->GetEntry(elist->GetEntry(i));
         
-        // --- set up flag ----------------------------------------------------
+        // --- set flag ----------------------------------------------------
         isHitT1t = false, isHitT2t = false, isHitT3t = false, isHitT4t = false;
         isHitSACSUMt = false, isHitBACSUMt = false, isHitKVCSUMt = false;
         for (Int_t n_hit = 0; n_hit < maxTDChit; n_hit++) {
