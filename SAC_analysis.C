@@ -444,19 +444,29 @@ void analyze(Int_t run_num, Bool_t isSave = false) {
     if (isSave) c_SACSUM->Print( Form("../img/SAC_run%05d_SACSUM.svg", run_num) );
 
 
-    // ----------------------------
-    TCanvas *c_SACSUM_test = new TCanvas("", "", 600, 600);
+    //  +--------+
+    //  |  test  |
+    //  +--------+
+    TCanvas *c_SACSUM_test = new TCanvas("", "", 1000, 800);
 
     c_SACSUM_test->cd(1);
     // gPad->SetLogy(1);
-    SetTH1(hSACOfflineSUMnpe, "", "N_{p.e.}", "");
-    hSACOfflineSUMnpe->GetXaxis()->SetRangeUser(-5, 80);    
-    hSACOfflineSUMnpe->Draw();  
-    // hTrigSACOfflineSUMnpe->SetFillColor(kRed);
-    // hTrigSACOfflineSUMnpe->SetFillStyle(1001);    
+    SetTH1(hTrigSACOfflineSUMnpe, "", "N_{p.e.}", "");
+    hTrigSACOfflineSUMnpe->GetXaxis()->SetRangeUser(-5, 30);
+    hTrigSACOfflineSUMnpe->Draw();  
+    hTrigSACOfflineSUMnpe->SetFillColor(kRed);
+    hTrigSACOfflineSUMnpe->SetFillStyle(1001);    
+    // hTrigSACOfflineSUMnpe->SetFillStyle(3353); 
     hTrigSACOfflineSUMnpe->Draw("same");
+    TF1 *func = new TF1("func", "[0] * TMath::Poisson(x, [1])", 3, 10);
+    
+    func->SetParameter(0, 2000);
+    func->SetParameter(1, 12);
+    func->SetLineColor(kOrange);
+    hSACOfflineSUMnpe->Fit(func, "0", "", 3, 50);
+    std::cout << "poisson = " << func->GetParameter(1) << std::endl;
 
-    if (isSave) c_SACSUM_test->Print( Form("../img/SAC_run%05d_test.svg", run_num) );
+    c_SACSUM_test->Print( Form("../img/SAC_run%05d_test.svg", run_num) );
 
     //  +---------------+
     //  |  correlation  |
