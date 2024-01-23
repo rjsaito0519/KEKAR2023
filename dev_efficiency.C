@@ -309,21 +309,21 @@ void efficiency(Int_t input_run_num){
 
 void efficiency_all(Int_t init, Int_t end){
 
-    // std::vector<Int_t> except_data1{ 309, 311, 320, 321, 326, 332, 337, 343, 350, 355, 356, 358, 359, 364, 367, 369, 370, 375, 377, 387, 389 };
-    // // 300 - 392
-    // for (Int_t i = init; i <= end; i++) {
-    //     Bool_t ana_flag = true;
-    //     for (Int_t j = 0; j < except_data1.size(); j++) if (i == except_data1[j]) ana_flag = false;
-    //     if (ana_flag) analyze( i );
-    // }
-    
-    std::vector<Int_t> except_data2{ 456, 458, 466, 476, 486, 496, 506, 516, 520, 524, 528 };
-    // 447 - 531
+    std::vector<Int_t> except_data1{ 309, 311, 320, 321, 326, 332, 337, 343, 350, 355, 356, 358, 359, 364, 367, 369, 370, 375, 377, 387, 389 };
+    // 300 - 392
     for (Int_t i = init; i <= end; i++) {
         Bool_t ana_flag = true;
-        for (Int_t j = 0; j < except_data2.size(); j++) if (i == except_data2[j]) ana_flag = false;
+        for (Int_t j = 0; j < except_data1.size(); j++) if (i == except_data1[j]) ana_flag = false;
         if (ana_flag) analyze( i );
     }
+    
+    // std::vector<Int_t> except_data2{ 456, 458, 466, 476, 486, 496, 506, 516, 520, 524, 528 };
+    // // 447 - 531
+    // for (Int_t i = init; i <= end; i++) {
+    //     Bool_t ana_flag = true;
+    //     for (Int_t j = 0; j < except_data2.size(); j++) if (i == except_data2[j]) ana_flag = false;
+    //     if (ana_flag) analyze( i );
+    // }
     
 }
 
