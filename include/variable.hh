@@ -48,7 +48,7 @@ static const Double_t npe_min = -5.;
 static const Double_t npe_max = 415.;
 
 // triggerの範囲の設定
-static const Int_t tdc_n_sigma = 5;
+static const Int_t tdc_n_sigma = 20;
 static const Int_t adc_n_sigma = 7;
 
 // pedestalの値

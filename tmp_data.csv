@@ -1,2 +1,2 @@
-run,tot_num,w/osac,w/sac,linear_a,linear_b,OnSumA,OnSumAerr,OnSumLamb,OnSumLamberr,OffSumA,OffSumAErr,OffSumLamb,OffSumLambErr,OnSumAlpha,OnSumAlphaErr,OnSumN,OnSumNErr,OffSumAlpha,OffSumAlphaErr,OffSumN,OffSumNErr
-304,25034,23644,23219,5.64195,88.6257,4221.13,133.066,8.23879,0.0990694,4461.31,146.386,8.47036,0.0994145,1.32097,1.43858,2.2094,1.0809,1.6623,1.98125,2.46719,1.06536
+run,tot_num,n_trig,n_SAC,n_BAC,n_KVC,effSAC,effBAC,effKVC
+333,25065,23565,23031,1724,17334,0.977339,0.0731593,0.735582
