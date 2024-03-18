@@ -144,33 +144,50 @@ plt.savefig("./img/SAC_Eff_corr1.jpg", dpi=600)
 # plt.close()
 plt.show()
 
+
+def convert_x(x):
+    return (x + 72)/16
+
 plt.figure(figsize=(10, 8))
 df = pd.DataFrame(BAC, columns=x_pos, index = y_pos)
-df[-80] = [np.nan]*7
-df[80] = [np.nan]*7
+# df[-80] = [np.nan]*7
+# df[80] = [np.nan]*7
 df.loc[72] = np.nan
 df.loc[-72] = np.nan
+
+df.iloc[:, 0] = np.nan
+df.iloc[:, 8] = np.nan
+
 df = df.sort_index(axis=0, ascending=False)
 df = df.sort_index(axis=1)
 print(df)
 plt.grid(which="major", alpha=0.3)
-sns.heatmap(df, cmap="viridis", annot=True, cbar=True, fmt='.3f', annot_kws={'fontsize': 15}, cbar_kws=dict(pad=-0.05, shrink=0.79))
+# sns.heatmap(df, cmap="viridis", annot=True, cbar=True, fmt='.3f', annot_kws={'fontsize': 15}, cbar_kws=dict(pad=-0.05, shrink=0.79))
+sns.heatmap(df, cmap="viridis", annot=True, cbar=True, fmt='.3f', annot_kws={'fontsize': 15}, cbar_kws=dict(pad=-0.08, shrink=0.79))
 plt.vlines(convert_x( -115/2 ), convert_y( -115/2 ), convert_y( 115/2 ), color = "red", ls = "dashed", lw = 2, zorder = 1)
 plt.vlines(convert_x( 115/2 ), convert_y( -115/2 ), convert_y( 115/2 ), color = "red", ls = "dashed", lw = 2, zorder = 1)
 plt.hlines(convert_y( -115/2 ), convert_x( -115/2 ), convert_x( 115/2 ), color = "red", ls = "dashed", lw = 2, zorder = 1)
 plt.hlines(convert_y( 115/2 ), convert_x( -115/2 ), convert_x( 115/2 ), color = "red", ls = "dashed", lw = 2, zorder = 1)
-plt.text(convert_x( -72 ), convert_y( 70 ), "BAC Efficiency at KEK AR test", zorder = 1)
+# plt.text(convert_x( -72 ), convert_y( 70 ), "BAC Efficiency at KEK AR test", zorder = 1)
+plt.text(convert_x( -56 ), convert_y( 70 ), "BAC Efficiency at KEK AR test", zorder = 1)
 plt.xlabel("x position [mm]")
 plt.ylabel("y position [mm]")
 plt.savefig("./img/BAC_Eff_corr1.jpg", dpi=600)
+plt.savefig("./img/BAC_Eff_corr1.svg", dpi=600, transparent=True)
 # plt.clf()
 # plt.close()
 plt.show()
 
+
+def convert_x(x):
+    return (x + 88)/16
+
 plt.figure(figsize=(10, 8))
-df = pd.DataFrame(KVC, columns=x_pos, index = y_pos)
+# df = pd.DataFrame(KVC, columns=x_pos, index = y_pos)
+df = pd.DataFrame(KVC[:, :7], columns=x_pos[:7], index = y_pos)
 df[-80] = [np.nan]*7
-df[80] = [np.nan]*7
+# df[80] = [np.nan]*7
+df[48] = [np.nan]*7
 up = pd.DataFrame([[np.nan for _ in range(len(x_pos+2))]], columns=x_pos, index = [72])
 df.loc[72] = np.nan
 df.loc[-72] = np.nan
@@ -178,7 +195,8 @@ df = df.sort_index(axis=0, ascending=False)
 df = df.sort_index(axis=1)
 print(df)
 plt.grid(which="major", alpha=0.3)
-sns.heatmap(df, cmap="viridis", annot=True, cbar=True, fmt='.3f', annot_kws={'fontsize': 15}, cbar_kws=dict(pad=-0.05, shrink=0.79))
+# sns.heatmap(df, cmap="viridis", annot=True, cbar=True, fmt='.3f', annot_kws={'fontsize': 15}, cbar_kws=dict(pad=-0.05, shrink=0.79))
+sns.heatmap(df, cmap="viridis", annot=True, cbar=True, fmt='.3f', annot_kws={'fontsize': 15}, cbar_kws=dict(pad=-0.09, shrink=0.78))
 for i in range(5):
     plt.vlines(convert_x( -26*2-13 + 26*i), convert_y( -120/2 ), convert_y( 120/2 ), color = "red", ls = "dashed", lw = 2, zorder = 1)
 plt.hlines(convert_y( -120/2 ), convert_x( -26*2-13 ), convert_x( 26+13 ), color = "red", ls = "dashed", lw = 2, zorder = 1)
@@ -186,8 +204,8 @@ plt.hlines(convert_y( 120/2 ), convert_x( -26*2-13 ), convert_x( 26+13 ), color 
 plt.text(convert_x( -72 ), convert_y( 72 ), "KVC Efficiency at KEK AR test", zorder = 1)
 plt.xlabel("x position [mm]")
 plt.ylabel("y position [mm]")
-# plt.savefig("./img/KVC_Eff_corr1.jpg", dpi=600)
-plt.savefig("./img/KVC_Eff_corr1.jpg")
+plt.savefig("./img/KVC_Eff_corr1.jpg", dpi=600)
+plt.savefig("./img/KVC_Eff_corr1.svg", dpi=600, transparent=True)
 # plt.clf()
 # plt.close()
 plt.show()
