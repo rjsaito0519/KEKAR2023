@@ -111,16 +111,16 @@ static const Double_t SAC_one_photon_gain[maxSACch][3] = {
 // static const Double_t SACSUM_one_photon_gain[3] = { 12.5889, 16.2106, 19.7347};
 
 // --- BAC ----------------------------------------------------
-static const Double_t BAC_one_photon_gain[4][3] = {
-    //   56V,     57V,     58V    
-    {11.2307, 14.9373, 18.6440}, 
-    {9.01049, 12.6678, 16.3251}, 
-    {7.90286, 11.2044, 14.5060}, 
-    {9.58750, 11.8408, 14.0941}
-};
+// static const Double_t BAC_one_photon_gain[4][3] = {
+//     //   56V,     57V,     58V    
+//     {11.2307, 14.9373, 18.6440}, 
+//     {9.01049, 12.6678, 16.3251}, 
+//     {7.90286, 11.2044, 14.5060}, 
+//     {9.58750, 11.8408, 14.0941}
+// };
+static const Double_t BAC_one_photon_gain = 15.088540;
 
-
-
+static const Double_t KVC_one_photon_gain = 14.181332;
 
 
 
