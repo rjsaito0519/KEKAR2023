@@ -1,60 +1,33 @@
 #include <iostream>
-#include <sys/stat.h>
-#include <fstream>
 #include <vector>
-#include <random>
-#include <unordered_map>
+#include <fstream>
 #include <sstream>
 #include <string>
-#include <unistd.h> // for getcwd
+#include <unordered_map>
+#include <random>
 
 // ROOT libraries
 #include <TFile.h>
 #include <TTree.h>
-#include <TEventList.h>
-#include <TMath.h>
-#include <TROOT.h>
-#include <TApplication.h>
-#include <TH1.h>
-#include <TH2.h>
-#include <TCanvas.h>
-#include <TF1.h>
-#include <TColor.h>
-#include <TGraph.h>
-#include <TStyle.h>
-#include <TGaxis.h>
-#include <TSpectrum.h>
-#include <TPolyMarker.h>
 #include <TTreeReader.h>
 #include <TTreeReaderArray.h>
-#include <TParticle.h>
-#include <TGraphErrors.h>
-#include <TRandom.h>
-#include <TMarker.h>
-#include <TSpline.h>
-#include <RooBreitWigner.h>
-#include <TFitResultPtr.h>
-#include <TFitResult.h>
-#include <TMinuit.h>
-#include <TF1Convolution.h>
-#include <TComplex.h>
-#include <TProfile.h>
-#include <TGClient.h>
-#include <TGFrame.h>
+#include <TH1.h>
+#include <TF1.h>
+#include <TCanvas.h>
+#include <TStyle.h>
+#include <TMath.h>
+#include <TApplication.h>
+#include <TROOT.h>
 #include <TGTab.h>
-#include <TRootEmbeddedCanvas.h>
-#include <TLine.h>
-#include <Math/IntegratorOptions.h>
+#include <TColor.h>
 
+// Custom headers
 #include "config.h"
-#include "variable.hh"
-#include "ana_helper.hh"
 #include "param.hh"
 #include "one_photon_gain_helper.hh"
 
-static const TString pdf_name = "../img/bac_one_photon_gain.pdf";
 
-std::pair<Double_t, Double_t> analyze(Int_t run_num, Int_t ch, TVirtualPad *c, Int_t n_c)
+std::vector<std::vector<Double_t>> analyze(Int_t run_num, Int_t ch, TVirtualPad *c, Int_t n_c)
 {   
     // +---------+
     // | setting |
@@ -78,7 +51,7 @@ std::pair<Double_t, Double_t> analyze(Int_t run_num, Int_t ch, TVirtualPad *c, I
     auto *f = new TFile( root_file_path.Data() );
     if (!f || f->IsZombie()) {
         std::cerr << "Error: Could not open file : " << root_file_path << std::endl;
-        return std::make_pair(-1.0, -1.0);
+        return {};
     }
     TTreeReader reader("tree", f);
     TTreeReaderArray<Double_t> baca(reader, "baca");
@@ -102,7 +75,7 @@ std::pair<Double_t, Double_t> analyze(Int_t run_num, Int_t ch, TVirtualPad *c, I
     // -- prepare -----
     c->cd(n_c);
     
-    std::vector<Double_t> result{};
+    std::vector<Double_t> result, result_err;
     std::pair<Double_t, Double_t> mean{ h->GetMean(),  h->GetMeanError() };
     Double_t n_total = h->GetEntries();
 
@@ -113,7 +86,6 @@ std::pair<Double_t, Double_t> analyze(Int_t run_num, Int_t ch, TVirtualPad *c, I
     Double_t first_peak_pos  = par[1];
     Double_t fit_range_left  = par[2];
     Double_t fit_range_right = par[3];
-    // std::cout << n_gauss << ", " << first_peak_pos << ", " << fit_range_left << ", " << fit_range_right << std::endl;
     h->GetXaxis()->SetRangeUser(fit_range_left-5.0, fit_range_right+5.0);
     Double_t half_width = 5.0;
 
@@ -146,18 +118,21 @@ std::pair<Double_t, Double_t> analyze(Int_t run_num, Int_t ch, TVirtualPad *c, I
     h->Fit(f_fit, "0", "", fit_range_left, fit_range_right);
     result.clear();
     Int_t n_par = f_fit->GetNpar();
-    for (Int_t i = 0; i < n_par; i++) result.push_back(i < f_fit->GetNpar() ? f_fit->GetParameter(i) : TMath::QuietNaN());
-    for (Int_t i = 0; i < n_par; i++) result.push_back(i < f_fit->GetNpar() ? f_fit->GetParError(i)  : TMath::QuietNaN());
+    for (Int_t i = 0; i < n_par; i++) {
+        result.push_back(f_fit->GetParameter(i));
+        result_err.push_back(f_fit->GetParError(i));
+    }
 
+    // -- for adjust fit range -----
     std::cout << result[3]*n_gauss + 2*result[2] + fit_range_left << std::endl;
 
     // -- cal one photon gain -----
     std::pair<Double_t, Double_t> pedestal{ f_fit->GetParameter(1), f_fit->GetParError(1) };
     std::pair<Double_t, Double_t> n_pedestal{ f_fit->GetParameter(0), f_fit->GetParError(0) };
     std::pair<Double_t, Double_t> one_photon_gain = cal_one_photon_gain( mean, pedestal, n_pedestal, n_total);
-    std::cout << one_photon_gain.first << ", " << one_photon_gain.second << std::endl;
+    // std::cout << one_photon_gain.first << ", " << one_photon_gain.second << std::endl;
     result.push_back(one_photon_gain.first);
-    result.push_back(one_photon_gain.second);
+    result_err.push_back(one_photon_gain.second);
 
     // -- draw -----
     h->Draw();
@@ -167,8 +142,8 @@ std::pair<Double_t, Double_t> analyze(Int_t run_num, Int_t ch, TVirtualPad *c, I
     f_first_gaus->SetParameters(result[0], result[1], result[2]);
     f_first_gaus->SetLineColor(kBlue);
     f_first_gaus->SetLineStyle(2);
-    f_first_gaus->SetFillColor(kBlue);
-    f_first_gaus->SetFillStyle(3003);
+    // f_first_gaus->SetFillColor(kBlue);
+    // f_first_gaus->SetFillStyle(3003);
     f_first_gaus->Draw("same");
 
     for (Int_t i = 1; i < n_gauss; i++) {
@@ -178,91 +153,120 @@ std::pair<Double_t, Double_t> analyze(Int_t run_num, Int_t ch, TVirtualPad *c, I
         f_single_gaus->SetLineStyle(2);
         f_single_gaus->Draw("same");    
     }    
-
     c->Update();
 
-    // //  +--------------+
-    // //  | write result |
-    // //  +--------------+
-    // Int_t unused;
-    // write_opg_result(".tmp_data.csv", run_num, ch, result, 0);
-    // unused = system("python3 write.py test");
-    // (void)unused;  // 変数を使わないことを明示
+    // // -- delete -----
+    // delete f;
 
-    return one_photon_gain;
+    std::vector<std::vector<Double_t>> result_container;
+    result_container.push_back(result);
+    result_container.push_back(result_err);
+
+    return result_container;
 }
 
-// void wrapper(TGTab* tab, std::vector<Int_t> run_num_container, Int_t ch, Double_t led_vol) {
-//     TCanvas *c = add_tab(tab, Form("led%.1f_ch%d", led_vol, ch));
-//     c->Divide(1, 2);
-//     TVirtualPad *c_fit = c->cd(1);
-//     c_fit->Divide(3,1);
-//     if (ch == 0 && led_vol == 3.4) c->Print(pdf_name + "["); // start
-
-//     // -- fit and draw -----
-//     std::vector<Double_t> x{}, x_err{}, y{}, y_err{};
-//     for (Int_t cond = 0; cond < 3; cond++) {
-//         std::pair<Double_t, Double_t> opg = analyze(run_num_container[cond], ch, c_fit, cond+1);
-//         x.push_back(bac_pmt_vol[ch][cond]); 
-//         x_err.push_back(0);
-//         y.push_back(opg.first);
-//         y_err.push_back(opg.second);    
-//     }
-
-//     // -- draw result -----
-//     c->cd(2);
-//     gPad->SetBottomMargin(0.15);
-//     gPad->SetLeftMargin(0.15);
-//     auto g = new TGraphErrors(3, &x[0], &y[0], &x_err[0], &y_err[0]);
-//     g->SetTitle( Form("LED %.1f V, ch%d", led_vol, ch+1) );
-//     g->GetXaxis()->SetTitle("PMT HV [V]");
-//     g->GetYaxis()->SetTitle("Gain [ch]");
-//     g->SetMarkerStyle(24);
-//     // g->GetYaxis()->SetRangeUser(0, 35);
-//     g->Draw("AP");
-    
-//     c->Print(pdf_name);
-//     if (ch == 5 && led_vol == 3.6) c->Print(pdf_name + "]"); // end
-// }
-
 Int_t main(int argc, char** argv) {
-    // -- check argments -----
-    if (argc < 2) {
-        std::cerr << "Usage: " << argv[0] << " <run number>" << std::endl;
-        return 1;
-    }
-    Int_t run_num = std::atoi(argv[1]);
 
-    TApplication *theApp = new TApplication("App", &argc, argv);
+    // +-------------+
+    // | dev version |
+    // +-------------+
+    // // -- check argments -----
+    // if (argc < 2) {
+    //     std::cerr << "Usage: " << argv[0] << " <run number>" << std::endl;
+    //     return 1;
+    // }
+    // Int_t run_num = std::atoi(argv[1]);
 
-    // -- create window -----
-    TGMainFrame *main = new TGMainFrame(gClient->GetRoot(), 1000, 800);
-    main->Connect("CloseWindow()", "TApplication", gApplication, "Terminate()");
-    TGTab *tab = new TGTab(main, 1000, 800);
+    // TApplication *theApp = new TApplication("App", &argc, argv);
 
-    // -- test -----
-    TCanvas *c = add_tab(tab, "bac");
-    c->Divide(2, 2);
-    for (Int_t ch = 0; ch < max_bac_ch; ch++) analyze(run_num, ch, c, ch+1);
+    // // -- create window -----
+    // TGMainFrame *main = new TGMainFrame(gClient->GetRoot(), 1000, 800);
+    // main->Connect("CloseWindow()", "TApplication", gApplication, "Terminate()");
+    // TGTab *tab = new TGTab(main, 1000, 800);
 
-    // // // -- fit -----
-    // // std::vector<Int_t> led_34{ 70107, 104, 101 };
-    // // std::vector<Int_t> led_35{   108, 105, 113 };
-    // // std::vector<Int_t> led_36{   109, 103, 100 };
+    // // -- test -----
+    // TCanvas *c = add_tab(tab, "bac");
+    // c->Divide(2, 2);
+    // for (Int_t ch = 0; ch < max_bac_ch; ch++) analyze(run_num, ch, c, ch+1);
 
-    // // for (Int_t ch = 0; ch < max_bac_ch; ch++) {
-    // //     wrapper(tab, led_34, ch, 3.4);
-    // //     wrapper(tab, led_35, ch, 3.5);
-    // //     wrapper(tab, led_36, ch, 3.6);
-    // // }
-
-    // -- add tab and draw window
-    main->AddFrame(tab, new TGLayoutHints(kLHintsExpandX | kLHintsExpandY));
-    main->MapSubwindows();
-    main->Resize(main->GetDefaultSize());
-    main->MapWindow();
+    // // -- add tab and draw window -----
+    // main->AddFrame(tab, new TGLayoutHints(kLHintsExpandX | kLHintsExpandY));
+    // main->MapSubwindows();
+    // main->Resize(main->GetDefaultSize());
+    // main->MapWindow();
     
-    theApp->Run();
+    // theApp->Run();
+
+
+    // +-------------+
+    // | pro version |
+    // +-------------+
+    Config& conf = Config::getInstance();
+    std::vector<Int_t> ana_run_num{ 138, 142, 144, 147, 149, 150, 153, 154, 157, 158, 160, 162, 164, 167, 169, 174, 176, 178, 180, 238, 239, 240 };
+
+    // +--------------------------+
+    // | prepare output root file |
+    // +--------------------------+
+    TString output_path = "./results/root/bac_opg.root";
+    if (std::ifstream(output_path.Data())) std::remove(output_path.Data());
+    TFile fout(output_path.Data(), "create");
+    TTree output_tree("tree", ""); 
+
+    // -- prepare root file branch -----
+    std::vector<Double_t> result_val, result_err;
+    Int_t tmp_run_num, tmp_ch;
+    Double_t cal_opg_val, cal_opg_err;
+
+    output_tree.Branch("run_num", &tmp_run_num, "run_num/I");
+    output_tree.Branch("ch", &tmp_ch, "ch/I");
+    output_tree.Branch("result_val", &result_val);
+    output_tree.Branch("result_err", &result_err);
+    output_tree.Branch("cal_opg_val", &cal_opg_val, "cal_opg_val/D");
+    output_tree.Branch("cal_opg_err", &cal_opg_err, "cal_opg_err/D");
+
+
+    // -- prepare pdf -----
+    Int_t nth_pad = 1;
+    Int_t rows = 2;
+    Int_t cols = 2;
+    Int_t max_pads = rows * cols;
+    TString pdf_name = "./results/img/bac_opg.pdf";
+
+    auto *c = new TCanvas("", "", 1500, 1200);
+    c->Divide(cols, rows);
+    c->Print(pdf_name + "["); // start
+    for (const auto &run_num : ana_run_num) {
+        for (Int_t ch = 0; ch < conf.max_bac_ch; ch++) {
+            if (nth_pad > max_pads) {
+                c->Print(pdf_name);
+                c->Clear();
+                c->Divide(cols, rows);
+                nth_pad = 1;
+            }
+
+            TString key = Form("%05d-%d", run_num, ch);
+            if (param::bac_opg.count(key.Data())) {
+                tmp_run_num = run_num; tmp_ch = ch;
+                std::vector<std::vector<Double_t>> result_container = analyze(run_num, ch, c, nth_pad);
+                cal_opg_val = result_container[0].back();
+                cal_opg_err = result_container[1].back();
+                result_val.assign(result_container[0].begin(), result_container[0].end() - 1);
+                result_val.assign(result_container[1].begin(), result_container[1].end() - 1);
+                output_tree.Fill();
+            }
+            nth_pad++;
+        }
+    }
+    c->Print(pdf_name);
+    c->Print(pdf_name + "]"); // end
+    delete c;
+
+    // +------------+
+    // | Write data |
+    // +------------+
+    fout.cd(); // 明示的にカレントディレクトリを設定
+    output_tree.Write();
+    fout.Close(); 
 
     return 0;
 }
