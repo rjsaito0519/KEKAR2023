@@ -27,7 +27,7 @@
 #include <Math/RootFinder.h>
 
 #include "variable.hh"
-#include "param.hh"
+#include "param.h"
 #include "fit_functions.hh"
 
 // タブを追加し、埋め込まれたキャンバスを返す関数

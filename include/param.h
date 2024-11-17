@@ -1,6 +1,11 @@
 #ifndef PARAM_
 #define PARAM_
 
+#include <unordered_map>
+#include <vector>
+#include <string>
+#include <Rtypes.h>
+
 namespace param
 {
     static const std::unordered_map<std::string, std::vector<Double_t>> trigger_adc{
