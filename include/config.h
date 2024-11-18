@@ -20,6 +20,28 @@ public:
     Int_t adc_min = 0;
     Int_t adc_max = 4096;
 
+    // ADCのbin設定
+    Int_t tdc_bin_num = 0x10000;
+    Int_t tdc_min = 0;
+    Int_t tdc_max = 0x200000;
+
+    // BAC one photon gain (KEKAR result)
+    std::unordered_map<Int_t, std::vector<std::pair<Double_t, Double_t>>> bac_opg{
+    //    HV    val,   err
+        { 56, {{ 8.850, 0.099}, // run00239
+               { 9.570, 0.049},
+               { 9.777, 0.044},
+               { 8.571, 0.084} }},
+        { 57, {{11.329, 0.067}, // run00238
+               {11.968, 0.036},
+               {12.120, 0.037},
+               {10.970, 0.050}} },
+        { 58, {{13.669, 0.073}, // run00240
+               {14.280, 0.037},
+               {14.455, 0.041},
+               {13.138, 0.056}} }
+    };
+
     // // 必要に応じて初期化メソッドを追加
     // void initialize(double th, int run, int samples) {
     //     threshold = th;
