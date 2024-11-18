@@ -54,12 +54,34 @@ std::vector<std::vector<Double_t>> analyze(Int_t run_num, Int_t ch, TVirtualPad 
         return {};
     }
     TTreeReader reader("tree", f);
+    TTreeReaderArray<Double_t> t1a(reader, "t1a");
+    TTreeReaderArray<Double_t> t1t(reader, "t1t");
+    TTreeReaderArray<Double_t> t2a(reader, "t2a");
+    TTreeReaderArray<Double_t> t2t(reader, "t2t");
+    TTreeReaderArray<Double_t> t3a(reader, "t3a");
+    TTreeReaderArray<Double_t> t3t(reader, "t3t");
+    TTreeReaderArray<Double_t> t4a(reader, "t4a");
+    TTreeReaderArray<Double_t> t4t(reader, "t4t");
     TTreeReaderArray<Double_t> baca(reader, "baca");
+    TTreeReaderArray<Double_t> bact(reader, "bact");
+    TTreeReaderArray<Double_t> kvca(reader, "kvca");
+    TTreeReaderArray<Double_t> kvct(reader, "kvct");
+    
 
     // +-------------------+
     // | Prepare histogram |
     // +-------------------+
+    auto *h_t1a = new TH1D(Form("T1a_%d", run_num), Form("run%05d T1(ADC);ADC;", run_num), conf.adc_bin_num, conf.adc_min, conf.adc_max);
+    auto *h_t1t = new TH1D(Form("T1t_%d", run_num), Form("run%05d T1(TDC);ADC;", run_num), conf.tdc_bin_num, conf.tdc_min, conf.tdc_max);
+    auto *h_t2a = new TH1D(Form("T2a_%d", run_num), Form("run%05d T2(ADC);ADC;", run_num), conf.adc_bin_num, conf.adc_min, conf.adc_max);
+    auto *h_t2t = new TH1D(Form("T2t_%d", run_num), Form("run%05d T2(TDC);ADC;", run_num), conf.tdc_bin_num, conf.tdc_min, conf.tdc_max);
+    auto *h_t3a = new TH1D(Form("T3a_%d", run_num), Form("run%05d T3(ADC);ADC;", run_num), conf.adc_bin_num, conf.adc_min, conf.adc_max);
+    auto *h_t3t = new TH1D(Form("T3t_%d", run_num), Form("run%05d T3(TDC);ADC;", run_num), conf.tdc_bin_num, conf.tdc_min, conf.tdc_max);
+    auto *h_t4a = new TH1D(Form("T4a_%d", run_num), Form("run%05d T4(ADC);ADC;", run_num), conf.adc_bin_num, conf.adc_min, conf.adc_max);
+    auto *h_t4t = new TH1D(Form("T4t_%d", run_num), Form("run%05d T4(TDC);ADC;", run_num), conf.tdc_bin_num, conf.tdc_min, conf.tdc_max);
+    
     auto *h = new TH1D(Form("BACa_%d_%d", run_num, ch+1), Form("run%05d BAC(ADC) ch%d;ADC;", run_num, ch+1), conf.adc_bin_num, conf.adc_min, conf.adc_max);
+
 
     // +------------------+
     // | Fill event (1st) |
@@ -81,7 +103,7 @@ std::vector<std::vector<Double_t>> analyze(Int_t run_num, Int_t ch, TVirtualPad 
 
     // -- load and set parameter -----
     TString key = Form("%05d-%d", run_num, ch);
-    std::vector<Double_t> par = param::bac_opg_fit.count(key.Data()) ? param::bac_opg_fit.at(key.Data()) : param::bac_opg_fit.at("default");
+    std::vector<Double_t> par = param::bac_opg.count(key.Data()) ? param::bac_opg.at(key.Data()) : param::bac_opg.at("default");
     Double_t n_gauss         = par[0];
     Double_t first_peak_pos  = par[1];
     Double_t fit_range_left  = par[2];
@@ -168,105 +190,35 @@ std::vector<std::vector<Double_t>> analyze(Int_t run_num, Int_t ch, TVirtualPad 
 Int_t main(int argc, char** argv) {
     Config& conf = Config::getInstance();
 
-    // // +-------------+
-    // // | dev version |
-    // // +-------------+
-    // // -- check argments -----
-    // if (argc < 2) {
-    //     std::cerr << "Usage: " << argv[0] << " <run number>" << std::endl;
-    //     return 1;
-    // }
-    // Int_t run_num = std::atoi(argv[1]);
-
-    // TApplication *theApp = new TApplication("App", &argc, argv);
-
-    // // -- create window -----
-    // TGMainFrame *main = new TGMainFrame(gClient->GetRoot(), 1000, 800);
-    // main->Connect("CloseWindow()", "TApplication", gApplication, "Terminate()");
-    // TGTab *tab = new TGTab(main, 1000, 800);
-
-    // // -- test -----
-    // TCanvas *c = add_tab(tab, "bac");
-    // c->Divide(2, 2);
-    // for (Int_t ch = 0; ch < conf.max_bac_ch; ch++) analyze(run_num, ch, c, ch+1);
-
-    // // -- add tab and draw window -----
-    // main->AddFrame(tab, new TGLayoutHints(kLHintsExpandX | kLHintsExpandY));
-    // main->MapSubwindows();
-    // main->Resize(main->GetDefaultSize());
-    // main->MapWindow();
-    
-    // theApp->Run();
-
-
     // +-------------+
-    // | pro version |
+    // | dev version |
     // +-------------+
-    std::vector<Int_t> ana_run_num{ 138, 142, 144, 147, 149, 150, 153, 154, 157, 158, 160, 162, 164, 167, 169, 174, 176, 178, 180, 238, 239, 240 };
-
-    // +--------------------------+
-    // | prepare output root file |
-    // +--------------------------+
-    TString output_path = "./results/root/bac_opg.root";
-    if (std::ifstream(output_path.Data())) std::remove(output_path.Data());
-    TFile fout(output_path.Data(), "create");
-    TTree output_tree("tree", ""); 
-
-    // -- prepare root file branch -----
-    std::vector<Double_t> result_val, result_err;
-    Int_t tmp_run_num, tmp_ch;
-    Double_t cal_opg_val, cal_opg_err;
-
-    output_tree.Branch("run_num", &tmp_run_num, "run_num/I");
-    output_tree.Branch("ch", &tmp_ch, "ch/I");
-    output_tree.Branch("result_val", &result_val);
-    output_tree.Branch("result_err", &result_err);
-    output_tree.Branch("cal_opg_val", &cal_opg_val, "cal_opg_val/D");
-    output_tree.Branch("cal_opg_err", &cal_opg_err, "cal_opg_err/D");
-
-
-    // -- prepare pdf -----
-    Int_t nth_pad = 1;
-    Int_t rows = 2;
-    Int_t cols = 2;
-    Int_t max_pads = rows * cols;
-    TString pdf_name = "./results/img/bac_opg.pdf";
-
-    auto *c = new TCanvas("", "", 1500, 1200);
-    c->Divide(cols, rows);
-    c->Print(pdf_name + "["); // start
-    for (const auto &run_num : ana_run_num) {
-        for (Int_t ch = 0; ch < conf.max_bac_ch; ch++) {
-            if (nth_pad > max_pads) {
-                c->Print(pdf_name);
-                c->Clear();
-                c->Divide(cols, rows);
-                nth_pad = 1;
-            }
-
-            TString key = Form("%05d-%d", run_num, ch);
-            if (param::bac_opg_fit.count(key.Data())) {
-                tmp_run_num = run_num; tmp_ch = ch;
-                std::vector<std::vector<Double_t>> result_container = analyze(run_num, ch, c, nth_pad);
-                cal_opg_val = result_container[0].back();
-                cal_opg_err = result_container[1].back();
-                result_val.assign(result_container[0].begin(), result_container[0].end() - 1);
-                result_err.assign(result_container[1].begin(), result_container[1].end() - 1);
-                output_tree.Fill();
-            }
-            nth_pad++;
-        }
+    // -- check argments -----
+    if (argc < 2) {
+        std::cerr << "Usage: " << argv[0] << " <run number>" << std::endl;
+        return 1;
     }
-    c->Print(pdf_name);
-    c->Print(pdf_name + "]"); // end
-    delete c;
+    Int_t run_num = std::atoi(argv[1]);
 
-    // +------------+
-    // | Write data |
-    // +------------+
-    fout.cd(); // 明示的にカレントディレクトリを設定
-    output_tree.Write();
-    fout.Close(); 
+    TApplication *theApp = new TApplication("App", &argc, argv);
+
+    // -- create window -----
+    TGMainFrame *main = new TGMainFrame(gClient->GetRoot(), 1000, 800);
+    main->Connect("CloseWindow()", "TApplication", gApplication, "Terminate()");
+    TGTab *tab = new TGTab(main, 1000, 800);
+
+    // -- test -----
+    TCanvas *c = add_tab(tab, "bac");
+    c->Divide(2, 2);
+    for (Int_t ch = 0; ch < conf.max_bac_ch; ch++) analyze(run_num, ch, c, ch+1);
+
+    // -- add tab and draw window -----
+    main->AddFrame(tab, new TGLayoutHints(kLHintsExpandX | kLHintsExpandY));
+    main->MapSubwindows();
+    main->Resize(main->GetDefaultSize());
+    main->MapWindow();
+    
+    theApp->Run();
 
     return 0;
 }

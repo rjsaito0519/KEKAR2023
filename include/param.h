@@ -81,7 +81,7 @@ namespace param
         { "00113-5", { 2, 142, 163} }
     };
 
-    static const std::unordered_map<std::string, std::vector<Double_t>> bac_opg{
+    static const std::unordered_map<std::string, std::vector<Double_t>> bac_opg_fit{
         // key        n_gauss fisrt_peak left right
         {"default",  { 5.0, 190.0, 170.0, 330.0}},
 
