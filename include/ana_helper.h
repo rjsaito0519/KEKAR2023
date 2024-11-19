@@ -17,6 +17,7 @@
 #include <Math/RootFinder.h>
 #include <Math/Functor.h>
 #include <TLine.h>
+#include <TBox.h>
 
 struct FitResult {
     std::vector<Double_t> par;
@@ -30,7 +31,8 @@ namespace ana_helper {
     TCanvas* add_tab(TGTab *tab, const char* tabName);
     std::vector<Int_t> get_should_hit_seg(Int_t run_number);
     Double_t get_shower_adc_min(Int_t run_number, Int_t seg);
-    FitResult trig_counter_adc_fit(TH1D *h, TCanvas *c, Int_t n_c);   
+    FitResult trig_counter_adc_fit(TH1D *h, TCanvas *c, Int_t n_c);
+    FitResult trig_counter_tdc_fit(TH1D *h, TCanvas *c, Int_t n_c);
 }
 
 #endif  // ANA_HELPER_
