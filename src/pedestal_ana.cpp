@@ -53,42 +53,30 @@ void analyze(Int_t run_num)
         return;
     }
     TTreeReader reader("tree", f);
-    TTreeReaderArray<Double_t> t1a(reader, "t1a");
-    TTreeReaderArray<Double_t> t1t(reader, "t1t");
-    TTreeReaderArray<Double_t> t2a(reader, "t2a");
-    TTreeReaderArray<Double_t> t2t(reader, "t2t");
-    TTreeReaderArray<Double_t> t3a(reader, "t3a");
-    TTreeReaderArray<Double_t> t3t(reader, "t3t");
-    TTreeReaderArray<Double_t> t4a(reader, "t4a");
-    TTreeReaderArray<Double_t> t4t(reader, "t4t");
+    TTreeReaderArray<Double_t> saca(reader, "saca");
+    TTreeReaderArray<Double_t> sacsuma(reader, "sacsuma");
     TTreeReaderArray<Double_t> baca(reader, "baca");
     TTreeReaderArray<Double_t> bacsuma(reader, "bacsuma");
-    TTreeReaderArray<Double_t> bacsumt(reader, "bacsumt");
+    TTreeReaderArray<Double_t> kvca(reader, "kvca");
     TTreeReaderArray<Double_t> kvcsuma(reader, "kvcsuma");
-    TTreeReaderArray<Double_t> kvcsumt(reader, "kvcsumt");
     
 
     // +-------------------+
     // | Prepare histogram |
     // +-------------------+
-    auto *h_t1a = new TH1D(Form("T1a_%d", run_num), Form("run%05d T1(ADC);ADC;", run_num), conf.adc_bin_num, conf.adc_min, conf.adc_max);
-    auto *h_t1t = new TH1D(Form("T1t_%d", run_num), Form("run%05d T1(TDC);TDC;", run_num), conf.tdc_bin_num, conf.tdc_min, conf.tdc_max);
-    auto *h_t2a = new TH1D(Form("T2a_%d", run_num), Form("run%05d T2(ADC);ADC;", run_num), conf.adc_bin_num, conf.adc_min, conf.adc_max);
-    auto *h_t2t = new TH1D(Form("T2t_%d", run_num), Form("run%05d T2(TDC);TDC;", run_num), conf.tdc_bin_num, conf.tdc_min, conf.tdc_max);
-    auto *h_t3a = new TH1D(Form("T3a_%d", run_num), Form("run%05d T3(ADC);ADC;", run_num), conf.adc_bin_num, conf.adc_min, conf.adc_max);
-    auto *h_t3t = new TH1D(Form("T3t_%d", run_num), Form("run%05d T3(TDC);TDC;", run_num), conf.tdc_bin_num, conf.tdc_min, conf.tdc_max);
-    auto *h_t4a = new TH1D(Form("T4a_%d", run_num), Form("run%05d T4(ADC);ADC;", run_num), conf.adc_bin_num, conf.adc_min, conf.adc_max);
-    auto *h_t4t = new TH1D(Form("T4t_%d", run_num), Form("run%05d T4(TDC);TDC;", run_num), conf.tdc_bin_num, conf.tdc_min, conf.tdc_max);
+    TH1D *h_saca[conf.max_sac_ch];
+    for (Int_t ch = 0; ch < conf.max_sac_ch; ch++) h_saca[ch] = new TH1D(Form("SACa_%d_%d", run_num, ch+1), Form("run%05d SAC(ADC) ch%d;ADC;", run_num, ch+1), conf.adc_bin_num, conf.adc_min, conf.adc_max);
+    auto *h_sacsuma = new TH1D(Form("SACSUMa_%d", run_num), Form("run%05d SACSUM(ADC);ADC;", run_num), conf.adc_bin_num, conf.adc_min, conf.adc_max);
 
     TH1D *h_baca[conf.max_bac_ch];
     for (Int_t ch = 0; ch < conf.max_bac_ch; ch++) h_baca[ch] = new TH1D(Form("BACa_%d_%d", run_num, ch+1), Form("run%05d BAC(ADC) ch%d;ADC;", run_num, ch+1), conf.adc_bin_num, conf.adc_min, conf.adc_max);
-    auto *h_bacsumt = new TH1D(Form("BACSUMt_%d", run_num), Form("run%05d BACSUM(TDC);TDC;", run_num), conf.tdc_bin_num, conf.tdc_min, conf.tdc_max);
+    auto *h_bacsuma = new TH1D(Form("BACSUMa_%d", run_num), Form("run%05d BACSUM(ADC);ADC;", run_num), conf.adc_bin_num, conf.adc_min, conf.adc_max);
 
+    TH1D *h_kvca[conf.max_kvc_ch];
     TH1D *h_kvcsuma[conf.max_kvc_ch];
-    TH1D *h_kvcsumt[conf.max_kvc_ch];
     for (Int_t ch = 0; ch < conf.max_kvc_ch; ch++) {
+        h_kvca[ch] = new TH1D(Form("KVCa_%d_%d", run_num, ch+1), Form("run%05d KVC(ADC) seg%d %s;ADC;", run_num, ch/2+2, ch%2==0 ? "up" : "down"), conf.adc_bin_num, conf.adc_min, conf.adc_max);
         h_kvcsuma[ch] = new TH1D(Form("KVCSUMa_%d_%d", run_num, ch+1), Form("run%05d KVCSUM(ADC) ch%d;ADC;", run_num, ch+1), conf.adc_bin_num, conf.adc_min, conf.adc_max);
-        h_kvcsumt[ch] = new TH1D(Form("KVCSUMt_%d_%d", run_num, ch+1), Form("run%05d KVCSUM(TDC) ch%d;TDC;", run_num, ch+1), conf.tdc_bin_num, conf.tdc_min, conf.tdc_max);
     }
 
     // +------------------+
@@ -96,46 +84,41 @@ void analyze(Int_t run_num)
     // +------------------+
     reader.Restart();
     while (reader.Next()){
-        h_t1a->Fill(t1a[0]);
-        h_t2a->Fill(t2a[0]);
-        h_t3a->Fill(t3a[0]);
-        h_t4a->Fill(t4a[0]);
+        for (Int_t ch = 0; ch < conf.max_sac_ch; ch++) h_saca[ch]->Fill(saca[ch]);
+        h_sacsuma->Fill(sacsuma[0]);
+        
         for (Int_t ch = 0; ch < conf.max_bac_ch; ch++) h_baca[ch]->Fill(baca[ch]);
-        for (Int_t ch = 0; ch < conf.max_kvc_ch; ch++) h_kvcsuma[ch]->Fill(kvcsuma[ch]);
-               
-        for (Int_t n_hit = 0; n_hit < conf.max_nhit_tdc; n_hit++) {
-            h_t1t->Fill(t1t[n_hit]);
-            h_t2t->Fill(t2t[n_hit]);
-            h_t3t->Fill(t3t[n_hit]);
-            h_t4t->Fill(t4t[n_hit]);
-            h_bacsumt->Fill(bacsumt[n_hit]);
-            for (Int_t ch = 0; ch < conf.max_kvc_ch; ch++) h_kvcsumt[ch]->Fill(kvcsumt[n_hit + ch*conf.max_kvc_ch]);
+        h_bacsuma->Fill(bacsuma[0]);
+
+        for (Int_t ch = 0; ch < conf.max_kvc_ch; ch++) {
+            h_kvca[ch]->Fill(kvca[ch]);
+            h_kvcsuma[ch]->Fill(kvcsuma[ch]);
         }
     }
 
-    // +--------------+
-    // | fit and plot |
-    // +--------------+
-    // -- create window -----
-    TGMainFrame *main = new TGMainFrame(gClient->GetRoot(), 1000, 800);
-    main->Connect("CloseWindow()", "TApplication", gApplication, "Terminate()");
-    TGTab *tab = new TGTab(main, 1000, 800);
+    // // +--------------+
+    // // | fit and plot |
+    // // +--------------+
+    // // -- create window -----
+    // TGMainFrame *main = new TGMainFrame(gClient->GetRoot(), 1000, 800);
+    // main->Connect("CloseWindow()", "TApplication", gApplication, "Terminate()");
+    // TGTab *tab = new TGTab(main, 1000, 800);
 
-    // -- test -----
-    TCanvas *c = ana_helper::add_tab(tab, "bac");
-    c->Divide(3, 2);
-    FitResult a = ana_helper::trig_counter_tdc_fit(h_t1t, c, 1);
-    ana_helper::trig_counter_tdc_fit(h_t2t, c, 2);
-    ana_helper::trig_counter_tdc_fit(h_t3t, c, 3);
-    ana_helper::trig_counter_tdc_fit(h_t4t, c, 4);
-    ana_helper::trig_counter_tdc_fit(h_bacsumt, c, 5);
+    // // -- test -----
+    // TCanvas *c = ana_helper::add_tab(tab, "bac");
+    // c->Divide(3, 2);
+    // ana_helper::trig_counter_tdc_fit(h_t1t, c, 1);
+    // ana_helper::trig_counter_tdc_fit(h_t2t, c, 2);
+    // ana_helper::trig_counter_tdc_fit(h_t3t, c, 3);
+    // ana_helper::trig_counter_tdc_fit(h_t4t, c, 4);
+    // ana_helper::trig_counter_tdc_fit(h_bacsumt, c, 5);
     
 
-    // -- add tab and draw window -----
-    main->AddFrame(tab, new TGLayoutHints(kLHintsExpandX | kLHintsExpandY));
-    main->MapSubwindows();
-    main->Resize(main->GetDefaultSize());
-    main->MapWindow();
+    // // -- add tab and draw window -----
+    // main->AddFrame(tab, new TGLayoutHints(kLHintsExpandX | kLHintsExpandY));
+    // main->MapSubwindows();
+    // main->Resize(main->GetDefaultSize());
+    // main->MapWindow();
 
 
     // // -- prepare -----
