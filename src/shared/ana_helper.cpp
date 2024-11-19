@@ -54,4 +54,89 @@ namespace ana_helper {
         return (it != kev_seg_map.end()) ? it->second : std::vector<Int_t>{};
     }
 
+    // ____________________________________________________________________________________________
+    Double_t get_shower_adc_min(Int_t run_number, Int_t seg) {
+
+        static const std::vector<Double_t> adc_min_condition1{  300.0, 300.0, 300.0, 300.0 };
+        static const std::vector<Double_t> adc_min_condition2{ 1000.0, 600.0, 700.0, 600.0 };
+
+        if (run_number <= 392) {
+            return adc_min_condition1[seg];
+        } else {
+            return adc_min_condition2[seg];
+        }
+
+    }
+
+    // ____________________________________________________________________________________________
+    FitResult trig_counter_adc_fit(TH1D *h, TCanvas *c, Int_t n_c) {
+        c->cd(n_c);
+        std::vector<Double_t> par, err;
+
+        Double_t peak_pos = h->GetXaxis()->GetBinCenter( h->GetMaximumBin() );
+        Double_t half_width = 50.0;
+
+        // first fit
+        TF1 *pre_fit_f = new TF1("pre_fit_gauss", "gausn", peak_pos-half_width, peak_pos+half_width);
+        pre_fit_f->SetParameter(1, peak_pos);
+        pre_fit_f->SetParameter(2, half_width/2);
+        h->Fit(pre_fit_f, "0Q", "", peak_pos-half_width, peak_pos+half_width );
+        for (Int_t i = 0; i < 3; i++) par.push_back(pre_fit_f->GetParameter(i));
+        delete pre_fit_f;
+
+        Double_t fit_range_min = par[1] - 5.0*par[2];
+        Double_t fit_range_max = par[1];
+
+        TF1 *fit_f = new TF1( Form("erf_fit_%s", h->GetName()), "[0]*TMath::Erf( (x-[1])/[2] ) + [3]", fit_range_min, fit_range_max);
+        fit_f->SetParameter(0, h->GetMaximum() / 2.0);
+        fit_f->SetParameter(1, par[1]-par[2]);
+        fit_f->SetParameter(2, 15.0);
+        fit_f->SetParameter(3, h->GetMaximum() / 2.0);
+        fit_f->SetLineColor(kOrange);
+        fit_f->SetLineWidth(2);
+        h->Fit(fit_f, "0Q", "", fit_range_min, fit_range_max);
+
+        FitResult result;
+        par.clear();
+        for (Int_t i = 0; i < 4; i++) {
+            par.push_back(fit_f->GetParameter(i));
+            err.push_back(fit_f->GetParError(i));
+        }
+        Double_t chi2 = fit_f->GetChisquare();
+        Double_t ndf  = fit_f->GetNDF();
+        Double_t reduced_chi2 = chi2 / ndf;
+        result.par = par;
+        result.err = err;
+        result.reduced_chi2 = reduced_chi2;
+
+        // 数値的に解を求めるためのRootFinderの設定, t0の値を調べる
+        Double_t target_value_ratio = 0.01;
+        Double_t target_value = 2*par[0] * target_value_ratio;
+        ROOT::Math::RootFinder rootFinder(ROOT::Math::RootFinder::kBRENT);
+        // 誤差関数の値は -par[0] ~ +par[0] の範囲になるので、par[0]分だけずらして最小値を0にする必要がある(したほうが解析しやすい)
+        ROOT::Math::Functor1D erf_func([=](Double_t x) { return par[0]*TMath::Erf( (x-par[1])/par[2] ) + par[0] - target_value; });
+        rootFinder.SetFunction(erf_func, fit_range_min, par[1]); // 探索範囲が第2, 3引数
+        if (rootFinder.Solve()) {
+            result.additional.push_back(rootFinder.Root());
+            result.is_success = true;
+        } else {
+            std::cerr << "Error: Root finding failed.\n";
+            result.additional.push_back(0.0);
+            result.is_success = false;
+        }
+
+        
+        h->GetXaxis()->SetRangeUser(result.additional[0] - 75.0, fit_range_max + 200.0);
+        h->Draw();
+        fit_f->Draw("same");
+
+        TLine *line = new TLine(result.additional[0], 0, result.additional[0], h->GetMaximum());
+        line->SetLineStyle(2);
+        line->SetLineWidth(2);
+        line->SetLineColor(kRed);
+        line->Draw("same");
+
+        return result;
+    }
+
 }
