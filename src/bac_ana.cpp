@@ -124,11 +124,12 @@ void analyze(Int_t run_num)
 
     // -- test -----
     TCanvas *c = ana_helper::add_tab(tab, "bac");
-    c->Divide(2, 2);
-    ana_helper::trig_counter_adc_fit(h_t1a, c, 1);
-    ana_helper::trig_counter_adc_fit(h_t2a, c, 2);
-    ana_helper::trig_counter_adc_fit(h_t3a, c, 3);
-    ana_helper::trig_counter_adc_fit(h_t4a, c, 4);
+    c->Divide(3, 2);
+    ana_helper::trig_counter_tdc_fit(h_t1t, c, 1);
+    ana_helper::trig_counter_tdc_fit(h_t2t, c, 2);
+    ana_helper::trig_counter_tdc_fit(h_t3t, c, 3);
+    ana_helper::trig_counter_tdc_fit(h_t4t, c, 4);
+    ana_helper::trig_counter_tdc_fit(h_bacsumt, c, 5);
     
 
     // -- add tab and draw window -----
