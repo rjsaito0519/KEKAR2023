@@ -44,8 +44,8 @@ namespace ana_helper {
         result.reduced_chi2 = (Double_t) chi2/ndf;
 
         // 数値的に解を求めるためのRootFinderの設定, t0の値を調べる
-        Double_t target_value_ratio = 0.01;
-        Double_t target_value = 2*par[0] * target_value_ratio;
+        Config& conf = Config::getInstance();
+        Double_t target_value = 2*par[0] * conf.trig_counter_adc_target_val_ratio;
         ROOT::Math::RootFinder rootFinder(ROOT::Math::RootFinder::kBRENT);
         // 誤差関数の値は -par[0] ~ +par[0] の範囲になるので、par[0]分だけずらして最小値を0にする必要がある(したほうが解析しやすい)
         ROOT::Math::Functor1D erf_func([=](Double_t x) { return par[0]*TMath::Erf( (x-par[1])/par[2] ) + par[0] - target_value; });
@@ -113,12 +113,16 @@ namespace ana_helper {
         result.reduced_chi2 = (Double_t) chi2/ndf;
 
         // -- draw -----
-        h->GetXaxis()->SetRangeUser(result.par[1]-(n_sigma+5)*result.par[2], result.par[1]+(n_sigma+3)*result.par[2]);
+        Config& conf = Config::getInstance();
+        h->GetXaxis()->SetRangeUser(
+            result.par[1]-(conf.trig_counter_tdc_n_sigma +5.0)*result.par[2], 
+            result.par[1]+(conf.trig_counter_tdc_n_sigma +5.0)*result.par[2]
+        );
         h->Draw();
         f_fit->Draw("same");
 
-        Double_t x1 = result.par[1] - n_sigma * result.par[2];
-        Double_t x2 = result.par[1] + n_sigma * result.par[2];
+        Double_t x1 = result.par[1] - conf.trig_counter_tdc_n_sigma  * result.par[2];
+        Double_t x2 = result.par[1] + conf.trig_counter_tdc_n_sigma  * result.par[2];
         Double_t y1 = 0;
         Double_t y2 = h->GetBinContent(h->GetMaximumBin());
 

@@ -21,6 +21,8 @@
 #include <TLine.h>
 #include <TBox.h>
 
+#include "config.h"
+
 struct FitResult {
     std::vector<Double_t> par;
     std::vector<Double_t> err;
