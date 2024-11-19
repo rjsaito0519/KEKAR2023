@@ -20,10 +20,17 @@ public:
     Int_t adc_min = 0;
     Int_t adc_max = 4096;
 
-    // ADCのbin設定
+    // TDCのbin設定
     Int_t tdc_bin_num = 0x10000;
     Int_t tdc_min = 0;
     Int_t tdc_max = 0x200000;
+
+
+    // -- trigger counter -----
+    Double_t trig_counter_adc_target_val_ratio = 0.01;
+    Double_t trig_counter_tdc_n_sigma =5.0;
+
+
 
     // BAC one photon gain (KEKAR result)
     std::unordered_map<Int_t, std::vector<std::pair<Double_t, Double_t>>> bac_opg{
@@ -43,11 +50,6 @@ public:
     };
 
 
-    // shower event cut condition (use KVC sum)
-    Double_t shower_tdc_min = 115000.0;
-    Double_t shower_tdc_max = 135000.0;
-    Double_t shower_adc_min = 300.0;
-    
 
     // // 必要に応じて初期化メソッドを追加
     // void initialize(double th, int run, int samples) {

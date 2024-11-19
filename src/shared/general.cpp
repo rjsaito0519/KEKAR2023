@@ -84,4 +84,53 @@ namespace ana_helper {
     }
 
 
+    std::vector<Double_t> fit_pedestal(TH1D *h, TCanvas *c, Int_t n_c, Double_t n_sigma_left  = 2.0, Double_t n_sigma_right = 0.5) {
+        c->cd(n_c);
+
+        std::vector<Double_t> result{};
+        Double_t peak_pos = h->GetBinCenter( h->GetMaximumBin() );
+        Double_t half_width = 10.0;
+
+        // -- first fit -----
+        TF1 *f_prefit = new TF1("pre_fit_gauss", "gausn", peak_pos-half_width, peak_pos+half_width);
+        f_prefit->SetParameter(1, peak_pos);
+        f_prefit->SetParameter(2, half_width/2);
+        TString fit_option = "0Q";
+        if ( h->GetBinContent( h->GetMaximumBin() ) < 50 ) fit_option += 'L';
+        h->Fit(f_prefit, fit_option.Data(), "", peak_pos-half_width, peak_pos+half_width );
+        for (Int_t i = 0; i < 3; i++) result.push_back(f_prefit->GetParameter(i));
+        delete f_prefit;
+
+        // -- second fit -----
+        TF1 *f_fit = new TF1( Form("gauss_%s", h->GetName()), "gausn", result[1]-n_sigma_left*result[2], result[1]+n_sigma_right*result[2]);
+        f_fit->SetParameter(1, result[1]);
+        f_fit->SetParameter(2, result[2]*0.9);
+        f_fit->SetLineColor(kOrange);
+        f_fit->SetLineWidth(2);
+        h->Fit(f_fit, fit_option.Data(), "", result[1]-n_sigma_left*result[2], result[1]+n_sigma_right*result[2]);
+        result.clear();
+        for (Int_t i = 0; i < 3; i++) result.push_back(f_fit->GetParameter(i));
+        for (Int_t i = 0; i < 3; i++) result.push_back(f_fit->GetParError(i));
+        Double_t chi2 = f_fit->GetChisquare();
+        Double_t ndf  = f_fit->GetNDF();
+        Double_t p_value = TMath::Prob(chi2, ndf);
+        // result.push_back(p_value);
+
+        // -- draw -----
+        h->GetXaxis()->SetRangeUser(result[1]-(n_sigma_left+5)*result[2], result[1]+(n_sigma_right+5)*result[2]);
+        h->Draw();
+        f_fit->Draw("same");
+
+        TLine *line = new TLine(result[1], 0, result[1], h->GetMaximum());
+        line->SetLineStyle(2);
+        line->SetLineColor(kRed);
+        line->Draw("same");
+
+        c->Update();
+
+        return result;
+
+    }
+
+
 }
