@@ -6,8 +6,10 @@
 #include <string>
 #include <iostream>
 #include <fstream>
+#include <utility>
 
 // ROOTヘッダー
+#include <Rtypes.h>
 #include <TCanvas.h>
 #include <TGTab.h>
 #include <TRootEmbeddedCanvas.h>
@@ -28,9 +30,20 @@ struct FitResult {
 };
 
 namespace ana_helper {
+    // -- general -----
     TCanvas* add_tab(TGTab *tab, const char* tabName);
     std::vector<Int_t> get_should_hit_seg(Int_t run_number);
     Double_t get_shower_adc_min(Int_t run_number, Int_t seg);
+
+    // -- one photon gain -----
+    std::pair<Double_t, Double_t> cal_one_photon_gain(
+        std::pair<Double_t, Double_t> mean,
+        std::pair<Double_t, Double_t> pedestal,
+        std::pair<Double_t, Double_t> n_pedestal,
+        Double_t n_total
+    );
+    
+    // -- trigger counter -----
     FitResult trig_counter_adc_fit(TH1D *h, TCanvas *c, Int_t n_c);
     FitResult trig_counter_tdc_fit(TH1D *h, TCanvas *c, Int_t n_c);
 }

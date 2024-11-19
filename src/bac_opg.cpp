@@ -24,7 +24,7 @@
 // Custom headers
 #include "config.h"
 #include "param.h"
-#include "one_photon_gain_helper.h"
+// #include "one_photon_gain_helper.h"
 #include "ana_helper.h"
 
 std::vector<std::vector<Double_t>> analyze(Int_t run_num, Int_t ch, TVirtualPad *c, Int_t n_c)
@@ -129,7 +129,7 @@ std::vector<std::vector<Double_t>> analyze(Int_t run_num, Int_t ch, TVirtualPad 
     // -- cal one photon gain -----
     std::pair<Double_t, Double_t> pedestal{ f_fit->GetParameter(1), f_fit->GetParError(1) };
     std::pair<Double_t, Double_t> n_pedestal{ f_fit->GetParameter(0), f_fit->GetParError(0) };
-    std::pair<Double_t, Double_t> one_photon_gain = cal_one_photon_gain( mean, pedestal, n_pedestal, n_total);
+    std::pair<Double_t, Double_t> one_photon_gain = ana_helper::cal_one_photon_gain( mean, pedestal, n_pedestal, n_total);
     // std::cout << one_photon_gain.first << ", " << one_photon_gain.second << std::endl;
     result.push_back(one_photon_gain.first);
     result_err.push_back(one_photon_gain.second);
