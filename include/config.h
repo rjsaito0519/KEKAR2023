@@ -10,8 +10,8 @@ public:
     }
 
     // チャンネル数の設定
-    Int_t max_sac_ch = 6;
-    Int_t max_kvc_ch = 1;
+    Int_t max_sac_ch = 8;
+    Int_t max_kvc_ch = 4;
     Int_t max_bac_ch = 4;
     Int_t max_nhit_tdc = 16;
 

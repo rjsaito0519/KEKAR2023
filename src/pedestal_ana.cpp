@@ -26,6 +26,84 @@
 #include "param.h"
 #include "ana_helper.h"
 
+
+// // -- for minuit fitting -----
+// static Double_t fit_range_left = 0.0, fit_range_right = 4096.0;
+// static Double_t chi2_value = 0.0;
+// static TH1D *h_pedestal;
+
+
+// // +--------+
+// // | Minuit |
+// // +--------+
+// // ______________________________________________________________________________________________________
+// void chi2(Int_t &npar, Double_t *gin, Double_t &f, Double_t *par, Int_t iflag)
+// {    
+//     // -- initialize -----
+//     f = 0;
+//     // -- calc. chisqare -----
+//     auto f_pedestal = new TF1("legendre", FF::Legendre2, -1, 1, n_order+1);
+
+//     auto f_legendre = new TF1("legendre", f_legendre_str, -1.0, 1.0);
+//     for (Int_t order = 0; order < n_coeff; order++) f_legendre->SetParameter(order, par[order]);
+//     for (Int_t i = 0, n_fit_points = fit_cos_theta.size(); i < n_fit_points; i++) {
+//         Double_t range_left  = fit_cos_theta[i] - fit_cos_theta_err[i];
+//         Double_t range_right = fit_cos_theta[i] + fit_cos_theta_err[i];        
+//         f += TMath::Power( (fit_diff_cs[i]*(range_right - range_left) - f_legendre->Integral( range_left, range_right )) / (fit_diff_cs_err[i]*(range_right - range_left) ), 2.0 );
+//     }
+//     delete f_legendre;
+//     chi2_value = f;
+// }
+
+// std::vector<Double_t> fit_pedestal(TH1D *h, TCanvas *c, Int_t n_c, Double_t n_sigma_left  = 2.0, Double_t n_sigma_right = 0.5) {
+//     c->cd(n_c);
+
+//     std::vector<Double_t> par, err;
+//     Double_t peak_pos = h->GetMean();
+//     Double_t stdev = h->GetStdDev();
+//     std::vector<std::pair<Double_t, Double_t>> fit_result;
+
+//     // -- minuit setting ----------
+//     Int_t n_par = 4;
+//     TMinuit *min = new TMinuit(n_par);
+//     min->SetPrintLevel(0);  // 0 simple, 1 verbose
+
+//     // -- define parameter -----
+//     min->DefineParameter(0, "scale", h->GetBinCenter( h->GetMaximumBin() )/2.0, 0.001, 0.0, 0x100000);
+//     min->DefineParameter(1, "gauss_sigma", stdev/2.0, 0.001, 0.0, stdev);
+//     min->DefineParameter(2, "mpv", peak_pos, 0.001, 0.0, 4096.0);
+//     min->DefineParameter(3, "landau_sigma", stdev/2.0, 0.001, 0.0, stdev);
+
+//     fit_range_left  = peak_pos - 1.0*stdev;
+//     fit_range_right = peak_pos + 3.0*stdev;
+
+//     min->SetFCN(chi2);
+
+//     // -- execute minuit ----------
+//     Int_t migrad_stats = min->Migrad();
+//     Int_t ndf = fit_cos_theta.size() - n_par;
+
+//     Double_t par, par_err;
+//     for(Int_t i =0; i < n_par; i++) {
+//         min->GetParameter(i, par, par_err);
+//         fit_result.emplace_back( par, par_err );
+//         std::cout << "A" << i << ": " << par << " +/- " << par_err << std::endl;
+//     }
+//     fit_result.emplace_back( migrad_stats, 0. );
+//     fit_result.emplace_back( chi2_value, 0. );
+//     fit_result.emplace_back( ndf, 0. );
+//     std::cout << "Status of Migrad: " << migrad_stats << std::endl;
+//     std::cout << "chi-square: " << chi2_value << std::endl;
+//     std::cout << "ndf: " << ndf << std::endl;
+
+//     // clean
+//     delete min;
+
+//     return fit_result;
+// }
+
+
+
 void analyze(Int_t run_num)
 {   
     // +---------+
@@ -96,29 +174,41 @@ void analyze(Int_t run_num)
         }
     }
 
-    // // +--------------+
-    // // | fit and plot |
-    // // +--------------+
-    // // -- create window -----
-    // TGMainFrame *main = new TGMainFrame(gClient->GetRoot(), 1000, 800);
-    // main->Connect("CloseWindow()", "TApplication", gApplication, "Terminate()");
-    // TGTab *tab = new TGTab(main, 1000, 800);
+    // +--------------+
+    // | fit and plot |
+    // +--------------+
+    // -- create window -----
+    TGMainFrame *main = new TGMainFrame(gClient->GetRoot(), 1000, 800);
+    main->Connect("CloseWindow()", "TApplication", gApplication, "Terminate()");
+    TGTab *tab = new TGTab(main, 1000, 800);
 
-    // // -- test -----
-    // TCanvas *c = ana_helper::add_tab(tab, "bac");
-    // c->Divide(3, 2);
-    // ana_helper::trig_counter_tdc_fit(h_t1t, c, 1);
-    // ana_helper::trig_counter_tdc_fit(h_t2t, c, 2);
-    // ana_helper::trig_counter_tdc_fit(h_t3t, c, 3);
-    // ana_helper::trig_counter_tdc_fit(h_t4t, c, 4);
-    // ana_helper::trig_counter_tdc_fit(h_bacsumt, c, 5);
+    // -- test -----
+    TCanvas *c = ana_helper::add_tab(tab, "bac");
+    c->Divide(3, 2);
+    for (Int_t i = 0; i < conf.max_bac_ch; i++) ana_helper::fit_pedestal2(h_baca[i], c, i+1);
+    ana_helper::fit_pedestal2(h_bacsuma, c, 5);
+
+    TCanvas *c2 = ana_helper::add_tab(tab, "sac");
+    c2->Divide(3, 3);
+    for (Int_t i = 0; i < conf.max_sac_ch; i++) ana_helper::fit_pedestal2(h_saca[i], c2, i+1);
+    ana_helper::fit_pedestal2(h_sacsuma, c2, 9);
+
+
+    TCanvas *c3 = ana_helper::add_tab(tab, "kvc");
+    c3->Divide(2, 4);
+    for (Int_t i = 0; i < conf.max_kvc_ch; i++) {
+        ana_helper::fit_pedestal2(h_kvca[i], c3, i+1);
+        ana_helper::fit_pedestal2(h_kvcsuma[i], c3, i+5);
+    }
+
+    
     
 
-    // // -- add tab and draw window -----
-    // main->AddFrame(tab, new TGLayoutHints(kLHintsExpandX | kLHintsExpandY));
-    // main->MapSubwindows();
-    // main->Resize(main->GetDefaultSize());
-    // main->MapWindow();
+    // -- add tab and draw window -----
+    main->AddFrame(tab, new TGLayoutHints(kLHintsExpandX | kLHintsExpandY));
+    main->MapSubwindows();
+    main->Resize(main->GetDefaultSize());
+    main->MapWindow();
 
 
     // // -- prepare -----
