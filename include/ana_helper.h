@@ -22,6 +22,8 @@
 #include <TBox.h>
 
 #include "config.h"
+#include "fit_functions.h"
+
 
 struct FitResult {
     std::vector<Double_t> par;
@@ -45,6 +47,9 @@ namespace ana_helper {
         Double_t n_total
     );
     
+    std::vector<Double_t> fit_pedestal(TH1D *h, TCanvas *c, Int_t n_c);
+    std::vector<Double_t> fit_pedestal2(TH1D *h, TCanvas *c, Int_t n_c) ;
+
     // -- trigger counter -----
     FitResult trig_counter_adc_fit(TH1D *h, TCanvas *c, Int_t n_c);
     FitResult trig_counter_tdc_fit(TH1D *h, TCanvas *c, Int_t n_c);
