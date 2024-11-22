@@ -83,13 +83,8 @@ void analyze(Int_t run_num)
     TH1D *h_baca[conf.max_bac_ch];
     for (Int_t ch = 0; ch < conf.max_bac_ch; ch++) h_baca[ch] = new TH1D(Form("BACa_%d_%d", run_num, ch+1), Form("run%05d BAC(ADC) ch%d;ADC;", run_num, ch+1), conf.adc_bin_num, conf.adc_min, conf.adc_max);
     auto *h_bacsumt = new TH1D(Form("BACSUMt_%d", run_num), Form("run%05d BACSUM(TDC);TDC;", run_num), conf.tdc_bin_num, conf.tdc_min, conf.tdc_max);
-
-    TH1D *h_kvcsuma[conf.max_kvc_ch];
-    TH1D *h_kvcsumt[conf.max_kvc_ch];
-    for (Int_t ch = 0; ch < conf.max_kvc_ch; ch++) {
-        h_kvcsuma[ch] = new TH1D(Form("KVCSUMa_%d_%d", run_num, ch+1), Form("run%05d KVCSUM(ADC) ch%d;ADC;", run_num, ch+1), conf.adc_bin_num, conf.adc_min, conf.adc_max);
-        h_kvcsumt[ch] = new TH1D(Form("KVCSUMt_%d_%d", run_num, ch+1), Form("run%05d KVCSUM(TDC) ch%d;TDC;", run_num, ch+1), conf.tdc_bin_num, conf.tdc_min, conf.tdc_max);
-    }
+    
+    HistPair h_bacsuma(Form("BACSUMa_%d", run_num), Form("run%05d BACSUM(ADC);ADC;", run_num), conf.adc_bin_num, conf.adc_min, conf.adc_max);
 
     // +------------------+
     // | Fill event (1st) |
@@ -101,7 +96,6 @@ void analyze(Int_t run_num)
         h_t3a->Fill(t3a[0]);
         h_t4a->Fill(t4a[0]);
         for (Int_t ch = 0; ch < conf.max_bac_ch; ch++) h_baca[ch]->Fill(baca[ch]);
-        for (Int_t ch = 0; ch < conf.max_kvc_ch; ch++) h_kvcsuma[ch]->Fill(kvcsuma[ch]);
                
         for (Int_t n_hit = 0; n_hit < conf.max_nhit_tdc; n_hit++) {
             h_t1t->Fill(t1t[n_hit]);
@@ -109,8 +103,9 @@ void analyze(Int_t run_num)
             h_t3t->Fill(t3t[n_hit]);
             h_t4t->Fill(t4t[n_hit]);
             h_bacsumt->Fill(bacsumt[n_hit]);
-            for (Int_t ch = 0; ch < conf.max_kvc_ch; ch++) h_kvcsumt[ch]->Fill(kvcsumt[n_hit + ch*conf.max_kvc_ch]);
         }
+
+        h_bacsuma.raw->Fill(bacsuma[0]);
     }
 
     // +--------------+
@@ -124,18 +119,126 @@ void analyze(Int_t run_num)
     // -- test -----
     TCanvas *c = ana_helper::add_tab(tab, "bac");
     c->Divide(3, 2);
-    FitResult a = ana_helper::trig_counter_tdc_fit(h_t1t, c, 1);
-    ana_helper::trig_counter_tdc_fit(h_t2t, c, 2);
-    ana_helper::trig_counter_tdc_fit(h_t3t, c, 3);
-    ana_helper::trig_counter_tdc_fit(h_t4t, c, 4);
-    ana_helper::trig_counter_tdc_fit(h_bacsumt, c, 5);
-    
+    FitResult tmp_fit_result;
 
-    // -- add tab and draw window -----
-    main->AddFrame(tab, new TGLayoutHints(kLHintsExpandX | kLHintsExpandY));
-    main->MapSubwindows();
-    main->Resize(main->GetDefaultSize());
-    main->MapWindow();
+    tmp_fit_result = ana_helper::trig_counter_tdc_fit(h_t1t, c, 1);
+    Double_t t1_tdc_min = tmp_fit_result.additional[0];
+    Double_t t1_tdc_max = tmp_fit_result.additional[1];
+
+    tmp_fit_result = ana_helper::trig_counter_tdc_fit(h_t2t, c, 2);
+    Double_t t2_tdc_min = tmp_fit_result.additional[0];
+    Double_t t2_tdc_max = tmp_fit_result.additional[1];
+
+    tmp_fit_result = ana_helper::trig_counter_tdc_fit(h_t3t, c, 3);
+    Double_t t3_tdc_min = tmp_fit_result.additional[0];
+    Double_t t3_tdc_max = tmp_fit_result.additional[1];
+
+    tmp_fit_result = ana_helper::trig_counter_tdc_fit(h_t4t, c, 4);
+    Double_t t4_tdc_min = tmp_fit_result.additional[0];
+    Double_t t4_tdc_max = tmp_fit_result.additional[1];
+
+    tmp_fit_result = ana_helper::cherenkov_tdc_fit(h_bacsumt, c, 5);
+    Double_t bac_tdc_min = tmp_fit_result.additional[0];
+    Double_t bac_tdc_max = tmp_fit_result.additional[1];
+
+    tmp_fit_result = ana_helper::trig_counter_adc_fit(h_bacsuma.raw, c, 6);
+    
+    auto *c3 = new TCanvas("", "", 800, 800);
+    c3->cd(1);
+    h_bacsuma.raw->Draw();
+
+
+    TCanvas *c2 = ana_helper::add_tab(tab, "adc");
+    c2->Divide(2, 2);
+    tmp_fit_result = ana_helper::trig_counter_adc_fit(h_t1a, c2, 1);
+    Double_t t1_adc_min = tmp_fit_result.additional[0];
+
+    tmp_fit_result = ana_helper::trig_counter_adc_fit(h_t2a, c2, 2);
+    Double_t t2_adc_min = tmp_fit_result.additional[0];
+
+    tmp_fit_result = ana_helper::trig_counter_adc_fit(h_t3a, c2, 3);
+    Double_t t3_adc_min = tmp_fit_result.additional[0];
+
+    tmp_fit_result = ana_helper::trig_counter_adc_fit(h_t4a, c2, 4);
+    Double_t t4_adc_min = tmp_fit_result.additional[0];
+
+        
+    
+    // -- prepare kvc veto flag -----
+    std::vector<Double_t> shower_adc_min;
+    std::vector<std::pair<Double_t, Double_t>> shower_tdc_gate;
+    if ( run_num <= conf.separate_run_num ) {
+        shower_adc_min  = conf.adc_min_condition1;
+        shower_tdc_gate = conf.tdc_gate_condition1;
+    } else {
+        shower_adc_min  = conf.adc_min_condition2;
+        shower_tdc_gate = conf.tdc_gate_condition2;    
+    }
+    // Bool_t veto
+
+
+
+
+
+
+    // // +------------------+
+    // // | Fill event (2nd) |
+    // // +------------------+
+    // Int_t n_trig = 0, n_sachit = 0;
+    // std::vector<Double_t> online_sum_container{}, trig_online_sum_container{}; // for online sum npe
+    // Double_t sum_pedestal_pos = sacsum_pedestal_pos[ pedestal_index(run_num) ]; // sumのpedestalは一番近い別のpedestal runからとってくる
+    
+    
+    // reader.Restart();
+    // while (reader.Next()){
+    //     // -- set up flag -----
+    //     Bool_t do_hit_t1a = false, do_hit_t2a = false, do_hit_t3a = false, do_hit_t4a = false;
+    //     Bool_t do_hit_t1t = false, do_hit_t2t = false, do_hit_t3t = false, do_hit_t4t = false, do_hit_bac = false;
+    //     if ( t1_adc_min < t1a[0] ) do_hit_t1a = true;
+    //     if ( t2_adc_min < t2a[0] ) do_hit_t2a = true;
+    //     if ( t3_adc_min < t3a[0] ) do_hit_t3a = true;
+    //     if ( t4_adc_min < t4a[0] ) do_hit_t4a = true;
+    //     for (Int_t n_hit = 0; n_hit < max_nhit_tdc; n_hit++) {
+    //         if ( t1_tdc_min < t1t[n_hit] && t1t[n_hit] < t1_tdc_max ) do_hit_t1t = true;
+    //         if ( t2_tdc_min < t2t[n_hit] && t2t[n_hit] < t2_tdc_max ) do_hit_t2t = true;
+    //         if ( t3_tdc_min < t3t[n_hit] && t3t[n_hit] < t3_tdc_max ) do_hit_t3t = true;
+    //         if ( t4_tdc_min < t4t[n_hit] && t4t[n_hit] < t4_tdc_max ) do_hit_t4t = true
+    //         if ( bac_tdc_min < bacsumt[n_hit] && bacsumt[n_hit] < bac_tdc_max ) do_hit_bac = true;
+    //     }
+    //     Bool_t trig_flag_adc = do_hit_t4a && do_hit_t2a && do_hit_t3a && do_hit_t4a;
+    //     Bool_t trig_flag_tdc = do_hit_t4t && do_hit_t2t && do_hit_t3t && do_hit_t4t;
+
+    //     // -- event selection and fill data -----
+    //     if ( trig_flag_tdc && trig_flag_adc ) {
+    //         n_trig++;
+    //         online_sum_container.push_back(sacsuma[0]);
+    //         if (do_hit_bac) {
+    //             n_sachit++;
+    //             Double_t offline_sum_a   = 0.;
+    //             Double_t offline_sum_npe = 0.;
+    //             for (Int_t ch = 0; ch < max_sac_ch; ch++) {
+    //                 h_trig_saca[ch]->Fill( saca[ch] );
+    //                 h_npe[ch]->Fill( (saca[ch] - result_pedestal[ch][1]) / sac_one_photon_gain[ch][2] );
+    //                 offline_sum_a   +=  saca[ch] - result_pedestal[ch][1];
+    //                 offline_sum_npe += (saca[ch] - result_pedestal[ch][1]) / sac_one_photon_gain[ch][2];
+    //             }
+    //             h_offline_sum_a->Fill(offline_sum_a);
+    //             h_online_sum_a ->Fill(sacsuma[0] - sum_pedestal_pos);
+    //             h_offline_sum_npe->Fill(offline_sum_npe);
+    //             trig_online_sum_container.push_back(sacsuma[0]);
+
+    //             // 最初にOnline sumのone photon gainをoffline sumとの相関より推測する
+    //             h_correlation->Fill( offline_sum_npe, sacsuma[0] - sum_pedestal_pos );
+    //         }
+    //     }
+    // }
+
+
+
+
+
+
+
 
 
     // // -- prepare -----
@@ -229,6 +332,13 @@ void analyze(Int_t run_num)
     // result_container.push_back(result_err);
 
     // return result_container;
+
+    // -- add tab and draw window -----
+    main->AddFrame(tab, new TGLayoutHints(kLHintsExpandX | kLHintsExpandY));
+    main->MapSubwindows();
+    main->Resize(main->GetDefaultSize());
+    main->MapWindow();
+
 }
 
 Int_t main(int argc, char** argv) {
