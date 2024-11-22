@@ -47,8 +47,10 @@ namespace ana_helper {
         Double_t n_total
     );
     
-    std::vector<Double_t> fit_pedestal(TH1D *h, TCanvas *c, Int_t n_c);
-    std::vector<Double_t> fit_pedestal2(TH1D *h, TCanvas *c, Int_t n_c) ;
+    // -- pedestal -----
+    FitResult fit_pedestal_with_landau_conv(TH1D *h, TCanvas *c, Int_t n_c);
+    FitResult fit_pedestal_with_gumbel(TH1D *h, TCanvas *c, Int_t n_c);
+    FitResult fit_pedestal_with_gauss(TH1D *h, TCanvas *c, Int_t n_c, Double_t n_sigma = 1.0);
 
     // -- trigger counter -----
     FitResult trig_counter_adc_fit(TH1D *h, TCanvas *c, Int_t n_c);
