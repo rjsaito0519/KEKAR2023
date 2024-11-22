@@ -26,11 +26,30 @@ public:
     Int_t tdc_max = 0x200000;
 
 
+    // -- for checking shower -----
+    Int_t separate_run_num = 392;
+    std::vector<Double_t> adc_min_condition1{  300.0, 300.0, 300.0, 300.0 };
+    std::vector<Double_t> adc_min_condition2{ 1000.0, 600.0, 700.0, 600.0 };
+    std::vector<std::pair<Double_t, Double_t>> tdc_gate_condition1{
+        {115000, 135000},
+        {115000, 135000},
+        {115000, 135000},
+        {115000, 135000}
+    };
+    std::vector<std::pair<Double_t, Double_t>> tdc_gate_condition2{
+        {115000, 135000},
+        {115000, 135000},
+        {115000, 135000},
+        {115000, 135000}
+    };
+
     // -- trigger counter -----
     Double_t trig_counter_adc_target_val_ratio = 0.01;
     Double_t trig_counter_tdc_n_sigma =5.0;
 
 
+    // -- cherenkov counter -----
+    Double_t cherenkov_tdc_n_sigma =5.0;
 
     // BAC one photon gain (KEKAR result)
     std::unordered_map<Int_t, std::vector<std::pair<Double_t, Double_t>>> bac_opg{

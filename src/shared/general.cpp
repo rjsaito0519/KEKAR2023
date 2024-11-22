@@ -7,10 +7,11 @@ namespace ana_helper {
         // タブを作成し、キャンバスを埋め込む
         TGCompositeFrame *tf = tab->AddTab(tabName);
         TRootEmbeddedCanvas *embeddedCanvas = new TRootEmbeddedCanvas(tabName, tf, 1000, 800);
-        tf->AddFrame(embeddedCanvas, new TGLayoutHints(kLHintsExpandX | kLHintsExpandY));
+       tf->AddFrame(embeddedCanvas, new TGLayoutHints(kLHintsExpandX | kLHintsExpandY));
         return embeddedCanvas->GetCanvas();
     }
-
+    
+    
     // ____________________________________________________________________________________________
     std::vector<Int_t> get_should_hit_seg(Int_t run_number) {
 
@@ -55,17 +56,40 @@ namespace ana_helper {
     }
 
     // ____________________________________________________________________________________________
-    Double_t get_shower_adc_min(Int_t run_number, Int_t seg) {
+    Int_t get_pedestal_run_num(Int_t run_number) {
+        
+        static const std::vector<std::tuple<Int_t, Int_t, Int_t>> pedestal_run_num_map = {
+            // condition 1
+            {300, 308, 309},
+            {310, 319, 320},
+            {322, 331, 332},
+            {333, 342, 343},
+            {344, 354, 355},
+            {357, 362, 355},
+            {363, 376, 377},
+            {378, 386, 387},
+            {388, 392, 387},
 
-        static const std::vector<Double_t> adc_min_condition1{  300.0, 300.0, 300.0, 300.0 };
-        static const std::vector<Double_t> adc_min_condition2{ 1000.0, 600.0, 700.0, 600.0 };
+            // condition 2
+            {447, 455, 456},
+            {457, 465, 466},
+            {467, 475, 476},
+            {477, 485, 486},
+            {487, 495, 496},
+            {497, 505, 506},
+            {507, 515, 516},
+            {517, 519, 520},
+            {521, 523, 524},
+            {525, 527, 528},
+            {529, 531, 532}
+        };
 
-        if (run_number <= 392) {
-            return adc_min_condition1[seg];
-        } else {
-            return adc_min_condition2[seg];
+        for (const auto& [start, end, pedestal] : pedestal_run_num_map) {
+            if (start <= run_number && run_number <= end) {
+                return pedestal;
+            }
         }
-
+        return -1;
     }
 
     // ____________________________________________________________________________________________
