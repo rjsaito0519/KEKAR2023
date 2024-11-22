@@ -24,7 +24,6 @@
 // Custom headers
 #include "config.h"
 #include "param.h"
-// #include "one_photon_gain_helper.h"
 #include "ana_helper.h"
 
 std::vector<std::vector<Double_t>> analyze(Int_t run_num, Int_t ch, TVirtualPad *c, Int_t n_c)
