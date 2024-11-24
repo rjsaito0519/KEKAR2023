@@ -117,7 +117,7 @@ namespace ana_helper {
 
         Double_t peak_pos = h->GetMean();
         Double_t stdev = h->GetStdDev();
-        Double_t n_sigma = 1.0;
+        Double_t n_sigma = 1.5;
 
         // -- first fit -----
         Int_t n_iter = 3;
@@ -135,7 +135,7 @@ namespace ana_helper {
         Double_t fit_range_min = par[1]-n_sigma*par[2];
         Double_t fit_range_max = par[1]+n_sigma*par[2];
         TF1 *f_poisson = new TF1(Form("poisson_%s", h->GetName()), "[0]*TMath::Poisson(x, [1])", fit_range_min, fit_range_max);
-        f_poisson->SetParameter(1, peak_pos);
+        f_poisson->SetParameter(1, par[1]);
         TString fit_option = "0Q";
         if ( h->GetBinContent( h->GetMaximumBin() ) < 50 ) fit_option += 'L';
         h->Fit(f_poisson, fit_option.Data(), "", fit_range_min, fit_range_max);
@@ -154,15 +154,16 @@ namespace ana_helper {
         result.reduced_chi2 = (Double_t) chi2/ndf;
 
         // -- draw -----
-        h->GetXaxis()->SetRangeUser(-3.0, 2.5*result.par[1]);
+        h->GetXaxis()->SetRangeUser(-3.0, 3.0*result.par[1]);
         h->Draw();
         f_poisson->SetLineColor(kOrange);
+        f_poisson->SetLineWidth(2);
         f_poisson->Draw("same");
 
         auto *text = new TLatex();
         text->SetNDC();
         text->SetTextSize(0.1);
-        text->DrawLatex(0.35, 0.8, Form("#mu = %.2f", result.par[1]));
+        text->DrawLatex(0.5, 0.8, Form("#lambda = %.2f", result.par[1]));
         text->Draw("same");
 
         return result;
@@ -175,7 +176,7 @@ namespace ana_helper {
 
         Double_t peak_pos = h->GetMean();
         Double_t stdev = h->GetStdDev();
-        Double_t n_sigma = 1.0;
+        Double_t n_sigma = 1.5;
 
         // -- first fit -----
         Int_t n_iter = 3;
@@ -197,7 +198,7 @@ namespace ana_helper {
         
         TF1Convolution* poisson_conv = fit_functions::poisson_conv(pedestal_sigma, conv_range_min, conv_range_max);
         TF1 *f_poisson = new TF1(Form("poisson_%s", h->GetName()), poisson_conv, fit_range_min, fit_range_max, 2);
-        f_poisson->SetParameter(1, peak_pos);
+        f_poisson->SetParameter(1, par[1]);
         TString fit_option = "0Q";
         if ( h->GetBinContent( h->GetMaximumBin() ) < 50 ) fit_option += 'L';
         h->Fit(f_poisson, fit_option.Data(), "", fit_range_min, fit_range_max);
@@ -216,15 +217,74 @@ namespace ana_helper {
         result.reduced_chi2 = (Double_t) chi2/ndf;
 
         // -- draw -----
-        h->GetXaxis()->SetRangeUser(-3.0, 2.5*result.par[1]);
+        h->GetXaxis()->SetRangeUser(-3.0, 3.0*result.par[1]);
         h->Draw();
         f_poisson->SetLineColor(kOrange);
+        f_poisson->SetLineWidth(2);
         f_poisson->Draw("same");
 
         auto *text = new TLatex();
         text->SetNDC();
         text->SetTextSize(0.1);
-        text->DrawLatex(0.35, 0.8, Form("#mu = %.2f", result.par[1]));
+        text->DrawLatex(0.5, 0.8, Form("#lambda = %.2f", result.par[1]));
+        text->Draw("same");
+
+        return result;
+    }
+
+    // ____________________________________________________________________________________________
+    FitResult npe_gauss_fit(TH1D *h, TCanvas *c, Int_t n_c, Double_t n_sigma) {
+        c->cd(n_c);
+        std::vector<Double_t> par, err;
+
+        Double_t peak_pos = h->GetMean();
+        Double_t stdev = h->GetStdDev();
+        
+        // -- first fit -----
+        Int_t n_iter = 3;
+        par.insert(par.end(), {0.0, peak_pos, 2.0*stdev});
+        for (Int_t dummy = 0; dummy < n_iter; dummy++) {
+            TF1 *f_prefit = new TF1("pre_fit_gauss", "gausn", par[1]-n_sigma*par[2], par[1]+n_sigma*par[2]);
+            f_prefit->SetParameter(1, par[1]);
+            f_prefit->SetParameter(2, par[2]*0.5);
+            h->Fit(f_prefit, "0Q", "", par[1]-n_sigma*par[2], par[1]+n_sigma*par[2]);
+            par.clear();
+            for (Int_t i = 0; i < 3; i++) par.push_back(f_prefit->GetParameter(i));
+            delete f_prefit;            
+        }
+
+        Double_t fit_range_min = par[1]-n_sigma*par[2];
+        Double_t fit_range_max = par[1]+n_sigma*par[2];
+        TF1 *f_fit = new TF1(Form("gauss_%s", h->GetName()), "gausn", fit_range_min, fit_range_max);
+        f_fit->SetParameters(par[0], par[1], par[2]);
+        TString fit_option = "0Q";
+        if ( h->GetBinContent( h->GetMaximumBin() ) < 50 ) fit_option += 'L';
+        h->Fit(f_fit, fit_option.Data(), "", fit_range_min, fit_range_max);
+
+        FitResult result;
+        par.clear();
+        Int_t n_par = f_fit->GetNpar();
+        for (Int_t i = 0; i < n_par; i++) {
+            par.push_back(f_fit->GetParameter(i));
+            err.push_back(f_fit->GetParError(i));
+        }
+        Double_t chi2 = f_fit->GetChisquare();
+        Double_t ndf  = f_fit->GetNDF();
+        result.par = par;
+        result.err = err;
+        result.reduced_chi2 = (Double_t) chi2/ndf;
+
+        // -- draw -----
+        h->GetXaxis()->SetRangeUser(-3.0, 3.0*result.par[1]);
+        h->Draw();
+        f_fit->SetLineColor(kOrange);
+        f_fit->SetLineWidth(2);
+        f_fit->Draw("same");
+
+        auto *text = new TLatex();
+        text->SetNDC();
+        text->SetTextSize(0.1);
+        text->DrawLatex(0.5, 0.8, Form("#lambda = %.2f", result.par[1]));
         text->Draw("same");
 
         return result;
