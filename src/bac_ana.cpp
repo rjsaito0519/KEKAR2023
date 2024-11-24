@@ -234,7 +234,7 @@ std::unordered_map<std::string, std::vector<FitResult>> analyze(Int_t run_num, I
     // +------------------+
     // | Fill event (2nd) |
     // +------------------+
-    Int_t n_trig = 0, n_bachit = 0;
+    Int_t n_trig = 0, n_hitbac = 0;
     std::unordered_map<std::string, std::vector<std::pair<Bool_t, Double_t>>> online_sum_container{ {"raw", {}}, {"trig", {}} };
     
     reader.Restart();
@@ -283,7 +283,7 @@ std::unordered_map<std::string, std::vector<FitResult>> analyze(Int_t run_num, I
             online_sum_container["raw"].emplace_back(shower_flag, bacsuma[0]);
             
             if (do_hit_bac) {
-                n_bachit++;
+                n_hitbac++;
                 offline_sum_a   = 0.;
                 offline_sum_npe = 0.;
                 for (Int_t ch = 0; ch < conf.max_bac_ch; ch++) {
@@ -306,6 +306,10 @@ std::unordered_map<std::string, std::vector<FitResult>> analyze(Int_t run_num, I
         }
     }
 
+    FitResult eff_result;
+    eff_result.additional.push_back( static_cast<Double_t>(n_trig) );
+    eff_result.additional.push_back( static_cast<Double_t>(n_hitbac) );
+    result_container["eff"].push_back(eff_result);
 
     // +----------------------------------------+
     // | Estimate one photon gain of online sum |
@@ -374,7 +378,7 @@ std::unordered_map<std::string, std::vector<FitResult>> analyze(Int_t run_num, I
         // h_npe[ch].trig->SetFillColor(kRed);
         // h_npe[ch].trig->SetFillStyle(3003);
         FitResult result = ana_helper::npe_gauss_fit(h_npe[ch].trig, c, nth_pad);
-        result_container[Form("indiv_npe_%d", ch)].push_back(result);
+        result_container["indiv_npe"].push_back(result);
         h_npe_shower[ch]->SetLineColor(kGreen);
         h_npe_shower[ch]->SetFillColor(kGreen);
         h_npe_shower[ch]->SetFillStyle(3003);
@@ -465,17 +469,117 @@ Int_t main(int argc, char** argv) {
     Config& conf = Config::getInstance();
     conf.bac_initialize();
 
-    // +-------------+
-    // | dev version |
-    // +-------------+
-    // -- check argments -----
-    if (argc < 2) {
-        std::cerr << "Usage: " << argv[0] << " <run number>" << std::endl;
-        return 1;
-    }
-    Int_t run_num = std::atoi(argv[1]);
+    // // +-------------+
+    // // | dev version |
+    // // +-------------+
+    // // -- check argments -----
+    // if (argc < 2) {
+    //     std::cerr << "Usage: " << argv[0] << " <run number>" << std::endl;
+    //     return 1;
+    // }
+    // Int_t run_num = std::atoi(argv[1]);
 
-    analyze(run_num, 3);
+    // analyze(run_num, 3);
     
+
+    // +-------------+
+    // | pro version |
+    // +-------------+
+    std::vector<Int_t> ana_run_num{ 
+        379, 380, 381, 382, 383, 384, 385,
+        365, 366, 368, 371, 372, 373, 374,
+        345, 346, 347, 348, 349, 350, 351,
+        301, 302, 303, 304, 305, 306, 307, 
+        312, 313, 314, 315, 316, 317, 318,
+        323, 324, 325, 329, 327, 328, 330,
+        334, 335, 336, 338, 339, 340, 341,
+        // again and additional
+        353, 352, 361, 360, 388, 390, 391, 392
+    };
+
+    // +--------------------------+
+    // | prepare output root file |
+    // +--------------------------+
+    TString output_path = "./results/root/bac_pos_scan_analysis.root";
+    if (std::ifstream(output_path.Data())) std::remove(output_path.Data());
+    TFile fout(output_path.Data(), "create");
+    TTree output_tree("tree", ""); 
+
+    // -- prepare root file branch -----
+    Int_t tmp_run_num, pos_x, pos_y;
+    Double_t n_trig, n_hit;
+    std::vector<Double_t> linear_a, linear_b;
+    std::vector<Double_t> indiv_npe_val, indiv_npe_err, onsum_npe_val, onsum_npe_err, offsum_npe_val, offsum_npe_err;
+
+    output_tree.Branch("run_num", &tmp_run_num, "run_num/I");
+    output_tree.Branch("pos_x", &pos_x, "pos_x/I");
+    output_tree.Branch("pos_y", &pos_y, "pos_y/I");
+    output_tree.Branch("n_trig", &n_trig, "n_trig/D");
+    output_tree.Branch("n_hit", &n_hit, "n_hit/D");
+    output_tree.Branch("linear_a", &linear_a);
+    output_tree.Branch("linear_b", &linear_b);
+    output_tree.Branch("indiv_npe_val", &indiv_npe_val);
+    output_tree.Branch("indiv_npe_err", &indiv_npe_err);
+    output_tree.Branch("onsum_npe_val", &onsum_npe_val);
+    output_tree.Branch("onsum_npe_err", &onsum_npe_err);
+    output_tree.Branch("offsum_npe_val", &offsum_npe_val);
+    output_tree.Branch("offsum_npe_err", &offsum_npe_err);
+
+    for (Int_t i = 0, n_run_num = ana_run_num.size(); i < n_run_num; i++) {
+        tmp_run_num = ana_run_num[i];
+        std::pair<Int_t, Int_t> position = ana_helper::get_scan_position(ana_run_num[i]);
+        pos_x = position.first;
+        pos_y = position.second;
+        
+        // -- analyze -----
+        Int_t pdf_save_mode = 0;
+        if (i == 0) pdf_save_mode = 1;
+        else if (i == n_run_num-1) pdf_save_mode = 2;
+        std::unordered_map<std::string, std::vector<FitResult>> result_container = analyze(ana_run_num[i], pdf_save_mode);
+
+        // -- initialize -----
+        linear_a.clear(); linear_b.clear();
+        indiv_npe_val.clear(); indiv_npe_err.clear();
+        onsum_npe_val.clear(); onsum_npe_err.clear();
+        offsum_npe_val.clear(); offsum_npe_err.clear();
+
+        // -- efficiency -----
+        n_trig = result_container["eff"][0].additional[0];
+        n_hit  = result_container["eff"][0].additional[1];
+        
+        // -- linear -----
+        for (const auto &result : result_container["linear"]) {
+            linear_a.push_back(  result.par[0] );
+            linear_b.push_back(  result.par[1] );
+        }
+
+        // -- indiv -----
+        for (const auto &result : result_container["indiv_npe"]) {
+            indiv_npe_val.push_back( result.par[1] );
+            indiv_npe_err.push_back( result.err[1] );
+        }
+
+        // -- onsum -----
+        for (const auto &result : result_container["onsum_npe"]) {
+            onsum_npe_val.push_back( result.par[1] );
+            onsum_npe_err.push_back( result.err[1] );
+        }
+        for (const auto &result : result_container["offsum_npe"]) {
+            offsum_npe_val.push_back( result.par[1] );
+            offsum_npe_err.push_back( result.err[1] );
+        }
+
+        output_tree.Fill();
+    }
+
+    // +------------+
+    // | Write data |
+    // +------------+
+    fout.cd(); // 明示的にカレントディレクトリを設定
+    output_tree.Write();
+    fout.Close(); 
+
+
+
     return 0;
 }
