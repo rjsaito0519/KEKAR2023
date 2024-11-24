@@ -60,6 +60,7 @@ namespace ana_helper {
     TCanvas* add_tab(TGTab *tab, const char* tabName);
     std::vector<Int_t> get_should_hit_ch(Int_t run_number);
     Int_t get_pedestal_run_num(Int_t run_number);
+    std::pair<Int_t, Int_t> get_scan_position(Int_t run_number);
 
     // -- one photon gain -----
     std::pair<Double_t, Double_t> cal_one_photon_gain(
