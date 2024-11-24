@@ -3,7 +3,7 @@
 namespace ana_helper {
 
     // ____________________________________________________________________________________________
-    FitResult fit_pedestal_with_landau_conv(TH1D *h, TCanvas *c, Int_t n_c) {
+    FitResult pedestal_fit_with_landau_conv(TH1D *h, TCanvas *c, Int_t n_c) {
         c->cd(n_c);
         std::vector<Double_t> par, err;
         
@@ -83,7 +83,7 @@ namespace ana_helper {
     }
 
     // ____________________________________________________________________________________________
-    FitResult fit_pedestal_with_gumbel(TH1D *h, TCanvas *c, Int_t n_c) {
+    FitResult pedestal_fit_with_gumbel(TH1D *h, TCanvas *c, Int_t n_c) {
         c->cd(n_c);
         std::vector<Double_t> par, err;
 
@@ -130,7 +130,7 @@ namespace ana_helper {
 
 
     // ____________________________________________________________________________________________
-    FitResult fit_pedestal_with_gauss(TH1D *h, TCanvas *c, Int_t n_c, Double_t n_sigma) {
+    FitResult pedestal_fit_with_gauss(TH1D *h, TCanvas *c, Int_t n_c, Double_t n_sigma) {
         c->cd(n_c);
         std::vector<Double_t> par, err;
 

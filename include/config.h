@@ -17,13 +17,24 @@ public:
 
     // ADCのbin設定
     Int_t adc_bin_num = 4096;
-    Int_t adc_min = 0;
-    Int_t adc_max = 4096;
+    Int_t adjust_adc_bin_num = 4096; // for adjustment
+    Double_t adc_min = 0.0;
+    Double_t adc_max = 4096.0;
 
     // TDCのbin設定
     Int_t tdc_bin_num = 0x10000;
-    Int_t tdc_min = 0;
-    Int_t tdc_max = 0x200000;
+    Double_t tdc_min = 0.0;
+    Double_t tdc_max = 2097152.0;
+
+    // NPEのbin設定
+    Int_t npe_bin_num = 2100;
+    Double_t npe_min = -5.;
+    Double_t npe_max = 415.;
+
+    // online sum(pedestal引いたやつ)のbin設定
+    Int_t sumadc_bin_num = 8192;
+    Double_t sumadc_min = 0.0;
+    Double_t sumadc_max = 8192.0;
 
 
     // -- for checking shower -----
@@ -47,7 +58,6 @@ public:
     Double_t trig_counter_adc_target_val_ratio = 0.01;
     Double_t trig_counter_tdc_n_sigma =5.0;
 
-
     // -- cherenkov counter -----
     Double_t cherenkov_tdc_n_sigma =5.0;
 
@@ -69,13 +79,11 @@ public:
     };
 
 
-
-    // // 必要に応じて初期化メソッドを追加
-    // void initialize(double th, int run, int samples) {
-    //     threshold = th;
-    //     currentRunNumber = run;
-    //     sampleCount = samples;
-    // }
+    void bac_initialize() {
+        adjust_adc_bin_num = 1024;
+        sumadc_bin_num = 1024;
+        npe_bin_num = 840;
+    }
 
 private:
     Config() = default; // コンストラクタをプライベートにして外部からのインスタンス生成を禁止

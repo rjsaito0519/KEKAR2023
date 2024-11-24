@@ -14,7 +14,8 @@
 #include <TCanvas.h>
 #include <TGTab.h>
 #include <TRootEmbeddedCanvas.h>
-#include <TH1D.h>
+#include <TH1.h>
+#include <TH2.h>
 #include <TF1.h>
 #include <TMath.h>
 #include <Math/RootFinder.h>
@@ -22,6 +23,7 @@
 #include <TLine.h>
 #include <TBox.h>
 #include <TROOT.h>
+#include <TLatex.h>
 
 #include "config.h"
 #include "fit_functions.h"
@@ -56,7 +58,7 @@ struct HistPair {
 namespace ana_helper {
     // -- general -----
     TCanvas* add_tab(TGTab *tab, const char* tabName);
-    std::vector<Int_t> get_should_hit_seg(Int_t run_number);
+    std::vector<Int_t> get_should_hit_ch(Int_t run_number);
     Int_t get_pedestal_run_num(Int_t run_number);
 
     // -- one photon gain -----
@@ -68,9 +70,9 @@ namespace ana_helper {
     );
     
     // -- pedestal -----
-    FitResult fit_pedestal_with_landau_conv(TH1D *h, TCanvas *c, Int_t n_c);
-    FitResult fit_pedestal_with_gumbel(TH1D *h, TCanvas *c, Int_t n_c);
-    FitResult fit_pedestal_with_gauss(TH1D *h, TCanvas *c, Int_t n_c, Double_t n_sigma = 1.0);
+    FitResult pedestal_fit_with_landau_conv(TH1D *h, TCanvas *c, Int_t n_c);
+    FitResult pedestal_fit_with_gumbel(TH1D *h, TCanvas *c, Int_t n_c);
+    FitResult pedestal_fit_with_gauss(TH1D *h, TCanvas *c, Int_t n_c, Double_t n_sigma = 1.0);
 
     // -- trigger counter -----
     FitResult trig_counter_adc_fit(TH1D *h, TCanvas *c, Int_t n_c);
@@ -78,6 +80,9 @@ namespace ana_helper {
 
     // -- cherenkov counter -----
     FitResult cherenkov_tdc_fit(TH1D *h, TCanvas *c, Int_t n_c);
+    FitResult correlation_fit(TH2D *h, TCanvas *c, Int_t n_c);
+    FitResult poisson_fit(TH1D *h, TCanvas *c, Int_t n_c);
+    FitResult conv_poisson_fit(TH1D *h, TCanvas *c, Int_t n_c, Double_t pedestal_sigma);
 }
 
 #endif  // ANA_HELPER_
