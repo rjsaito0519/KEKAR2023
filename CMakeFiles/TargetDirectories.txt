@@ -1,5 +1,0 @@
-/mnt/c/Users/saito/physics/root/KEKAR2023/code/CMakeFiles/bac_ana.dir
-/mnt/c/Users/saito/physics/root/KEKAR2023/code/CMakeFiles/bac_opg.dir
-/mnt/c/Users/saito/physics/root/KEKAR2023/code/CMakeFiles/pedestal_ana.dir
-/mnt/c/Users/saito/physics/root/KEKAR2023/code/CMakeFiles/edit_cache.dir
-/mnt/c/Users/saito/physics/root/KEKAR2023/code/CMakeFiles/rebuild_cache.dir
