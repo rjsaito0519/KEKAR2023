@@ -13,9 +13,9 @@ namespace ana_helper {
     
     
     // ____________________________________________________________________________________________
-    std::vector<Int_t> get_should_hit_seg(Int_t run_number) {
+    std::vector<Int_t> get_should_hit_ch(Int_t run_number) {
 
-        static const std::unordered_map<Int_t, std::vector<Int_t>> kev_seg_map = {
+        static const std::unordered_map<Int_t, std::vector<Int_t>> kev_ch_map = {
             // Condition 1
             {300, {0}},       {301, {0}},       {302, {1}},       {303, {1, 2}},    {304, {2}},
             {305, {2, 3}},    {306, {3}},       {307, {}},        {308, {}},        {310, {0}},
@@ -51,8 +51,8 @@ namespace ana_helper {
             {526, {2, 3}},    {527, {2, 3}},    {529, {3}},       {530, {3}},       {531, {3}}
         };
 
-        auto it = kev_seg_map.find(run_number);
-        return (it != kev_seg_map.end()) ? it->second : std::vector<Int_t>{};
+        auto it = kev_ch_map.find(run_number);
+        return (it != kev_ch_map.end()) ? it->second : std::vector<Int_t>{};
     }
 
     // ____________________________________________________________________________________________

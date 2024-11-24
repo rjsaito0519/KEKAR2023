@@ -124,10 +124,10 @@ std::unordered_map<std::string, std::vector<FitResult>> analyze(Int_t run_num, I
             nth_pad = 1;
         }
         if (ch < conf.max_bac_ch) {
-            FitResult result = ana_helper::fit_pedestal_with_gauss(h_baca[ch], c, nth_pad);
+            FitResult result = ana_helper::pedestal_fit_with_gauss(h_baca[ch], c, nth_pad);
             result_container["BAC"].push_back(result);
         } else {
-            FitResult result = ana_helper::fit_pedestal_with_gauss(h_bacsuma, c, nth_pad);
+            FitResult result = ana_helper::pedestal_fit_with_gauss(h_bacsuma, c, nth_pad);
             result_container["BACSUM"].push_back(result);
         }
         nth_pad++;
@@ -142,10 +142,10 @@ std::unordered_map<std::string, std::vector<FitResult>> analyze(Int_t run_num, I
             nth_pad = 1;
         }
         if (ch < conf.max_sac_ch) {
-            FitResult result = ana_helper::fit_pedestal_with_gauss(h_saca[ch], c, nth_pad, 3.0);
+            FitResult result = ana_helper::pedestal_fit_with_gauss(h_saca[ch], c, nth_pad, 3.0);
             result_container["SAC"].push_back(result);
         } else { 
-            FitResult result = ana_helper::fit_pedestal_with_gauss(h_sacsuma, c, nth_pad, 3.0);
+            FitResult result = ana_helper::pedestal_fit_with_gauss(h_sacsuma, c, nth_pad, 3.0);
             result_container["SACSUM"].push_back(result);
         }
         nth_pad++;
@@ -160,10 +160,10 @@ std::unordered_map<std::string, std::vector<FitResult>> analyze(Int_t run_num, I
             nth_pad = 1;
         }
         if (ch < conf.max_kvc_ch) {
-            FitResult result = ana_helper::fit_pedestal_with_gauss(h_kvca[ch], c, nth_pad);
+            FitResult result = ana_helper::pedestal_fit_with_gauss(h_kvca[ch], c, nth_pad);
             result_container["KVC"].push_back(result);
         } else {
-            FitResult result = ana_helper::fit_pedestal_with_gauss(h_kvcsuma[ch%conf.max_kvc_ch], c, nth_pad);
+            FitResult result = ana_helper::pedestal_fit_with_gauss(h_kvcsuma[ch%conf.max_kvc_ch], c, nth_pad);
             result_container["KVCSUM"].push_back(result);
         }
         nth_pad++;
@@ -205,26 +205,43 @@ Int_t main(int argc, char** argv) {
     TTree output_tree("tree", ""); 
 
     // -- prepare root file branch -----
-    std::vector<Double_t> bac_ped_val, bac_ped_err, bacsum_ped_val, bacsum_ped_err;
-    std::vector<Double_t> sac_ped_val, sac_ped_err, sacsum_ped_val, sacsum_ped_err;
-    std::vector<Double_t> kvc_ped_val, kvc_ped_err, kvcsum_ped_val, kvcsum_ped_err;
+    std::vector<Double_t> bac_ped_pos_val, bac_ped_pos_err, bacsum_ped_pos_val, bacsum_ped_pos_err;
+    std::vector<Double_t> sac_ped_pos_val, sac_ped_pos_err, sacsum_ped_pos_val, sacsum_ped_pos_err;
+    std::vector<Double_t> kvc_ped_pos_val, kvc_ped_pos_err, kvcsum_ped_pos_val, kvcsum_ped_pos_err;
+    std::vector<Double_t> bac_ped_sig_val, bac_ped_sig_err, bacsum_ped_sig_val, bacsum_ped_sig_err;
+    std::vector<Double_t> sac_ped_sig_val, sac_ped_sig_err, sacsum_ped_sig_val, sacsum_ped_sig_err;
+    std::vector<Double_t> kvc_ped_sig_val, kvc_ped_sig_err, kvcsum_ped_sig_val, kvcsum_ped_sig_err;
     Int_t tmp_run_num;
 
     output_tree.Branch("run_num", &tmp_run_num, "run_num/I");
-    output_tree.Branch("bac_ped_val", &bac_ped_val);
-    output_tree.Branch("bac_ped_err", &bac_ped_err);
-    output_tree.Branch("bacsum_ped_val", &bacsum_ped_val);
-    output_tree.Branch("bacsum_ped_err", &bacsum_ped_err);
-    output_tree.Branch("sac_ped_val", &sac_ped_val);
-    output_tree.Branch("sac_ped_err", &sac_ped_err);
-    output_tree.Branch("sacsum_ped_val", &sacsum_ped_val);
-    output_tree.Branch("sacsum_ped_err", &sacsum_ped_err);
-    output_tree.Branch("kvc_ped_val", &kvc_ped_val);
-    output_tree.Branch("kvc_ped_err", &kvc_ped_err);
-    output_tree.Branch("kvcsum_ped_val", &kvcsum_ped_val);
-    output_tree.Branch("kvcsum_ped_err", &kvcsum_ped_err);
+    output_tree.Branch("bac_ped_pos_val", &bac_ped_pos_val);
+    output_tree.Branch("bac_ped_pos_err", &bac_ped_pos_err);
+    output_tree.Branch("bacsum_ped_pos_val", &bacsum_ped_pos_val);
+    output_tree.Branch("bacsum_ped_pos_err", &bacsum_ped_pos_err);
+    output_tree.Branch("bac_ped_sig_val", &bac_ped_sig_val);
+    output_tree.Branch("bac_ped_sig_err", &bac_ped_sig_err);
+    output_tree.Branch("bacsum_ped_sig_val", &bacsum_ped_sig_val);
+    output_tree.Branch("bacsum_ped_sig_err", &bacsum_ped_sig_err);
+    output_tree.Branch("sac_ped_pos_val", &sac_ped_pos_val);
+    output_tree.Branch("sac_ped_pos_err", &sac_ped_pos_err);
+    output_tree.Branch("sacsum_ped_pos_val", &sacsum_ped_pos_val);
+    output_tree.Branch("sacsum_ped_pos_err", &sacsum_ped_pos_err);
+    output_tree.Branch("sac_ped_sig_val", &sac_ped_sig_val);
+    output_tree.Branch("sac_ped_sig_err", &sac_ped_sig_err);
+    output_tree.Branch("sacsum_ped_sig_val", &sacsum_ped_sig_val);
+    output_tree.Branch("sacsum_ped_sig_err", &sacsum_ped_sig_err);
+    output_tree.Branch("kvc_ped_pos_val", &kvc_ped_pos_val);
+    output_tree.Branch("kvc_ped_pos_err", &kvc_ped_pos_err);
+    output_tree.Branch("kvcsum_ped_pos_val", &kvcsum_ped_pos_val);
+    output_tree.Branch("kvcsum_ped_pos_err", &kvcsum_ped_pos_err);
+    output_tree.Branch("kvc_ped_sig_val", &kvc_ped_sig_val);
+    output_tree.Branch("kvc_ped_sig_err", &kvc_ped_sig_err);
+    output_tree.Branch("kvcsum_ped_sig_val", &kvcsum_ped_sig_val);
+    output_tree.Branch("kvcsum_ped_sig_err", &kvcsum_ped_sig_err);
 
     for (Int_t i = 0, n_run_num = ana_run_num.size(); i < n_run_num; i++) {
+        tmp_run_num = ana_run_num[i];
+        
         // -- analyze -----
         Int_t pdf_save_mode = 0;
         if (i == 0) pdf_save_mode = 1;
@@ -232,38 +249,53 @@ Int_t main(int argc, char** argv) {
         std::unordered_map<std::string, std::vector<FitResult>> result_container = analyze(ana_run_num[i], pdf_save_mode);
 
         // -- initialize -----
-        bac_ped_val.clear(); bac_ped_err.clear(); bacsum_ped_val.clear(); bacsum_ped_err.clear();
-        sac_ped_val.clear(); sac_ped_err.clear(); sacsum_ped_val.clear(); sacsum_ped_err.clear();
-        kvc_ped_val.clear(); kvc_ped_err.clear(); kvcsum_ped_val.clear(); kvcsum_ped_err.clear();
+        bac_ped_pos_val.clear(); bac_ped_pos_err.clear(); bacsum_ped_pos_val.clear(); bacsum_ped_pos_err.clear();
+        sac_ped_pos_val.clear(); sac_ped_pos_err.clear(); sacsum_ped_pos_val.clear(); sacsum_ped_pos_err.clear();
+        kvc_ped_pos_val.clear(); kvc_ped_pos_err.clear(); kvcsum_ped_pos_val.clear(); kvcsum_ped_pos_err.clear();
+        bac_ped_sig_val.clear(); bac_ped_sig_err.clear(); bacsum_ped_sig_val.clear(); bacsum_ped_sig_err.clear();
+        sac_ped_sig_val.clear(); sac_ped_sig_err.clear(); sacsum_ped_sig_val.clear(); sacsum_ped_sig_err.clear();
+        kvc_ped_sig_val.clear(); kvc_ped_sig_err.clear(); kvcsum_ped_sig_val.clear(); kvcsum_ped_sig_err.clear();
 
         // -- bac -----
         for (const auto &result : result_container["BAC"]) {
-            bac_ped_val.push_back( result.par[1] );
-            bac_ped_err.push_back( result.err[1] );
+            bac_ped_pos_val.push_back( result.par[1] );
+            bac_ped_pos_err.push_back( result.err[1] );
+            bac_ped_sig_val.push_back( result.par[2] );
+            bac_ped_sig_err.push_back( result.err[2] );
         }
         for (const auto &result : result_container["BACSUM"]) {
-            bacsum_ped_val.push_back( result.par[1] );
-            bacsum_ped_err.push_back( result.err[1] );
+            bacsum_ped_pos_val.push_back( result.par[1] );
+            bacsum_ped_pos_err.push_back( result.err[1] );
+            bacsum_ped_sig_val.push_back( result.par[2] );
+            bacsum_ped_sig_err.push_back( result.err[2] );
         }
 
         // -- sac -----
         for (const auto &result : result_container["SAC"]) {
-            sac_ped_val.push_back( result.par[1] );
-            sac_ped_err.push_back( result.err[1] );
+            sac_ped_pos_val.push_back( result.par[1] );
+            sac_ped_pos_err.push_back( result.err[1] );
+            sac_ped_sig_val.push_back( result.par[2] );
+            sac_ped_sig_err.push_back( result.err[2] );
         }
         for (const auto &result : result_container["SACSUM"]) {
-            sacsum_ped_val.push_back( result.par[1] );
-            sacsum_ped_err.push_back( result.err[1] );
+            sacsum_ped_pos_val.push_back( result.par[1] );
+            sacsum_ped_pos_err.push_back( result.err[1] );
+            sacsum_ped_sig_val.push_back( result.par[2] );
+            sacsum_ped_sig_err.push_back( result.err[2] );
         }
 
         // -- kvc -----
         for (const auto &result : result_container["KVC"]) {
-            kvc_ped_val.push_back( result.par[1] );
-            kvc_ped_err.push_back( result.err[1] );
+            kvc_ped_pos_val.push_back( result.par[1] );
+            kvc_ped_pos_err.push_back( result.err[1] );
+            kvc_ped_sig_val.push_back( result.par[2] );
+            kvc_ped_sig_err.push_back( result.err[2] );
         }
         for (const auto &result : result_container["KVCSUM"]) {
-            kvcsum_ped_val.push_back( result.par[1] );
-            kvcsum_ped_err.push_back( result.err[1] );
+            kvcsum_ped_pos_val.push_back( result.par[1] );
+            kvcsum_ped_pos_err.push_back( result.err[1] );
+            kvcsum_ped_sig_val.push_back( result.par[2] );
+            kvcsum_ped_sig_err.push_back( result.err[2] );
         }
 
         output_tree.Fill();

@@ -28,6 +28,16 @@ namespace fit_functions
         return scale / sigma * TMath::Exp(-z) * TMath::Exp(-TMath::Exp(-z));
     }
 
+    inline TF1Convolution* poisson_conv(Double_t gauss_sigma, Double_t conv_range_min, Double_t conv_range_max)
+    {
+        auto *gauss   = new TF1("gauss", Form("TMath::Gaus(x, 0, %f, true)", gauss_sigma));
+        auto *poisson = new TF1("poisson", "[0]*TMath::Poisson(x, [1])");
+
+        auto *poisson_conv = new TF1Convolution(poisson, gauss, conv_range_min, conv_range_max, true);
+        poisson_conv->SetNofPointsFFT(5000);
+        return poisson_conv;
+    }
+
 }
 
 #endif  // FIT_FUNCTIONS_H_
