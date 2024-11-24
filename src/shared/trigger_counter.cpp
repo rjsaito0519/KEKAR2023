@@ -29,7 +29,7 @@ namespace ana_helper {
         f_fit_erf->SetParameter(3, h->GetMaximum() / 2.0);
         f_fit_erf->SetLineColor(kOrange);
         f_fit_erf->SetLineWidth(2);
-        h->Fit(f_fit_erf, "0", "", fit_range_min, fit_range_max);
+        h->Fit(f_fit_erf, "0Q", "", fit_range_min, fit_range_max);
 
         FitResult result;
         par.clear();

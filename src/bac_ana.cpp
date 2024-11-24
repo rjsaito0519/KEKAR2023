@@ -27,13 +27,17 @@
 #include "param.h"
 #include "ana_helper.h"
 
-void analyze(Int_t run_num)
+static const TString pdf_name =  "./results/img/bac_pos_scan_analysis.pdf";
+
+std::unordered_map<std::string, std::vector<FitResult>> analyze(Int_t run_num, Int_t start_or_end = 0) // 0: mid_page, 1:start_page, 2: end_page, 3: both
 {   
     // +---------+
     // | setting |
     // +---------+
-    gROOT->GetColor(kOrange)->SetRGB(1.0, 0.4980392156862745, 0.054901960784313725);
     gROOT->GetColor(kBlue)->SetRGB(0.12156862745098039, 0.4666666666666667, 0.7058823529411765);
+    gROOT->GetColor(kOrange)->SetRGB(1.0, 0.4980392156862745, 0.054901960784313725);
+    gROOT->GetColor(kGreen)->SetRGB(44.0/256, 160.0/256, 44.0/256);
+    
     gStyle->SetOptStat(0);
     gStyle->SetLabelSize(0.06, "XY");
     gStyle->SetTitleSize(0.06, "x"); // x軸のタイトルサイズ
@@ -46,6 +50,9 @@ void analyze(Int_t run_num)
     // -- parameter -----
     Config& conf = Config::getInstance();
 
+    // -- prepare container -----
+    std::unordered_map<std::string, std::vector<FitResult>> result_container;
+
     // +----------------+
     // | load root file |
     // +----------------+
@@ -53,7 +60,7 @@ void analyze(Int_t run_num)
     auto *f = new TFile( root_file_path.Data() );
     if (!f || f->IsZombie()) {
         std::cerr << "Error: Could not open file : " << root_file_path << std::endl;
-        return;
+        return {};
     }
     TTreeReader reader("tree", f);
     TTreeReaderArray<Double_t> t1a(reader, "t1a");
@@ -116,10 +123,6 @@ void analyze(Int_t run_num)
     // -- 2d histogram -----
     auto *h_correlation = new TH2D("on_off_correlation", ";online sum[adc];offline sum[npe]", conf.sumadc_bin_num, conf.sumadc_min, conf.sumadc_max, conf.npe_bin_num, conf.npe_min, conf.npe_max);
 
-    // divided histogram for checking threshold
-    auto *h_divided = new TH1D("divided_online_sum_npe", Form("run%05d check threshold;NPE;ratio", run_num), conf.npe_bin_num, conf.npe_min, conf.npe_max);
-
-
     // +------------------+
     // | Fill event (1st) |
     // +------------------+
@@ -129,7 +132,6 @@ void analyze(Int_t run_num)
         h_t2a->Fill(t2a[0]);
         h_t3a->Fill(t3a[0]);
         h_t4a->Fill(t4a[0]);
-
         for (Int_t n_hit = 0; n_hit < conf.max_nhit_tdc; n_hit++) {
             h_t1t->Fill(t1t[n_hit]);
             h_t2t->Fill(t2t[n_hit]);
@@ -142,49 +144,58 @@ void analyze(Int_t run_num)
     // +--------------+
     // | fit and plot |
     // +--------------+
-    // -- create window -----
-    TGMainFrame *main = new TGMainFrame(gClient->GetRoot(), 1000, 800);
-    main->Connect("CloseWindow()", "TApplication", gApplication, "Terminate()");
-    TGTab *tab = new TGTab(main, 1000, 800);
+    // -- make canvas and draw -----
+    Int_t nth_pad = 1;
+    const Int_t rows = 2;
+    const Int_t cols = 2;
+    const Int_t max_pads = rows * cols;
+    auto *c = new TCanvas("", "", 1500, 1200);
+    c->Divide(cols, rows);
+    if (start_or_end == 1 || start_or_end == 3) c->Print(pdf_name + "["); // start
 
-    // -- test -----
-    TCanvas *c = ana_helper::add_tab(tab, "bac");
-    c->Divide(3, 2);
+    // -- T1 -----
     FitResult tmp_fit_result;
-
-    tmp_fit_result = ana_helper::trig_counter_tdc_fit(h_t1t, c, 1);
+    tmp_fit_result = ana_helper::trig_counter_tdc_fit(h_t1t, c, nth_pad);
     Double_t t1_tdc_min = tmp_fit_result.additional[0];
     Double_t t1_tdc_max = tmp_fit_result.additional[1];
-
-    tmp_fit_result = ana_helper::trig_counter_tdc_fit(h_t2t, c, 2);
-    Double_t t2_tdc_min = tmp_fit_result.additional[0];
-    Double_t t2_tdc_max = tmp_fit_result.additional[1];
-
-    tmp_fit_result = ana_helper::trig_counter_tdc_fit(h_t3t, c, 3);
-    Double_t t3_tdc_min = tmp_fit_result.additional[0];
-    Double_t t3_tdc_max = tmp_fit_result.additional[1];
-
-    tmp_fit_result = ana_helper::trig_counter_tdc_fit(h_t4t, c, 4);
-    Double_t t4_tdc_min = tmp_fit_result.additional[0];
-    Double_t t4_tdc_max = tmp_fit_result.additional[1];
-
-    tmp_fit_result = ana_helper::cherenkov_tdc_fit(h_bacsumt, c, 5);
-    Double_t bac_tdc_min = tmp_fit_result.additional[0];
-    Double_t bac_tdc_max = tmp_fit_result.additional[1];
-
-    TCanvas *c2 = ana_helper::add_tab(tab, "adc");
-    c2->Divide(2, 2);
-    tmp_fit_result = ana_helper::trig_counter_adc_fit(h_t1a, c2, 1);
+    tmp_fit_result = ana_helper::trig_counter_adc_fit(h_t1a, c, ++nth_pad);
     Double_t t1_adc_min = tmp_fit_result.additional[0];
 
-    tmp_fit_result = ana_helper::trig_counter_adc_fit(h_t2a, c2, 2);
+    // -- T2 -----
+    tmp_fit_result = ana_helper::trig_counter_tdc_fit(h_t2t, c, ++nth_pad);
+    Double_t t2_tdc_min = tmp_fit_result.additional[0];
+    Double_t t2_tdc_max = tmp_fit_result.additional[1];
+    tmp_fit_result = ana_helper::trig_counter_adc_fit(h_t2a, c, ++nth_pad);
     Double_t t2_adc_min = tmp_fit_result.additional[0];
 
-    tmp_fit_result = ana_helper::trig_counter_adc_fit(h_t3a, c2, 3);
+    c->Print(pdf_name);
+    c->Clear();
+    c->Divide(cols, rows);
+    nth_pad = 1;
+
+    // -- T3 -----
+    tmp_fit_result = ana_helper::trig_counter_tdc_fit(h_t3t, c, nth_pad);
+    Double_t t3_tdc_min = tmp_fit_result.additional[0];
+    Double_t t3_tdc_max = tmp_fit_result.additional[1];
+    tmp_fit_result = ana_helper::trig_counter_adc_fit(h_t3a, c, ++nth_pad);
     Double_t t3_adc_min = tmp_fit_result.additional[0];
 
-    tmp_fit_result = ana_helper::trig_counter_adc_fit(h_t4a, c2, 4);
+    // -- T4 -----
+    tmp_fit_result = ana_helper::trig_counter_tdc_fit(h_t4t, c, ++nth_pad);
+    Double_t t4_tdc_min = tmp_fit_result.additional[0];
+    Double_t t4_tdc_max = tmp_fit_result.additional[1];
+    tmp_fit_result = ana_helper::trig_counter_adc_fit(h_t4a, c, ++nth_pad);
     Double_t t4_adc_min = tmp_fit_result.additional[0];
+
+    c->Print(pdf_name);
+    c->Clear();
+    c->Divide(1, 1);
+    nth_pad = 1;
+
+    // -- bac sum -----
+    tmp_fit_result = ana_helper::cherenkov_tdc_fit(h_bacsumt, c, nth_pad);
+    Double_t bac_tdc_min = tmp_fit_result.additional[0];
+    Double_t bac_tdc_max = tmp_fit_result.additional[1];
 
     
     // +--------------------------+
@@ -195,7 +206,7 @@ void analyze(Int_t run_num)
     auto *f_ped = new TFile( pedestal_file_path.Data() );
     if (!f_ped || f_ped->IsZombie()) {
         std::cerr << "Error: Could not open file : " << pedestal_file_path << std::endl;
-        return;
+        return {};
     }
     TTreeReader reader_ped("tree", f_ped);
     TTreeReaderValue<Int_t> run_num_ped(reader_ped, "run_num");
@@ -300,147 +311,154 @@ void analyze(Int_t run_num)
     // | Estimate one photon gain of online sum |
     // +----------------------------------------+
     // -- fitting and estimate -----
-    TCanvas *c_correlation = ana_helper::add_tab(tab, "correlation");
-    // c_correlation->cd(1);
-    // gPad->SetLeftMargin(0.2);
-    // gPad->SetBottomMargin(0.15);
-    // auto *f_linear = new TF1("linear", "[0]*x+[1]", 0.0, 3500.0);
-    // f_linear->SetParameters(1., 0.);
-    // f_linear->SetLineColor(kRed);
-    // h_correlation->Fit(f_linear, "0Q", "", 0.0, 3500.0);
-    // std::vector<Double_t> result_f_linearit{};
-    // for (Int_t i = 0; i < 2; i++) result_f_linearit.push_back(f_linear->GetParameter(i));
-    // h_correlation->GetXaxis()->SetRangeUser(0.0, 4096.0);
-    // h_correlation->Draw("colz");
-    // f_linear->Draw("same");
+    c->Print(pdf_name);
+    c->Clear();
+    c->Divide(1, 1);
+    nth_pad = 1;
+    FitResult linear_fit_result = ana_helper::correlation_fit(h_correlation, c, nth_pad);
+    result_container["linear"].push_back(linear_fit_result);
 
-    tmp_fit_result = ana_helper::correlation_fit(h_correlation, c_correlation, 1);
     // -- calc and fill -----
-    for (const auto& pair : online_sum_container["raw"]) h_onsum_npe.raw->Fill( tmp_fit_result.par[0]*(pair.second - bacsum_ped_pos_val[0]) + tmp_fit_result.par[1] );
+    for (const auto& pair : online_sum_container["raw"]) h_onsum_npe.raw->Fill( linear_fit_result.par[0]*(pair.second - bacsum_ped_pos_val[0]) + linear_fit_result.par[1] );
     for (const auto& pair : online_sum_container["trig"]) {
-        h_onsum_npe.trig->Fill( tmp_fit_result.par[0]*(pair.second - bacsum_ped_pos_val[0]) + tmp_fit_result.par[1] );
-        if (pair.first) h_onsum_npe_shower->Fill( tmp_fit_result.par[0]*(pair.second - bacsum_ped_pos_val[0]) + tmp_fit_result.par[1] );
+        h_onsum_npe.trig->Fill( linear_fit_result.par[0]*(pair.second - bacsum_ped_pos_val[0]) + linear_fit_result.par[1] );
+        if (pair.first) h_onsum_npe_shower->Fill( linear_fit_result.par[0]*(pair.second - bacsum_ped_pos_val[0]) + linear_fit_result.par[1] );
     }
-    
-
-    // // -- calc and fill -----
-    // for (const auto& pair : online_sum_container["raw"]) h_onsum_npe.raw->Fill( result_f_linearit[0]*(pair.second - bacsum_ped_pos_val[0]) + result_f_linearit[1] );
-    // for (const auto& pair : online_sum_container["trig"]) {
-    //     h_onsum_npe.trig->Fill( result_f_linearit[0]*(pair.second - bacsum_ped_pos_val[0]) + result_f_linearit[1] );
-    //     if (pair.first) h_onsum_npe_shower->Fill( result_f_linearit[0]*(pair.second - bacsum_ped_pos_val[0]) + result_f_linearit[1] );
-    // }
-
 
 
     //  +-----------------+
     //  | Draw histograms |
     //  +-----------------+
-
     // -- indiv adc -----
-    TCanvas *c_indiv_adc = ana_helper::add_tab(tab, "indiv_adc");
-    c_indiv_adc->Divide(2,2);
-    TH1D *h_baca_clone[conf.max_bac_ch];
+    c->Print(pdf_name);
+    c->Clear();
+    c->Divide(cols, rows);
+    nth_pad = 1;
+
     for (Int_t ch = 0; ch < conf.max_bac_ch; ch++) {
-        c_indiv_adc->cd(ch+1);
+        if (nth_pad > max_pads) {
+            c->Print(pdf_name);
+            c->Clear();
+            c->Divide(cols, rows);
+            nth_pad = 1;
+        }
+        c->cd(nth_pad);
         // gPad->SetLogy(1);
         Double_t peak_pos = h_baca[ch].raw->GetMean();
         Double_t stdev = h_baca[ch].raw->GetStdDev();
-        h_baca[ch].raw->GetXaxis()->SetRangeUser(peak_pos - 5.0*stdev, peak_pos + 5.0*stdev);
-        h_baca[ch].raw->Draw();
-        h_baca[ch].trig->SetLineColor(kRed);
-        h_baca[ch].trig->SetFillColor(kRed);
-        h_baca[ch].trig->SetFillStyle(3003);
+        // h_baca[ch].raw->GetXaxis()->SetRangeUser(peak_pos - 5.0*stdev, peak_pos + 5.0*stdev);
+        // h_baca[ch].raw->SetLineColor(kBlue);
+        // h_baca[ch].raw->Draw();
+        // h_baca[ch].trig->SetLineColor(kRed);
+        // h_baca[ch].trig->SetFillColor(kRed);
+        // h_baca[ch].trig->SetFillStyle(3003);
+        h_baca[ch].trig->GetXaxis()->SetRangeUser(peak_pos - 5.0*stdev, peak_pos + 5.0*stdev);
         h_baca[ch].trig->Draw("same");
+        nth_pad++;
     }
 
     // -- indiv NPE -----
-    TCanvas *c_indiv_npe = ana_helper::add_tab(tab, "indiv_npe");
-    c_indiv_npe->Divide(2,2);
     for (Int_t ch = 0; ch < conf.max_bac_ch; ch++) {
-        c_indiv_npe->cd(ch+1);
+        if (nth_pad > max_pads) {
+            c->Print(pdf_name);
+            c->Clear();
+            c->Divide(cols, rows);
+            nth_pad = 1;
+        }
+        c->cd(nth_pad);
         // gPad->SetLogy(1);
-        h_npe[ch].raw->GetXaxis()->SetRangeUser(-5, 100.0);
-        h_npe[ch].raw->Draw();
-        h_npe[ch].trig->SetLineColor(kRed);
-        h_npe[ch].trig->SetFillColor(kRed);
-        h_npe[ch].trig->SetFillStyle(3003);
-        h_npe[ch].trig->Draw("same");
-        h_npe_shower[ch]->SetLineColor(kBlue);
-        h_npe_shower[ch]->SetFillColor(kBlue);
+        // h_npe[ch].raw->GetXaxis()->SetRangeUser(-5, 100.0);
+        // h_npe[ch].raw->SetLineColor(kBlue);
+        // h_npe[ch].raw->Draw();
+        // h_npe[ch].trig->SetLineColor(kRed);
+        // h_npe[ch].trig->SetFillColor(kRed);
+        // h_npe[ch].trig->SetFillStyle(3003);
+        FitResult result = ana_helper::npe_gauss_fit(h_npe[ch].trig, c, nth_pad);
+        result_container[Form("indiv_npe_%d", ch)].push_back(result);
+        h_npe_shower[ch]->SetLineColor(kGreen);
+        h_npe_shower[ch]->SetFillColor(kGreen);
         h_npe_shower[ch]->SetFillStyle(3003);
         h_npe_shower[ch]->Draw("same");
+        nth_pad++;
     }
 
     // -- sum adc -----
     {
-        TCanvas *c_sum_adc = ana_helper::add_tab(tab, "sum_adc");
-        c_sum_adc->Divide(2, 1);
-        c_sum_adc->cd(1);
+        c->Print(pdf_name);
+        c->Clear();
+        c->Divide(2, 1);
+        nth_pad = 1;
+
+        c->cd(nth_pad);
         Double_t peak_pos = h_offsum_adc.raw->GetMean();
         Double_t stdev = h_offsum_adc.raw->GetStdDev();
-        h_offsum_adc.raw->GetXaxis()->SetRangeUser(peak_pos - 5.0*stdev, peak_pos + 5.0*stdev);
-        h_offsum_adc.raw->Draw();
-        h_offsum_adc.trig->SetLineColor(kRed);
-        h_offsum_adc.trig->SetFillColor(kRed);
-        h_offsum_adc.trig->SetFillStyle(3003);
+        // h_offsum_adc.raw->GetXaxis()->SetRangeUser(peak_pos - 5.0*stdev, peak_pos + 5.0*stdev);
+        // h_offsum_adc.raw->SetLineColor(kBlue);
+        // h_offsum_adc.raw->Draw();
+        // h_offsum_adc.trig->SetLineColor(kRed);
+        // h_offsum_adc.trig->SetFillColor(kRed);
+        // h_offsum_adc.trig->SetFillStyle(3003);
+        h_offsum_adc.trig->GetXaxis()->SetRangeUser(peak_pos - 5.0*stdev, peak_pos + 5.0*stdev);
         h_offsum_adc.trig->Draw("same");
+        nth_pad++;
 
-        c_sum_adc->cd(2);
-        h_onsum_adc.raw->GetXaxis()->SetRangeUser(peak_pos - 5.0*stdev, peak_pos + 5.0*stdev);
-        h_onsum_adc.raw->Draw();
-        h_onsum_adc.trig->SetLineColor(kRed);
-        h_onsum_adc.trig->SetFillColor(kRed);
-        h_onsum_adc.trig->SetFillStyle(3003);
+        c->cd(nth_pad);
+        // h_onsum_adc.raw->GetXaxis()->SetRangeUser(peak_pos - 5.0*stdev, peak_pos + 5.0*stdev);
+        // h_onsum_adc.raw->SetLineColor(kBlue);
+        // h_onsum_adc.raw->Draw();
+        // h_onsum_adc.trig->SetLineColor(kRed);
+        // h_onsum_adc.trig->SetFillColor(kRed);
+        // h_onsum_adc.trig->SetFillStyle(3003);
+        h_onsum_adc.trig->GetXaxis()->SetRangeUser(peak_pos - 5.0*stdev, peak_pos + 5.0*stdev);
         h_onsum_adc.trig->Draw("same");
+        nth_pad++;
     }
 
     // -- sum npe -----
     {
-        TCanvas *c_sum_npe = ana_helper::add_tab(tab, "sum_npe");
-        c_sum_npe->Divide(2, 1);
-        c_sum_npe->cd(1);
-        Double_t peak_pos = h_offsum_npe.raw->GetMean();
-        Double_t stdev = h_offsum_npe.raw->GetStdDev();
-        h_offsum_npe.raw->GetXaxis()->SetRangeUser(peak_pos - 5.0*stdev, peak_pos + 5.0*stdev);
-        h_offsum_npe.raw->Draw();
-        h_offsum_npe.trig->SetLineColor(kRed);
-        h_offsum_npe.trig->SetFillColor(kRed);
-        h_offsum_npe.trig->SetFillStyle(3003);
-        // h_offsum_npe.trig->Draw("same");
-        ana_helper::conv_poisson_fit(h_offsum_npe.trig, c_sum_npe, 1, tmp_fit_result.par[0]*bacsum_ped_sig_val[0]+tmp_fit_result.par[1]);
-        h_offsum_npe_shower->SetLineColor(kBlue);
-        h_offsum_npe_shower->SetFillColor(kBlue);
+        c->Print(pdf_name);
+        c->Clear();
+        c->Divide(2, 1);
+        nth_pad = 1;
+        
+        c->cd(nth_pad);
+        // Double_t peak_pos = h_offsum_npe.raw->GetMean();
+        // Double_t stdev = h_offsum_npe.raw->GetStdDev();
+        // h_offsum_npe.raw->GetXaxis()->SetRangeUser(peak_pos - 5.0*stdev, peak_pos + 5.0*stdev);
+        // h_offsum_npe.raw->SetLineColor(kBlue);
+        // h_offsum_npe.raw->Draw();
+        // h_offsum_npe.trig->SetLineColor(kRed);
+        // h_offsum_npe.trig->SetFillColor(kRed);
+        // h_offsum_npe.trig->SetFillStyle(3003);
+        FitResult offsum_result = ana_helper::npe_gauss_fit(h_offsum_npe.trig, c, nth_pad, 1.5);
+        result_container["offsum_npe"].push_back(offsum_result);
+        h_offsum_npe_shower->SetLineColor(kGreen);
+        h_offsum_npe_shower->SetFillColor(kGreen);
         h_offsum_npe_shower->SetFillStyle(3003);
         h_offsum_npe_shower->Draw("same");
+        nth_pad++;
 
-        c_sum_npe->cd(2);
-        h_onsum_npe.raw->GetXaxis()->SetRangeUser(peak_pos - 5.0*stdev, peak_pos + 5.0*stdev);
-        h_onsum_npe.raw->Draw();
-        h_onsum_npe.trig->SetLineColor(kRed);
-        h_onsum_npe.trig->SetFillColor(kRed);
-        h_onsum_npe.trig->SetFillStyle(3003);
-        h_onsum_npe.trig->Draw("same");
-        h_onsum_npe_shower->SetLineColor(kBlue);
-        h_onsum_npe_shower->SetFillColor(kBlue);
+        c->cd(nth_pad);
+        // h_onsum_npe.raw->GetXaxis()->SetRangeUser(peak_pos - 5.0*stdev, peak_pos + 5.0*stdev);
+        // h_onsum_npe.raw->SetLineColor(kBlue);
+        // h_onsum_npe.raw->Draw();
+        // h_onsum_npe.trig->SetLineColor(kRed);
+        // h_onsum_npe.trig->SetFillColor(kRed);
+        // h_onsum_npe.trig->SetFillStyle(3003);
+        FitResult onsum_result = ana_helper::npe_gauss_fit(h_onsum_npe.trig, c, nth_pad, 1.5);
+        result_container["onsum_npe"].push_back(onsum_result);
+        h_onsum_npe_shower->SetLineColor(kGreen);
+        h_onsum_npe_shower->SetFillColor(kGreen);
         h_onsum_npe_shower->SetFillStyle(3003);
         h_onsum_npe_shower->Draw("same");
+        nth_pad++;
     }
 
-    // -- threshold -----
-    TCanvas *c_threshold = ana_helper::add_tab(tab, "threshold");
-    h_divided->Divide( h_onsum_npe.trig, h_onsum_npe.raw, 1, 1 );
-    // std::vector<std::vector<Double_t>> result_threshold{};
-    // result = fit_threshold(h_divided, c_threshold, 1);
-    // result_threshold.push_back(result);
-    h_divided->Draw();
+    c->Print(pdf_name);
+    if (start_or_end == 2 || start_or_end == 3) c->Print(pdf_name + "]"); // end
+    gROOT->Reset();
 
-
-    // -- add tab and draw window -----
-    main->AddFrame(tab, new TGLayoutHints(kLHintsExpandX | kLHintsExpandY));
-    main->MapSubwindows();
-    main->Resize(main->GetDefaultSize());
-    main->MapWindow();
-
+    return result_container;
 }
 
 Int_t main(int argc, char** argv) {
@@ -457,11 +475,7 @@ Int_t main(int argc, char** argv) {
     }
     Int_t run_num = std::atoi(argv[1]);
 
-    TApplication *theApp = new TApplication("App", &argc, argv);
-
-    analyze(run_num);
+    analyze(run_num, 3);
     
-    theApp->Run();
-
     return 0;
 }
