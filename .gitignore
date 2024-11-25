@@ -1,3 +1,4 @@
 .build
 bin
 results
+include/paths.h

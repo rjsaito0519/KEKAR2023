@@ -26,8 +26,9 @@
 #include "config.h"
 #include "param.h"
 #include "ana_helper.h"
+#include "paths.h"
 
-static const TString pdf_name =  "./results/img/bac_pos_scan_analysis.pdf";
+static const TString pdf_name =  OUTPUT_DIR + "/img/bac_pos_scan_analysis.pdf";
 
 std::unordered_map<std::string, std::vector<FitResult>> analyze(Int_t run_num, Int_t start_or_end = 0) // 0: mid_page, 1:start_page, 2: end_page, 3: both
 {   
@@ -56,7 +57,7 @@ std::unordered_map<std::string, std::vector<FitResult>> analyze(Int_t run_num, I
     // +----------------+
     // | load root file |
     // +----------------+
-    TString root_file_path = Form( "../root/kekar_run%05d.root", run_num );
+    TString root_file_path = Form("%s/kekar_run%05d.root", DATA_DIR.Data(), run_num);
     auto *f = new TFile( root_file_path.Data() );
     if (!f || f->IsZombie()) {
         std::cerr << "Error: Could not open file : " << root_file_path << std::endl;
@@ -202,7 +203,7 @@ std::unordered_map<std::string, std::vector<FitResult>> analyze(Int_t run_num, I
     // | Preparation for 2nd fill |
     // +--------------------------+
     // -- load pedestal data -----
-    TString pedestal_file_path = "./data/pedestal.root";
+    TString pedestal_file_path = WORK_DIR + "/data/pedestal.root";
     auto *f_ped = new TFile( pedestal_file_path.Data() );
     if (!f_ped || f_ped->IsZombie()) {
         std::cerr << "Error: Could not open file : " << pedestal_file_path << std::endl;
@@ -512,7 +513,7 @@ Int_t main(int argc, char** argv) {
     // +--------------------------+
     // | prepare output root file |
     // +--------------------------+
-    TString output_path = "./results/root/bac_pos_scan_analysis.root";
+    TString output_path = OUTPUT_DIR + "/root/bac_pos_scan_analysis.root";
     if (std::ifstream(output_path.Data())) std::remove(output_path.Data());
     TFile fout(output_path.Data(), "create");
     TTree output_tree("tree", ""); 
@@ -590,7 +591,6 @@ Int_t main(int argc, char** argv) {
     fout.cd(); // 明示的にカレントディレクトリを設定
     output_tree.Write();
     fout.Close(); 
-
 
 
     return 0;
