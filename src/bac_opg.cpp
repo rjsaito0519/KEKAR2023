@@ -25,6 +25,8 @@
 #include "config.h"
 #include "param.h"
 #include "ana_helper.h"
+#include "paths.h"
+
 
 std::vector<std::vector<Double_t>> analyze(Int_t run_num, Int_t ch, TVirtualPad *c, Int_t n_c)
 {   
@@ -46,7 +48,7 @@ std::vector<std::vector<Double_t>> analyze(Int_t run_num, Int_t ch, TVirtualPad 
     // +----------------+
     // | load root file |
     // +----------------+
-    TString root_file_path = Form( "../root/kekar_run%05d.root", run_num );
+    TString root_file_path = Form("%s/kekar_run%05d.root", DATA_DIR.Data(), run_num);
     auto *f = new TFile( root_file_path.Data() );
     if (!f || f->IsZombie()) {
         std::cerr << "Error: Could not open file : " << root_file_path << std::endl;
@@ -206,7 +208,7 @@ Int_t main(int argc, char** argv) {
     // +--------------------------+
     // | prepare output root file |
     // +--------------------------+
-    TString output_path = "./results/root/bac_opg.root";
+    TString output_path = OUTPUT_DIR + "/root/bac_opg.root";
     if (std::ifstream(output_path.Data())) std::remove(output_path.Data());
     TFile fout(output_path.Data(), "create");
     TTree output_tree("tree", ""); 
@@ -229,7 +231,7 @@ Int_t main(int argc, char** argv) {
     Int_t rows = 2;
     Int_t cols = 2;
     Int_t max_pads = rows * cols;
-    TString pdf_name = "./results/img/bac_opg.pdf";
+    TString pdf_name = OUTPUT_DIR + "/img/bac_opg.pdf";
 
     auto *c = new TCanvas("", "", 1500, 1200);
     c->Divide(cols, rows);
