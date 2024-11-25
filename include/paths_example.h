@@ -3,8 +3,8 @@
 
 #include <Rtypes.h>
 
-const TString DATA_DIR   = "/mnt/c/Users/saito/root/KEKAR2023/root";
-const TString OUTPUT_DIR = "/mnt/c/Users/saito/root/KEKAR2023/code/results";
-const TString WORK_DIR   = "/mnt/c/Users/saito/root/KEKAR2023/code";
+static const TString DATA_DIR   = "/mnt/c/Users/saito/root/KEKAR2023/root";
+static const TString OUTPUT_DIR = "/mnt/c/Users/saito/root/KEKAR2023/code/results";
+static const TString WORK_DIR   = "/mnt/c/Users/saito/root/KEKAR2023/code";
 
 #endif // PATHS_EXAMPLE_H
