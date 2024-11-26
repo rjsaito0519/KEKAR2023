@@ -64,7 +64,7 @@ void analyze(Int_t run_num, Int_t ch, TVirtualPad *c, Int_t n_c)
     // +-------------------+
     // | Prepare histogram |
     // +-------------------+
-    auto *h = new TH1D(Form("BACa_%d_%d", run_num, ch+1), Form("run%05d BAC(ADC) ch%d;ADC;", run_num, ch+1), conf.adc_bin_num, conf.adc_min, conf.adc_max);
+    auto *h = new TH1D(Form("KVCa_%d_%d", run_num, ch+1), Form("run%05d KVC(ADC) ch%d;ADC;", run_num, ch+1), conf.adc_bin_num, conf.adc_min, conf.adc_max);
 
     // +------------------+
     // | Fill event (1st) |
