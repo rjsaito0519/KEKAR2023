@@ -55,19 +55,19 @@ std::vector<std::vector<Double_t>> analyze(Int_t run_num, Int_t ch, TVirtualPad 
         return {};
     }
     TTreeReader reader("tree", f);
-    TTreeReaderArray<Double_t> baca(reader, "baca");
+    TTreeReaderArray<Double_t> kvca(reader, "kvca");
 
     // +-------------------+
     // | Prepare histogram |
     // +-------------------+
-    auto *h = new TH1D(Form("BACa_%d_%d", run_num, ch+1), Form("run%05d BAC(ADC) ch%d;ADC;", run_num, ch+1), conf.adc_bin_num, conf.adc_min, conf.adc_max);
+    auto *h = new TH1D(Form("KVCa_%d_%d", run_num, ch+1), Form("run%05d KVC(ADC) ch%d;ADC;", run_num, ch+1), conf.adc_bin_num, conf.adc_min, conf.adc_max);
 
     // +------------------+
     // | Fill event (1st) |
     // +------------------+
     reader.Restart();
     while (reader.Next()){
-        h->Fill(baca[ch]);
+        h->Fill(kvca[ch]);
     }
 
     // +--------------+
@@ -82,7 +82,7 @@ std::vector<std::vector<Double_t>> analyze(Int_t run_num, Int_t ch, TVirtualPad 
 
     // -- load and set parameter -----
     TString key = Form("%05d-%d", run_num, ch);
-    std::vector<Double_t> par = param::bac_opg_fit.count(key.Data()) ? param::bac_opg_fit.at(key.Data()) : param::bac_opg_fit.at("default");
+    std::vector<Double_t> par = param::kvc_opg_fit.count(key.Data()) ? param::kvc_opg_fit.at(key.Data()) : param::kvc_opg_fit.at("default");
     Double_t n_gauss         = par[0];
     Double_t first_peak_pos  = par[1];
     Double_t fit_range_left  = par[2];
@@ -169,105 +169,105 @@ std::vector<std::vector<Double_t>> analyze(Int_t run_num, Int_t ch, TVirtualPad 
 Int_t main(int argc, char** argv) {
     Config& conf = Config::getInstance();
 
-    // // +-------------+
-    // // | dev version |
-    // // +-------------+
-    // // -- check argments -----
-    // if (argc < 2) {
-    //     std::cerr << "Usage: " << argv[0] << " <run number>" << std::endl;
-    //     return 1;
-    // }
-    // Int_t run_num = std::atoi(argv[1]);
-
-    // TApplication *theApp = new TApplication("App", &argc, argv);
-
-    // // -- create window -----
-    // TGMainFrame *main = new TGMainFrame(gClient->GetRoot(), 1000, 800);
-    // main->Connect("CloseWindow()", "TApplication", gApplication, "Terminate()");
-    // TGTab *tab = new TGTab(main, 1000, 800);
-
-    // // -- test -----
-    // TCanvas *c = add_tab(tab, "bac");
-    // c->Divide(2, 2);
-    // for (Int_t ch = 0; ch < conf.max_bac_ch; ch++) analyze(run_num, ch, c, ch+1);
-
-    // // -- add tab and draw window -----
-    // main->AddFrame(tab, new TGLayoutHints(kLHintsExpandX | kLHintsExpandY));
-    // main->MapSubwindows();
-    // main->Resize(main->GetDefaultSize());
-    // main->MapWindow();
-    
-    // theApp->Run();
-
-
     // +-------------+
-    // | pro version |
+    // | dev version |
     // +-------------+
-    std::vector<Int_t> ana_run_num{ 138, 142, 144, 147, 149, 150, 153, 154, 157, 158, 160, 162, 164, 167, 169, 174, 176, 178, 180, 238, 239, 240 };
-
-    // +--------------------------+
-    // | prepare output root file |
-    // +--------------------------+
-    TString output_path = OUTPUT_DIR + "/root/bac_opg.root";
-    if (std::ifstream(output_path.Data())) std::remove(output_path.Data());
-    TFile fout(output_path.Data(), "create");
-    TTree output_tree("tree", ""); 
-
-    // -- prepare root file branch -----
-    std::vector<Double_t> result_val, result_err;
-    Int_t tmp_run_num, tmp_ch;
-    Double_t cal_opg_val, cal_opg_err;
-
-    output_tree.Branch("run_num", &tmp_run_num, "run_num/I");
-    output_tree.Branch("ch", &tmp_ch, "ch/I");
-    output_tree.Branch("result_val", &result_val);
-    output_tree.Branch("result_err", &result_err);
-    output_tree.Branch("cal_opg_val", &cal_opg_val, "cal_opg_val/D");
-    output_tree.Branch("cal_opg_err", &cal_opg_err, "cal_opg_err/D");
-
-
-    // -- prepare pdf -----
-    Int_t nth_pad = 1;
-    Int_t rows = 2;
-    Int_t cols = 2;
-    Int_t max_pads = rows * cols;
-    TString pdf_name = OUTPUT_DIR + "/img/bac_opg.pdf";
-
-    auto *c = new TCanvas("", "", 1500, 1200);
-    c->Divide(cols, rows);
-    c->Print(pdf_name + "["); // start
-    for (const auto &run_num : ana_run_num) {
-        for (Int_t ch = 0; ch < conf.max_bac_ch; ch++) {
-            if (nth_pad > max_pads) {
-                c->Print(pdf_name);
-                c->Clear();
-                c->Divide(cols, rows);
-                nth_pad = 1;
-            }
-
-            TString key = Form("%05d-%d", run_num, ch);
-            if (param::bac_opg_fit.count(key.Data())) {
-                tmp_run_num = run_num; tmp_ch = ch;
-                std::vector<std::vector<Double_t>> result_container = analyze(run_num, ch, c, nth_pad);
-                cal_opg_val = result_container[0].back();
-                cal_opg_err = result_container[1].back();
-                result_val.assign(result_container[0].begin(), result_container[0].end() - 1);
-                result_err.assign(result_container[1].begin(), result_container[1].end() - 1);
-                output_tree.Fill();
-            }
-            nth_pad++;
-        }
+    // -- check argments -----
+    if (argc < 2) {
+        std::cerr << "Usage: " << argv[0] << " <run number>" << std::endl;
+        return 1;
     }
-    c->Print(pdf_name);
-    c->Print(pdf_name + "]"); // end
-    delete c;
+    Int_t run_num = std::atoi(argv[1]);
 
-    // +------------+
-    // | Write data |
-    // +------------+
-    fout.cd(); // 明示的にカレントディレクトリを設定
-    output_tree.Write();
-    fout.Close(); 
+    TApplication *theApp = new TApplication("App", &argc, argv);
+
+    // -- create window -----
+    TGMainFrame *main = new TGMainFrame(gClient->GetRoot(), 1000, 800);
+    main->Connect("CloseWindow()", "TApplication", gApplication, "Terminate()");
+    TGTab *tab = new TGTab(main, 1000, 800);
+
+    // -- test -----
+    TCanvas *c = ana_helper::add_tab(tab, "kvc");
+    c->Divide(2, 2);
+    for (Int_t ch = 0; ch < conf.max_kvc_ch; ch++) analyze(run_num, ch, c, ch+1);
+
+    // -- add tab and draw window -----
+    main->AddFrame(tab, new TGLayoutHints(kLHintsExpandX | kLHintsExpandY));
+    main->MapSubwindows();
+    main->Resize(main->GetDefaultSize());
+    main->MapWindow();
+    
+    theApp->Run();
+
+
+    // // +-------------+
+    // // | pro version |
+    // // +-------------+
+    // std::vector<Int_t> ana_run_num{ 138, 142, 144, 147, 149, 150, 153, 154, 157, 158, 160, 162, 164, 167, 169, 174, 176, 178, 180, 238, 239, 240 };
+
+    // // +--------------------------+
+    // // | prepare output root file |
+    // // +--------------------------+
+    // TString output_path = OUTPUT_DIR + "/root/kvc_opg.root";
+    // if (std::ifstream(output_path.Data())) std::remove(output_path.Data());
+    // TFile fout(output_path.Data(), "create");
+    // TTree output_tree("tree", ""); 
+
+    // // -- prepare root file branch -----
+    // std::vector<Double_t> result_val, result_err;
+    // Int_t tmp_run_num, tmp_ch;
+    // Double_t cal_opg_val, cal_opg_err;
+
+    // output_tree.Branch("run_num", &tmp_run_num, "run_num/I");
+    // output_tree.Branch("ch", &tmp_ch, "ch/I");
+    // output_tree.Branch("result_val", &result_val);
+    // output_tree.Branch("result_err", &result_err);
+    // output_tree.Branch("cal_opg_val", &cal_opg_val, "cal_opg_val/D");
+    // output_tree.Branch("cal_opg_err", &cal_opg_err, "cal_opg_err/D");
+
+
+    // // -- prepare pdf -----
+    // Int_t nth_pad = 1;
+    // Int_t rows = 2;
+    // Int_t cols = 2;
+    // Int_t max_pads = rows * cols;
+    // TString pdf_name = OUTPUT_DIR + "/img/kvc_opg.pdf";
+
+    // auto *c = new TCanvas("", "", 1500, 1200);
+    // c->Divide(cols, rows);
+    // c->Print(pdf_name + "["); // start
+    // for (const auto &run_num : ana_run_num) {
+    //     for (Int_t ch = 0; ch < conf.max_kvc_ch; ch++) {
+    //         if (nth_pad > max_pads) {
+    //             c->Print(pdf_name);
+    //             c->Clear();
+    //             c->Divide(cols, rows);
+    //             nth_pad = 1;
+    //         }
+
+    //         TString key = Form("%05d-%d", run_num, ch);
+    //         if (param::kvc_opg_fit.count(key.Data())) {
+    //             tmp_run_num = run_num; tmp_ch = ch;
+    //             std::vector<std::vector<Double_t>> result_container = analyze(run_num, ch, c, nth_pad);
+    //             cal_opg_val = result_container[0].kvck();
+    //             cal_opg_err = result_container[1].kvck();
+    //             result_val.assign(result_container[0].begin(), result_container[0].end() - 1);
+    //             result_err.assign(result_container[1].begin(), result_container[1].end() - 1);
+    //             output_tree.Fill();
+    //         }
+    //         nth_pad++;
+    //     }
+    // }
+    // c->Print(pdf_name);
+    // c->Print(pdf_name + "]"); // end
+    // delete c;
+
+    // // +------------+
+    // // | Write data |
+    // // +------------+
+    // fout.cd(); // 明示的にカレントディレクトリを設定
+    // output_tree.Write();
+    // fout.Close(); 
 
     return 0;
 }
