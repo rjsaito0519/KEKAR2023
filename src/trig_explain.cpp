@@ -146,57 +146,56 @@ std::unordered_map<std::string, std::vector<FitResult>> analyze(Int_t run_num, I
     // | fit and plot |
     // +--------------+
     // -- make canvas and draw -----
-    Int_t nth_pad = 1;
-    const Int_t rows = 2;
-    const Int_t cols = 2;
-    const Int_t max_pads = rows * cols;
-    auto *c = new TCanvas("", "", 1500, 1200);
-    c->Divide(cols, rows);
-    if (start_or_end == 1 || start_or_end == 3) c->Print(pdf_name + "["); // start
+    // -- create window -----
+    TGMainFrame *main = new TGMainFrame(gClient->GetRoot(), 1000, 800);
+    main->Connect("CloseWindow()", "TApplication", gApplication, "Terminate()");
+    TGTab *tab = new TGTab(main, 1000, 800);
+
+
+    TCanvas *c_trig1 = ana_helper::add_tab(tab, "trigger");
+    c_trig1->Divide(2, 2);
 
     // -- T1 -----
     FitResult tmp_fit_result;
-    tmp_fit_result = ana_helper::trig_counter_tdc_fit(h_t1t, c, nth_pad);
+    tmp_fit_result = ana_helper::trig_counter_tdc_fit(h_t1t, c_trig1, 1);
     Double_t t1_tdc_min = tmp_fit_result.additional[0];
     Double_t t1_tdc_max = tmp_fit_result.additional[1];
-    tmp_fit_result = ana_helper::trig_counter_adc_fit(h_t1a, c, ++nth_pad);
+    tmp_fit_result = ana_helper::trig_counter_adc_fit(h_t1a, c_trig1, 2);
     Double_t t1_adc_min = tmp_fit_result.additional[0];
 
     // -- T2 -----
-    tmp_fit_result = ana_helper::trig_counter_tdc_fit(h_t2t, c, ++nth_pad);
+    tmp_fit_result = ana_helper::trig_counter_tdc_fit(h_t2t, c_trig1, 3);
     Double_t t2_tdc_min = tmp_fit_result.additional[0];
     Double_t t2_tdc_max = tmp_fit_result.additional[1];
-    tmp_fit_result = ana_helper::trig_counter_adc_fit(h_t2a, c, ++nth_pad);
+    tmp_fit_result = ana_helper::trig_counter_adc_fit(h_t2a, c_trig1, 4);
     Double_t t2_adc_min = tmp_fit_result.additional[0];
 
-    c->Print(pdf_name);
-    c->Clear();
-    c->Divide(cols, rows);
-    nth_pad = 1;
+    
+    TCanvas *c_trig2 = ana_helper::add_tab(tab, "trigger");
+    c_trig2->Divide(2, 2);
 
     // -- T3 -----
-    tmp_fit_result = ana_helper::trig_counter_tdc_fit(h_t3t, c, nth_pad);
+    tmp_fit_result = ana_helper::trig_counter_tdc_fit(h_t3t, c_trig2, 1);
     Double_t t3_tdc_min = tmp_fit_result.additional[0];
     Double_t t3_tdc_max = tmp_fit_result.additional[1];
-    tmp_fit_result = ana_helper::trig_counter_adc_fit(h_t3a, c, ++nth_pad);
+    tmp_fit_result = ana_helper::trig_counter_adc_fit(h_t3a, c_trig2, 2);
     Double_t t3_adc_min = tmp_fit_result.additional[0];
 
     // -- T4 -----
-    tmp_fit_result = ana_helper::trig_counter_tdc_fit(h_t4t, c, ++nth_pad);
+    tmp_fit_result = ana_helper::trig_counter_tdc_fit(h_t4t, c_trig2, 3);
     Double_t t4_tdc_min = tmp_fit_result.additional[0];
     Double_t t4_tdc_max = tmp_fit_result.additional[1];
-    tmp_fit_result = ana_helper::trig_counter_adc_fit(h_t4a, c, ++nth_pad);
+    tmp_fit_result = ana_helper::trig_counter_adc_fit(h_t4a, c_trig2, 4);
     Double_t t4_adc_min = tmp_fit_result.additional[0];    
 
-    c->Print(pdf_name);
-    c->Clear();
-    c->Divide(1, 1);
-    nth_pad = 1;
 
+    TCanvas *c_bact = ana_helper::add_tab(tab, "bac");
+    
     // -- bac sum -----
-    tmp_fit_result = ana_helper::cherenkov_tdc_fit(h_bacsumt, c, nth_pad);
+    tmp_fit_result = ana_helper::cherenkov_tdc_fit(h_bacsumt, c_bact, 1);
     Double_t bac_tdc_min = tmp_fit_result.additional[0];
     Double_t bac_tdc_max = tmp_fit_result.additional[1];
+
 
     
     // +--------------------------+
@@ -264,13 +263,15 @@ std::unordered_map<std::string, std::vector<FitResult>> analyze(Int_t run_num, I
 
         // -- check shower -----
         Bool_t shower_flag = false;
-        for (Int_t ch = 0; ch < conf.max_kvc_ch; ch++) {
-            if (!std::binary_search(should_hit_ch.begin(), should_hit_ch.end(), ch) 
-                && shower_adc_min[ch] < kvcsuma[ch] 
-                && shower_tdc_gate[ch].first < kvcsumt[ch]
-                && kvcsumt[ch] < shower_tdc_gate[ch].second 
-            ) shower_flag = true;
-        }
+        // for (Int_t ch = 0; ch < conf.max_kvc_ch; ch++) {
+        //     if (!std::binary_search(should_hit_ch.begin(), should_hit_ch.end(), ch) 
+        //         && shower_adc_min[ch] < kvcsuma[ch] 
+        //         && shower_tdc_gate[ch].first < kvcsumt[ch]
+        //         && kvcsumt[ch] < shower_tdc_gate[ch].second 
+        //     ) shower_flag = true;
+        // }
+        if ( 600.0 < t3a[0] || 630.0 < t4a[0] ) shower_flag = true;
+
 
         // -- event selection and fill data -----
         if ( trig_flag_tdc && trig_flag_adc ) {
@@ -321,11 +322,9 @@ std::unordered_map<std::string, std::vector<FitResult>> analyze(Int_t run_num, I
     // | Estimate one photon gain of online sum |
     // +----------------------------------------+
     // -- fitting and estimate -----
-    c->Print(pdf_name);
-    c->Clear();
-    c->Divide(1, 1);
-    nth_pad = 1;
-    FitResult linear_fit_result = ana_helper::correlation_fit(h_correlation, c, nth_pad);
+    TCanvas *c_corr = ana_helper::add_tab(tab, "corr");
+
+    FitResult linear_fit_result = ana_helper::correlation_fit(h_correlation, c_corr, 1);
     result_container["linear"].push_back(linear_fit_result);
 
     // -- calc and fill -----
@@ -340,19 +339,11 @@ std::unordered_map<std::string, std::vector<FitResult>> analyze(Int_t run_num, I
     //  | Draw histograms |
     //  +-----------------+
     // -- indiv adc -----
-    c->Print(pdf_name);
-    c->Clear();
-    c->Divide(cols, rows);
-    nth_pad = 1;
+    TCanvas *c_indiva = ana_helper::add_tab(tab, "adc");
+    c_indiva->Divide(2, 2);
 
     for (Int_t ch = 0; ch < conf.max_bac_ch; ch++) {
-        if (nth_pad > max_pads) {
-            c->Print(pdf_name);
-            c->Clear();
-            c->Divide(cols, rows);
-            nth_pad = 1;
-        }
-        c->cd(nth_pad);
+        c_indiva->cd(ch+1);
         // gPad->SetLogy(1);
         Double_t peak_pos = h_baca[ch].raw->GetMean();
         Double_t stdev = h_baca[ch].raw->GetStdDev();
@@ -364,18 +355,14 @@ std::unordered_map<std::string, std::vector<FitResult>> analyze(Int_t run_num, I
         // h_baca[ch].trig->SetFillStyle(3003);
         h_baca[ch].trig->GetXaxis()->SetRangeUser(peak_pos - 5.0*stdev, peak_pos + 5.0*stdev);
         h_baca[ch].trig->Draw("same");
-        nth_pad++;
     }
 
     // -- indiv NPE -----
+    TCanvas *c_indivnpe = ana_helper::add_tab(tab, "adc");
+    c_indivnpe->Divide(2, 2);
+
     for (Int_t ch = 0; ch < conf.max_bac_ch; ch++) {
-        if (nth_pad > max_pads) {
-            c->Print(pdf_name);
-            c->Clear();
-            c->Divide(cols, rows);
-            nth_pad = 1;
-        }
-        c->cd(nth_pad);
+        c_indivnpe->cd(ch+1);
         // gPad->SetLogy(1);
         // h_npe[ch].raw->GetXaxis()->SetRangeUser(-5, 100.0);
         // h_npe[ch].raw->SetLineColor(kBlue);
@@ -383,23 +370,19 @@ std::unordered_map<std::string, std::vector<FitResult>> analyze(Int_t run_num, I
         // h_npe[ch].trig->SetLineColor(kRed);
         // h_npe[ch].trig->SetFillColor(kRed);
         // h_npe[ch].trig->SetFillStyle(3003);
-        FitResult result = ana_helper::npe_gauss_fit(h_npe[ch].trig, c, nth_pad);
+        FitResult result = ana_helper::npe_gauss_fit(h_npe[ch].trig, c_indivnpe, ch+1);
         result_container["indiv_npe"].push_back(result);
         h_npe_shower[ch]->SetLineColor(kGreen);
         h_npe_shower[ch]->SetFillColor(kGreen);
         h_npe_shower[ch]->SetFillStyle(3003);
         h_npe_shower[ch]->Draw("same");
-        nth_pad++;
     }
 
     // -- sum adc -----
+    TCanvas *c_suma = ana_helper::add_tab(tab, "adc");
+    c_suma->Divide(2, 1);
     {
-        c->Print(pdf_name);
-        c->Clear();
-        c->Divide(2, 1);
-        nth_pad = 1;
-
-        c->cd(nth_pad);
+        c_suma->cd(1);
         Double_t peak_pos = h_offsum_adc.raw->GetMean();
         Double_t stdev = h_offsum_adc.raw->GetStdDev();
         // h_offsum_adc.raw->GetXaxis()->SetRangeUser(peak_pos - 5.0*stdev, peak_pos + 5.0*stdev);
@@ -410,9 +393,8 @@ std::unordered_map<std::string, std::vector<FitResult>> analyze(Int_t run_num, I
         // h_offsum_adc.trig->SetFillStyle(3003);
         h_offsum_adc.trig->GetXaxis()->SetRangeUser(peak_pos - 5.0*stdev, peak_pos + 5.0*stdev);
         h_offsum_adc.trig->Draw("same");
-        nth_pad++;
 
-        c->cd(nth_pad);
+        c_suma->cd(2);
         // h_onsum_adc.raw->GetXaxis()->SetRangeUser(peak_pos - 5.0*stdev, peak_pos + 5.0*stdev);
         // h_onsum_adc.raw->SetLineColor(kBlue);
         // h_onsum_adc.raw->Draw();
@@ -421,17 +403,13 @@ std::unordered_map<std::string, std::vector<FitResult>> analyze(Int_t run_num, I
         // h_onsum_adc.trig->SetFillStyle(3003);
         h_onsum_adc.trig->GetXaxis()->SetRangeUser(peak_pos - 5.0*stdev, peak_pos + 5.0*stdev);
         h_onsum_adc.trig->Draw("same");
-        nth_pad++;
     }
 
     // -- sum npe -----
-    {
-        c->Print(pdf_name);
-        c->Clear();
-        c->Divide(2, 1);
-        nth_pad = 1;
-        
-        c->cd(nth_pad);
+    TCanvas *c_sumnpe = ana_helper::add_tab(tab, "adc");
+    c_sumnpe->Divide(2, 1);
+    {        
+        c_sumnpe->cd(1);
         // Double_t peak_pos = h_offsum_npe.raw->GetMean();
         // Double_t stdev = h_offsum_npe.raw->GetStdDev();
         // h_offsum_npe.raw->GetXaxis()->SetRangeUser(peak_pos - 5.0*stdev, peak_pos + 5.0*stdev);
@@ -440,32 +418,34 @@ std::unordered_map<std::string, std::vector<FitResult>> analyze(Int_t run_num, I
         // h_offsum_npe.trig->SetLineColor(kRed);
         // h_offsum_npe.trig->SetFillColor(kRed);
         // h_offsum_npe.trig->SetFillStyle(3003);
-        FitResult offsum_result = ana_helper::npe_gauss_fit(h_offsum_npe.trig, c, nth_pad, 1.5);
+        FitResult offsum_result = ana_helper::npe_gauss_fit(h_offsum_npe.trig, c_sumnpe, 1, 1.5);
         result_container["offsum_npe"].push_back(offsum_result);
         h_offsum_npe_shower->SetLineColor(kGreen);
         h_offsum_npe_shower->SetFillColor(kGreen);
         h_offsum_npe_shower->SetFillStyle(3003);
         h_offsum_npe_shower->Draw("same");
-        nth_pad++;
 
-        c->cd(nth_pad);
+        c_sumnpe->cd(2);
         // h_onsum_npe.raw->GetXaxis()->SetRangeUser(peak_pos - 5.0*stdev, peak_pos + 5.0*stdev);
         // h_onsum_npe.raw->SetLineColor(kBlue);
         // h_onsum_npe.raw->Draw();
         // h_onsum_npe.trig->SetLineColor(kRed);
         // h_onsum_npe.trig->SetFillColor(kRed);
         // h_onsum_npe.trig->SetFillStyle(3003);
-        FitResult onsum_result = ana_helper::npe_gauss_fit(h_onsum_npe.trig, c, nth_pad, 1.5);
+        FitResult onsum_result = ana_helper::npe_gauss_fit(h_onsum_npe.trig, c_sumnpe, 2, 1.5);
         result_container["onsum_npe"].push_back(onsum_result);
         h_onsum_npe_shower->SetLineColor(kGreen);
         h_onsum_npe_shower->SetFillColor(kGreen);
         h_onsum_npe_shower->SetFillStyle(3003);
         h_onsum_npe_shower->Draw("same");
-        nth_pad++;
     }
 
-    c->Print(pdf_name);
-    if (start_or_end == 2 || start_or_end == 3) c->Print(pdf_name + "]"); // end
+    // -- add tab and draw window -----
+    main->AddFrame(tab, new TGLayoutHints(kLHintsExpandX | kLHintsExpandY));
+    main->MapSubwindows();
+    main->Resize(main->GetDefaultSize());
+    main->MapWindow();
+    
 
     return result_container;
 }
@@ -484,8 +464,10 @@ Int_t main(int argc, char** argv) {
     }
     Int_t run_num = std::atoi(argv[1]);
 
-    analyze(run_num, 3);
 
+    TApplication *theApp = new TApplication("App", &argc, argv);
+    analyze(run_num, 3);
+    theApp->Run();
 
     return 0;
 }
