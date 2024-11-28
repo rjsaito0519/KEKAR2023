@@ -76,7 +76,8 @@ namespace ana_helper {
     FitResult pedestal_fit_with_gauss(TH1D *h, TCanvas *c, Int_t n_c, Double_t n_sigma = 1.0);
 
     // -- trigger counter -----
-    FitResult trig_counter_adc_fit(TH1D *h, TCanvas *c, Int_t n_c);
+    FitResult trig_counter_adc_erf_fit(TH1D *h, TCanvas *c, Int_t n_c);
+    FitResult trig_counter_adc_gauss_fit(TH1D *h, TCanvas *c, Int_t n_c);
     FitResult trig_counter_tdc_fit(TH1D *h, TCanvas *c, Int_t n_c);
 
     // -- cherenkov counter -----

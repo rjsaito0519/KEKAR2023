@@ -90,38 +90,71 @@ std::unordered_map<std::string, std::vector<FitResult>> analyze(Int_t run_num, I
     auto *h_t4t = new TH1D(Form("T4t_%d", run_num), Form("run%05d T4(TDC);TDC;", run_num), conf.tdc_bin_num, conf.tdc_min, conf.tdc_max);
 
     std::vector<HistPair> h_kvca;
+    std::vector<HistPair> h_onsum_adc;
+    std::vector<HistPair> h_offsum_adc;
+    TH1D* h_kvcsumt[conf.max_kvc_ch];
     for (Int_t ch = 0; ch < conf.max_kvc_ch; ch++) {
         TString name  = Form("KVCa_%d_%d", run_num, ch + 1);
-        TString title = Form("run%05d KVC(ADC) ch%d;ADC;", run_num, ch + 1);
+        TString title = Form("run%05d KVC(ADC) seg%d %s;ADC;", run_num, ch/2+2, ch%2==0 ? "UP" : "DOWN");
         h_kvca.emplace_back(name, title, conf.adjust_adc_bin_num, conf.adc_min, conf.adc_max);
+
+        name  = Form("KVConSUMa_%d_%d", run_num, ch+1);
+        title = Form("run%05d KVC online sum(ADC) seg%d;ADC;", run_num, ch+1);
+        h_onsum_adc.emplace_back(name, title, conf.sumadc_bin_num, conf.sumadc_min, conf.sumadc_max);
+
+        name  = Form("KVCoffSUMa_%d_%d", run_num, ch+1);
+        title = Form("run%05d KVC offline sum(ADC) seg%d;ADC;", run_num, ch+1);
+        h_offsum_adc.emplace_back(name, title, conf.sumadc_bin_num, conf.sumadc_min, conf.sumadc_max);
+    
+        h_kvcsumt[ch] = new TH1D(Form("KVCSUMt_%d_%d", run_num, ch+1), Form("run%05d KVCSUM(TDC) seg%d;TDC;", run_num, ch+1), conf.tdc_bin_num, conf.tdc_min, conf.tdc_max);
     }
-    HistPair h_onsum_adc(Form("KVConSUMa_%d", run_num), Form("run%05d KVC online sum(ADC);ADC;", run_num), conf.sumadc_bin_num, conf.sumadc_min, conf.sumadc_max);
-    HistPair h_offsum_adc(Form("KVCoffSUMa_%d", run_num), Form("run%05d KVC offline sum(ADC);ADC;", run_num), conf.sumadc_bin_num, conf.sumadc_min, conf.sumadc_max);
-    auto *h_kvcsumt = new TH1D(Form("KVCSUMt_%d", run_num), Form("run%05d KVCSUM(TDC);TDC;", run_num), conf.tdc_bin_num, conf.tdc_min, conf.tdc_max);
     
     // -- NPE -----
     std::vector<HistPair> h_npe;
+    std::vector<HistPair> h_onsum_npe;
+    std::vector<HistPair> h_offsum_npe;
     for (Int_t ch = 0; ch < conf.max_kvc_ch; ch++) {
         TString name  = Form("KVCnpe_%d_%d", run_num, ch + 1);
-        TString title = Form("run%05d KVC(NPE) ch%d;NPE;", run_num, ch + 1);
+        TString title = Form("run%05d KVC(NPE) seg%d %s;NPE;", run_num, ch/2+2, ch%2==0 ? "UP" : "DOWN");
         h_npe.emplace_back(name, title, conf.npe_bin_num, conf.npe_min, conf.npe_max);
+
+        name  = Form("KVConsumnpe_%d_%d", run_num, ch+1);
+        title = Form("run%05d KVC online SUM(NPE) seg%d;NPE;", run_num, ch+1);
+        h_onsum_npe.emplace_back(name, title, conf.npe_bin_num, conf.npe_min, conf.npe_max);
+
+        name  = Form("KVCoffsumnpe_%d_%d", run_num, ch+1);
+        title = Form("run%05d KVC offline SUM(NPE) seg%d;NPE;", run_num, ch+1);
+        h_offsum_npe.emplace_back(name, title, conf.npe_bin_num, conf.npe_min, conf.npe_max);
     }
-    HistPair h_onsum_npe(Form("KVConsumnpe_%d", run_num), Form("run%05d KVC online SUM(NPE);NPE;", run_num), conf.npe_bin_num, conf.npe_min, conf.npe_max);
-    HistPair h_offsum_npe(Form("KVCoffsumnpe_%d", run_num), Form("run%05d KVC offline sum(NPE);NPE;", run_num), conf.npe_bin_num, conf.npe_min, conf.npe_max);
    
     // shower event
     TH1D *h_npe_shower[conf.max_kvc_ch];
+    TH1D *h_onsum_npe_shower[conf.max_kvc_ch];
+    TH1D *h_offsum_npe_shower[conf.max_kvc_ch];
     for (Int_t ch = 0; ch < conf.max_kvc_ch; ch++) {
         TString name  = Form("KVCnpe_shower_%d_%d", run_num, ch + 1);
-        TString title = Form("run%05d KVC(NPE) ch%d;NPE;", run_num, ch + 1);
+        TString title = Form("run%05d KVC(NPE) ch%d %s;NPE;", run_num, ch/2+2, ch%2==0 ? "UP" : "DOWN");
         h_npe_shower[ch] = new TH1D(name, title, conf.npe_bin_num, conf.npe_min, conf.npe_max);
+
+        name  = Form("KVConsumnpe_shower_%d_%d", run_num, ch+1);
+        title =  Form("run%05d KVC online SUM(NPE) seg%d;NPE;", run_num, ch+1);
+        h_onsum_npe_shower[ch] = new TH1D(name, title, conf.npe_bin_num, conf.npe_min, conf.npe_max);
+
+        name  = Form("KVCoffsumnpe_shower_%d_%d", run_num, ch+1);
+        title =  Form("run%05d KVC offline SUM(NPE) seg%d;NPE;", run_num, ch+1);
+        h_offsum_npe_shower[ch] = new TH1D(name, title, conf.npe_bin_num, conf.npe_min, conf.npe_max);
     }
-    auto *h_onsum_npe_shower = new TH1D(Form("KVConsumnpe_shower_%d", run_num), Form("run%05d KVC online SUM(NPE);NPE;", run_num), conf.npe_bin_num, conf.npe_min, conf.npe_max);
-    auto *h_offsum_npe_shower = new TH1D(Form("KVCoffsumnpe_shower_%d", run_num), Form("run%05d KVC offline SUM(NPE);NPE;", run_num), conf.npe_bin_num, conf.npe_min, conf.npe_max);
 
     // -- 2d histogram -----
-    auto *h_correlation = new TH2D("on_off_correlation", ";online sum[adc];offline sum[npe]", conf.sumadc_bin_num, conf.sumadc_min, conf.sumadc_max, conf.npe_bin_num, conf.npe_min, conf.npe_max);
-
+    TH2D *h_correlation[2];
+    for (Int_t i = 0; i < 2; i++) {
+        h_correlation[i] = new TH2D(
+            Form("on_off_correlation_%d", i), 
+            Form("seg%d;online sum[adc];offline sum[npe]", i+2), 
+            conf.sumadc_bin_num, conf.sumadc_min, conf.sumadc_max, 
+            conf.npe_bin_num, conf.npe_min, conf.npe_max
+        );
+    }
     // +------------------+
     // | Fill event (1st) |
     // +------------------+
@@ -157,14 +190,14 @@ std::unordered_map<std::string, std::vector<FitResult>> analyze(Int_t run_num, I
     tmp_fit_result = ana_helper::trig_counter_tdc_fit(h_t1t, c, nth_pad);
     Double_t t1_tdc_min = tmp_fit_result.additional[0];
     Double_t t1_tdc_max = tmp_fit_result.additional[1];
-    tmp_fit_result = ana_helper::trig_counter_adc_fit(h_t1a, c, ++nth_pad);
+    tmp_fit_result = ana_helper::trig_counter_adc_gauss_fit(h_t1a, c, ++nth_pad);
     Double_t t1_adc_min = tmp_fit_result.additional[0];
 
     // -- T2 -----
     tmp_fit_result = ana_helper::trig_counter_tdc_fit(h_t2t, c, ++nth_pad);
     Double_t t2_tdc_min = tmp_fit_result.additional[0];
     Double_t t2_tdc_max = tmp_fit_result.additional[1];
-    tmp_fit_result = ana_helper::trig_counter_adc_fit(h_t2a, c, ++nth_pad);
+    tmp_fit_result = ana_helper::trig_counter_adc_gauss_fit(h_t2a, c, ++nth_pad);
     Double_t t2_adc_min = tmp_fit_result.additional[0];
 
     c->Print(pdf_name);
@@ -176,25 +209,32 @@ std::unordered_map<std::string, std::vector<FitResult>> analyze(Int_t run_num, I
     tmp_fit_result = ana_helper::trig_counter_tdc_fit(h_t3t, c, nth_pad);
     Double_t t3_tdc_min = tmp_fit_result.additional[0];
     Double_t t3_tdc_max = tmp_fit_result.additional[1];
-    tmp_fit_result = ana_helper::trig_counter_adc_fit(h_t3a, c, ++nth_pad);
+    tmp_fit_result = ana_helper::trig_counter_adc_gauss_fit(h_t3a, c, ++nth_pad);
     Double_t t3_adc_min = tmp_fit_result.additional[0];
+    Double_t t3_adc_max = tmp_fit_result.additional[1];
 
     // -- T4 -----
     tmp_fit_result = ana_helper::trig_counter_tdc_fit(h_t4t, c, ++nth_pad);
     Double_t t4_tdc_min = tmp_fit_result.additional[0];
     Double_t t4_tdc_max = tmp_fit_result.additional[1];
-    tmp_fit_result = ana_helper::trig_counter_adc_fit(h_t4a, c, ++nth_pad);
+    tmp_fit_result = ana_helper::trig_counter_adc_gauss_fit(h_t4a, c, ++nth_pad);
     Double_t t4_adc_min = tmp_fit_result.additional[0];
-
+    Double_t t4_adc_max = tmp_fit_result.additional[1];
+    
     c->Print(pdf_name);
     c->Clear();
-    c->Divide(1, 1);
+    c->Divide(cols, rows);
     nth_pad = 1;
 
     // -- kvc sum -----
-    tmp_fit_result = ana_helper::cherenkov_tdc_fit(h_kvcsumt, c, nth_pad);
-    Double_t kvc_tdc_min = tmp_fit_result.additional[0];
-    Double_t kvc_tdc_max = tmp_fit_result.additional[1];
+    Double_t kvc_tdc_min[conf.max_kvc_ch];
+    Double_t kvc_tdc_max[conf.max_kvc_ch];
+    for (Int_t ch = 0; ch < conf.max_kvc_ch; ch++) {
+        tmp_fit_result = ana_helper::cherenkov_tdc_fit(h_kvcsumt[ch], c, nth_pad);
+        kvc_tdc_min[ch] = tmp_fit_result.additional[0];
+        kvc_tdc_max[ch] = tmp_fit_result.additional[1];
+        nth_pad++;
+    }
 
     
     // +--------------------------+
@@ -243,8 +283,11 @@ std::unordered_map<std::string, std::vector<FitResult>> analyze(Int_t run_num, I
         Bool_t do_hit_t1t = false, do_hit_t2t = false, do_hit_t3t = false, do_hit_t4t = false, do_hit_kvc = false;
         if ( t1_adc_min < t1a[0] ) do_hit_t1a = true;
         if ( t2_adc_min < t2a[0] ) do_hit_t2a = true;
-        if ( t3_adc_min < t3a[0] ) do_hit_t3a = true;
-        if ( t4_adc_min < t4a[0] ) do_hit_t4a = true;
+        // if ( t3_adc_min < t3a[0] ) do_hit_t3a = true;
+        // if ( t4_adc_min < t4a[0] ) do_hit_t4a = true;
+        if ( t3_adc_min < t3a[0] && t3a[0] < t3_adc_max ) do_hit_t3a = true;
+        if ( t4_adc_min < t4a[0] && t4a[0] < t4_adc_max ) do_hit_t4a = true;
+
         for (Int_t n_hit = 0; n_hit < conf.max_nhit_tdc; n_hit++) {
             if ( t1_tdc_min < t1t[n_hit] && t1t[n_hit] < t1_tdc_max ) do_hit_t1t = true;
             if ( t2_tdc_min < t2t[n_hit] && t2t[n_hit] < t2_tdc_max ) do_hit_t2t = true;
@@ -466,7 +509,7 @@ std::unordered_map<std::string, std::vector<FitResult>> analyze(Int_t run_num, I
 
 Int_t main(int argc, char** argv) {
     Config& conf = Config::getInstance();
-    conf.kvc_initialize();
+    // conf.kvc_initialize();
 
     // // +-------------+
     // // | dev version |
