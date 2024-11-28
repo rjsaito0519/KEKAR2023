@@ -57,6 +57,10 @@ public:
     // -- trigger counter -----
     Double_t trig_counter_adc_target_val_ratio = 0.01;
     Double_t trig_counter_tdc_n_sigma = 5.0;
+    Double_t trig_counter_adc_min_n_sigma = 3.0;
+    Double_t trig_counter_adc_max_n_sigma = 4.0;
+
+    
 
     // -- cherenkov counter -----
     Double_t cherenkov_tdc_n_sigma = 5.0;
