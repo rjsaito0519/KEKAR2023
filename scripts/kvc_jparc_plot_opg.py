@@ -22,76 +22,54 @@ plt.rcParams["ytick.minor.size"] = 5                 #y軸補助目盛り線の�
 
 
 script_dir = os.path.dirname(os.path.abspath(__file__))
-root_file_path = os.path.join(script_dir, "../results/root/kvc_opg.root")
+root_file_path1 = os.path.join(script_dir, "../results/root/kvc_opg.root")
+root_file_path2 = os.path.join(script_dir, "../results/root/kvc_jparc_opg.root")
 
-file = uproot.open(root_file_path)
-tree = file["tree"].arrays(library="np")
+file1 = uproot.open(root_file_path1)
+tree1 = file1["tree"].arrays(library="np")
 
+file2 = uproot.open(root_file_path2)
+tree2 = file2["tree"].arrays(library="np")
+
+# 他のものと定義が違うので注意
 mppc_map = {
-    52: 1,
-    56: 1,
-    59: 1,
-    62: 1,
-    65: 2,
-    66: 2,
-    71: 3,
-    72: 3,
-    74: 3,
-    77: 4,
-    78: 4,
-    79: 4,
-    82: 5,
-    83: 5,
-    86: 6,
-    87: 6,
-    89: 7,
-    90: 7,
-    94: 8,
-    95: 8,
-    101: 9,
-    102: 9,
-    103: 9,
-    105: 10,
-    106: 10,
-    107: 10,
-    108: 10,
-    110: 11,
-    111: 11,
-    114: 12,
-    115: 12,
-    116: 12,
-    119: 13,
-    120: 13,
-    124: 14,
-    125: 14,
-    126: 14,
-    128: 15,
-    129: 15,
-    131: 16,
-    132: 16,
-    133: 16
+    1: [23],
+    2: [26],
+    3: [30],
+    4: [35],
+    5: [24],
+    6: [28],
+    7: [31],
+    8: [36],
+    9: [45, 47],
+    10: [51, 52],
+    11: [55],
+    12: [60],
+    13: [48],
+    14: [52],
+    15: [57],
+    16: [61],
 }
+
 
 HV_map = {
-    58 : 402,
-    57 : 404,
-    56 : 405
+    58 : 251,
+    57 : 249,
+    56 : 250
 }
 
-ch1 = opg_tool.data_summarize(tree, 0, mppc_map)
-ch2 = opg_tool.data_summarize(tree, 1, mppc_map)
-ch3 = opg_tool.data_summarize(tree, 2, mppc_map)
-ch4 = opg_tool.data_summarize(tree, 3, mppc_map)
 
-indiv_data = [ch1, ch2, ch3, ch4]
-use_ch = 5
+ch1 = opg_tool.data_summarize_for_jparc(tree2, mppc_map, True)
+ch2 = opg_tool.data_summarize_for_jparc(tree2, mppc_map, False)
+
+indiv_data = [ch1, ch2]
+use_ch = 4
 
 for HV in [56, 57, 58]:
-    offset = []
-    for ch in range(4):
-        for i in range(len(tree["run_num"])):
-            if tree["run_num"][i] == HV_map[HV] and tree["ch"][i] == ch:
-                offset.append(tree["result_val"][i][3] - indiv_data[ch][use_ch][0])
+    offset = np.nan
+    for i in range(len(tree1["run_num"])):
+        if tree1["run_num"][i] == HV_map[HV]:
+            offset = tree1["result_val"][i][3] - indiv_data[0][use_ch][0]
 
     # 凡例ラベルを保存するリスト
     legend_labels = []
@@ -99,7 +77,8 @@ for HV in [56, 57, 58]:
     fig = plt.figure(figsize=(12, 6))
     ax  = fig.add_subplot(111)
     for i, ch in enumerate(indiv_data):
-        corrected_data = ch[:, 0] + np.full_like(ch[:, 0], offset[i])
+        corrected_data = ch[:, 0] + np.full_like(ch[:, 0], offset)
+        
         ax.errorbar(
             np.arange(1, 17), corrected_data, yerr = ch[:, 1], 
             fmt = "s", capsize = 0, markeredgecolor = "k", ms = 8, ecolor='black',  color=f'C{i}', markeredgewidth = 0.2, zorder = 3
@@ -140,5 +119,5 @@ for HV in [56, 57, 58]:
     
     ax.legend(loc='upper left', fontsize = 18, bbox_to_anchor=(1.0, 1.03))
     plt.subplots_adjust(left = 0.13, right = 0.72, top = 0.98, bottom = 0.15)
-    plt.savefig(os.path.join(script_dir, f"../results/img/kvc_opg_{HV:.0f}.png"), dpi=600, transparent=True)
+    plt.savefig(os.path.join(script_dir, f"../results/img/kvc_jparc_opg_{HV:.0f}.png"), dpi=600, transparent=True)
     plt.show()
