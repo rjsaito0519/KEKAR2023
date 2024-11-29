@@ -29,6 +29,7 @@ namespace ana_helper {
         f_fit_erf->SetParameter(3, h->GetMaximum() / 2.0);
         f_fit_erf->SetLineColor(kOrange);
         f_fit_erf->SetLineWidth(2);
+        f_fit_erf->SetNpx(1000);
         h->Fit(f_fit_erf, "0Q", "", fit_range_min, fit_range_max);
 
         FitResult result;
@@ -103,6 +104,7 @@ namespace ana_helper {
         f_fit->SetParameters(par[0], par[1], par[2], 0.0, 0.0);
         f_fit->SetLineColor(kOrange);
         f_fit->SetLineWidth(2);
+        f_fit->SetNpx(1000);
         h->Fit(f_fit, "0Q", "", fit_range_min, fit_range_max);
 
         FitResult result;
@@ -122,8 +124,8 @@ namespace ana_helper {
 
         // -- draw -----
         h->GetXaxis()->SetRangeUser(
-            result.par[1]-(conf.trig_counter_adc_min_n_sigma +5.0)*result.par[2], 
-            result.par[1]+(conf.trig_counter_adc_max_n_sigma +5.0)*result.par[2]
+            result.par[1]-(conf.trig_counter_adc_min_n_sigma+5.0)*result.par[2], 
+            result.par[1]+(conf.trig_counter_adc_max_n_sigma+10.0)*result.par[2]
         );
         h->Draw();
         f_fit->Draw("same");
@@ -168,6 +170,7 @@ namespace ana_helper {
         f_fit->SetParameter(2, par[2]*0.9);
         f_fit->SetLineColor(kOrange);
         f_fit->SetLineWidth(2);
+        f_fit->SetNpx(1000);
         h->Fit(f_fit, "0Q", "", par[1]-n_sigma*par[2], par[1]+n_sigma*par[2]);
 
         FitResult result;

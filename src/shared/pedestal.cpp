@@ -53,6 +53,7 @@ namespace ana_helper {
         f_fit->SetParameter(2, stdev/2.0);
         f_fit->SetLineColor(kOrange);
         f_fit->SetLineWidth(2);
+        f_fit->SetNpx(1000);
         h->Fit(f_fit, "0Q", "", fit_range_left, fit_range_right);
 
         FitResult result;
@@ -99,6 +100,7 @@ namespace ana_helper {
         f_fit->SetParameter(2, stdev/2.0);
         f_fit->SetLineColor(kOrange);
         f_fit->SetLineWidth(2);
+        f_fit->SetNpx(1000);
         h->Fit(f_fit, "0Q", "", fit_range_left, fit_range_right);
 
         FitResult result;
@@ -157,6 +159,7 @@ namespace ana_helper {
         f_fit->SetParameter(2, par[2]*0.9);
         f_fit->SetLineColor(kOrange);
         f_fit->SetLineWidth(2);
+        f_fit->SetNpx(1000);
         h->Fit(f_fit, "0Q", "", par[1]-n_sigma*par[2], par[1]+n_sigma*par[2]);
 
         FitResult result;

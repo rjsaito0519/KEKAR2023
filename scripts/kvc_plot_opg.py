@@ -87,11 +87,11 @@ indiv_data = [ch1, ch2, ch3, ch4]
 use_ch = 5
 
 for HV in [56, 57, 58]:
-    offset = []
+    scale = []
     for ch in range(4):
         for i in range(len(tree["run_num"])):
             if tree["run_num"][i] == HV_map[HV] and tree["ch"][i] == ch:
-                offset.append(tree["result_val"][i][3] - indiv_data[ch][use_ch][0])
+                scale.append(tree["result_val"][i][3]/indiv_data[ch][use_ch][0])
 
     # 凡例ラベルを保存するリスト
     legend_labels = []
@@ -99,7 +99,7 @@ for HV in [56, 57, 58]:
     fig = plt.figure(figsize=(12, 6))
     ax  = fig.add_subplot(111)
     for i, ch in enumerate(indiv_data):
-        corrected_data = ch[:, 0] + np.full_like(ch[:, 0], offset[i])
+        corrected_data = scale[i] * ch[:, 0]
         ax.errorbar(
             np.arange(1, 17), corrected_data, yerr = ch[:, 1], 
             fmt = "s", capsize = 0, markeredgecolor = "k", ms = 8, ecolor='black',  color=f'C{i}', markeredgewidth = 0.2, zorder = 3

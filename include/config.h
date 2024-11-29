@@ -68,117 +68,119 @@ public:
     // BAC one photon gain
     std::unordered_map<Int_t, std::vector<std::pair<Double_t, Double_t>>> bac_opg{
     //    HV    val,   err
-        { 56, {{ 8.598, 0.015},     // ch1
-               { 9.429, 0.016},     // ch2
-               { 9.314, 0.016},     // ch3
-               { 8.198, 0.018} }},  // ch4
-        { 57, {{11.077, 0.015},
-               {11.827, 0.016},
-               {11.656, 0.016},
-               {10.597, 0.018}} },
-        { 58, {{13.417, 0.015},
-               {14.140, 0.016},
-               {13.992, 0.016},
-               {12.766, 0.018}} }       
+        { 56, {{ 8.676, 0.015},
+                {9.468, 0.016},
+                {9.438, 0.016},
+                {8.312, 0.018}} },
+       
+        { 57, {{11.106, 0.015},
+               {11.841, 0.016},
+               {11.699, 0.016},
+               {10.639, 0.018}} },
+
+        { 58, {{13.400, 0.015},
+               {14.129, 0.016},
+               {13.954, 0.016},
+               {12.742, 0.018}} }       
     };
 
     // KVC one photon gain
     std::unordered_map<Int_t, std::vector<std::pair<Double_t, Double_t>>> kvc_thick_opg{
     //    HV     val,    err
-        { 56, { {10.050, 0.087},    // board1 kvc seg1
-                {10.039, 0.083},    // board1 kvc seg2
-                {10.087, 0.092},    // board1 kvc seg3
-                { 9.996, 0.073},    // board1 kvc seg4
+        { 56, { {10.096, 0.087},    // board1 kvc seg1
+                {10.088, 0.083},    // board1 kvc seg2
+                {10.121, 0.092},    // board1 kvc seg3
+                {10.059, 0.073},    // board1 kvc seg4
 
-                { 8.962, 0.095},    // board2 kvc seg1
-                { 9.508, 0.114},    // board2 kvc seg2
-                { 9.486, 0.141},    // board2 kvc seg3
-                { 8.711, 0.056},    // board2 kvc seg4
+                { 9.259, 0.095},    // board2 kvc seg1
+                { 9.628, 0.114},    // board2 kvc seg2
+                { 9.613, 0.141},    // board2 kvc seg3
+                { 9.090, 0.056},    // board2 kvc seg4
 
-                {10.107, 0.091},    // board3 kvc seg1
-                {10.827, 0.071},    // board3 kvc seg2
-                {10.182, 0.099},    // board3 kvc seg3
-                {10.371, 0.089},    // board3 kvc seg4
+                {10.323, 0.091},    // board3 kvc seg1
+                {10.846, 0.071},    // board3 kvc seg2
+                {10.378, 0.099},    // board3 kvc seg3
+                {10.515, 0.089},    // board3 kvc seg4
 
-                { 9.417, 0.095},    // board4 kvc seg1
-                { 9.634, 0.114},    // board4 kvc seg2
-                { 9.573, 0.153},    // board4 kvc seg3
-                { 9.294, 0.071}}},  // board4 kvc seg4
+                { 9.511, 0.095},    // board4 kvc seg1
+                { 9.657, 0.114},    // board4 kvc seg2
+                { 9.616, 0.153},    // board4 kvc seg3
+                { 9.429, 0.071}}},  // board4 kvc seg4
 
-        { 57, { {13.011, 0.087},    // board1 kvc seg1
-                {12.999, 0.083},    // board1 kvc seg2
-                {13.047, 0.092},    // board1 kvc seg3
-                {12.956, 0.073},    // board1 kvc seg4
+        { 57, { {13.028, 0.087},    // board1 kvc seg1
+                {13.018, 0.083},    // board1 kvc seg2
+                {13.060, 0.092},    // board1 kvc seg3
+                {12.980, 0.073},    // board1 kvc seg4
 
-                {11.866, 0.095},    // board2 kvc seg1
-                {12.413, 0.114},    // board2 kvc seg2
-                {12.391, 0.141},    // board2 kvc seg3
-                {11.615, 0.056},    // board2 kvc seg4
+                {11.983, 0.095},    // board2 kvc seg1
+                {12.460, 0.114},    // board2 kvc seg2
+                {12.440, 0.141},    // board2 kvc seg3
+                {11.764, 0.056},    // board2 kvc seg4
 
-                {13.264, 0.091},    // board3 kvc seg1
-                {13.984, 0.071},    // board3 kvc seg2
-                {13.339, 0.099},    // board3 kvc seg3
-                {13.528, 0.089},    // board3 kvc seg4
+                {13.314, 0.091},    // board3 kvc seg1
+                {13.988, 0.071},    // board3 kvc seg2
+                {13.385, 0.099},    // board3 kvc seg3
+                {13.561, 0.089},    // board3 kvc seg4
 
-                {12.748, 0.095},    // board4 kvc seg1
-                {12.965, 0.114},    // board4 kvc seg2
-                {12.903, 0.153},    // board4 kvc seg3
-                {12.625, 0.071}}},  // board4 kvc seg4
+                {12.777, 0.095},    // board4 kvc seg1
+                {12.972, 0.114},    // board4 kvc seg2
+                {12.917, 0.153},    // board4 kvc seg3
+                {12.666, 0.071}}},  // board4 kvc seg4
 
-        { 58, { {15.986, 0.087},    // board1 kvc seg1
-                {15.974, 0.083},    // board1 kvc seg2
-                {16.022, 0.092},    // board1 kvc seg3
-                {15.931, 0.073},    // board1 kvc seg4
+        { 58, { {15.975, 0.087},    // board1 kvc seg1
+                {15.962, 0.083},    // board1 kvc seg2
+                {16.014, 0.092},    // board1 kvc seg3
+                {15.916, 0.073},    // board1 kvc seg4
 
-                {14.666, 0.095},    // board2 kvc seg1
-                {15.213, 0.114},    // board2 kvc seg2
-                {15.191, 0.141},    // board2 kvc seg3
-                {14.415, 0.056},    // board2 kvc seg4
+                {14.608, 0.095},    // board2 kvc seg1
+                {15.189, 0.114},    // board2 kvc seg2
+                {15.166, 0.141},    // board2 kvc seg3
+                {14.341, 0.056},    // board2 kvc seg4
 
-                {16.473, 0.091},    // board3 kvc seg1
-                {17.193, 0.071},    // board3 kvc seg2
-                {16.548, 0.099},    // board3 kvc seg3
-                {16.737, 0.089},    // board3 kvc seg4
+                {16.355, 0.091},    // board3 kvc seg1
+                {17.183, 0.071},    // board3 kvc seg2
+                {16.441, 0.099},    // board3 kvc seg3
+                {16.658, 0.089},    // board3 kvc seg4
 
-                {15.736, 0.095},    // board4 kvc seg1
-                {15.954, 0.114},    // board4 kvc seg2
-                {15.892, 0.153},    // board4 kvc seg3
-                {15.614, 0.071}}}   // board4 kvc seg4
+                {15.707, 0.095},    // board4 kvc seg1
+                {15.947, 0.114},    // board4 kvc seg2
+                {15.879, 0.153},    // board4 kvc seg3
+                {15.571, 0.071}}}   // board4 kvc seg4
+
     };
 
     // KVC one photon gain
     std::unordered_map<Int_t, std::vector<std::pair<Double_t, Double_t>>> kvc_thin_opg{
     //    HV     val,    err
-        { 56, { { 9.417, 0.050},    // up kvc seg1
-                { 9.174, 0.040},    // up kvc seg2
-                { 9.976, 0.047},    // up kvc seg3
-                {10.998, 0.053},    // up kvc seg4
+        { 56, { { 9.303, 0.050},    // up kvc seg1
+                { 9.120, 0.040},    // up kvc seg2
+                { 9.723, 0.047},    // up kvc seg3
+                {10.490, 0.053},    // up kvc seg4
 
-                { 9.460, 0.052},    // down kvc seg1
-                { 9.472, 0.048},    // down kvc seg2
-                { 9.446, 0.053},    // down kvc seg3
-                { 9.622, 0.044}}},  // down kvc seg4
+                { 9.336, 0.052},    // down kvc seg1
+                { 9.345, 0.048},    // down kvc seg2
+                { 9.325, 0.053},    // down kvc seg3
+                { 9.457, 0.044}}},  // down kvc seg4
 
-        { 57, { {11.978, 0.050},    // up kvc seg1
-                {11.735, 0.040},    // up kvc seg2
-                {12.537, 0.047},    // up kvc seg3
-                {13.559, 0.053},    // up kvc seg4
+        { 57, { {11.962, 0.050},    // up kvc seg1
+                {11.728, 0.040},    // up kvc seg2
+                {12.502, 0.047},    // up kvc seg3
+                {13.489, 0.053},    // up kvc seg4
 
-                {12.022, 0.052},    // down kvc seg1
-                {12.033, 0.048},    // down kvc seg2
-                {12.007, 0.053},    // down kvc seg3
-                {12.183, 0.044}}},  // down kvc seg4
+                {12.004, 0.052},    // down kvc seg1
+                {12.016, 0.048},    // down kvc seg2
+                {11.990, 0.053},    // down kvc seg3
+                {12.160, 0.044}}},  // down kvc seg4
 
-        { 58, { {14.316, 0.050},    // up kvc seg1
-                {14.073, 0.040},    // up kvc seg2
-                {14.876, 0.047},    // up kvc seg3
-                {15.898, 0.053},    // up kvc seg4
+        { 58, { {14.390, 0.050},    // up kvc seg1
+                {14.108, 0.040},    // up kvc seg2
+                {15.040, 0.047},    // up kvc seg3
+                {16.227, 0.053},    // up kvc seg4
 
-                {14.360, 0.052},    // down kvc seg1
-                {14.372, 0.048},    // down kvc seg2
-                {14.346, 0.053},    // down kvc seg3
-                {14.522, 0.044}}}   // down kvc seg4
-
+                {14.441, 0.052},    // down kvc seg1
+                {14.455, 0.048},    // down kvc seg2
+                {14.424, 0.053},    // down kvc seg3
+                {14.629, 0.044}}}   // down kvc seg4
     };
 
     void bac_initialize() {
