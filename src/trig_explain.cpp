@@ -160,14 +160,14 @@ std::unordered_map<std::string, std::vector<FitResult>> analyze(Int_t run_num, I
     tmp_fit_result = ana_helper::trig_counter_tdc_fit(h_t1t, c_trig1, 1);
     Double_t t1_tdc_min = tmp_fit_result.additional[0];
     Double_t t1_tdc_max = tmp_fit_result.additional[1];
-    tmp_fit_result = ana_helper::trig_counter_adc_fit(h_t1a, c_trig1, 2);
+    tmp_fit_result = ana_helper::trig_counter_adc_gauss_fit(h_t1a, c_trig1, 2);
     Double_t t1_adc_min = tmp_fit_result.additional[0];
 
     // -- T2 -----
     tmp_fit_result = ana_helper::trig_counter_tdc_fit(h_t2t, c_trig1, 3);
     Double_t t2_tdc_min = tmp_fit_result.additional[0];
     Double_t t2_tdc_max = tmp_fit_result.additional[1];
-    tmp_fit_result = ana_helper::trig_counter_adc_fit(h_t2a, c_trig1, 4);
+    tmp_fit_result = ana_helper::trig_counter_adc_gauss_fit(h_t2a, c_trig1, 4);
     Double_t t2_adc_min = tmp_fit_result.additional[0];
 
     
@@ -178,15 +178,17 @@ std::unordered_map<std::string, std::vector<FitResult>> analyze(Int_t run_num, I
     tmp_fit_result = ana_helper::trig_counter_tdc_fit(h_t3t, c_trig2, 1);
     Double_t t3_tdc_min = tmp_fit_result.additional[0];
     Double_t t3_tdc_max = tmp_fit_result.additional[1];
-    tmp_fit_result = ana_helper::trig_counter_adc_fit(h_t3a, c_trig2, 2);
+    tmp_fit_result = ana_helper::trig_counter_adc_gauss_fit(h_t3a, c_trig2, 2);
     Double_t t3_adc_min = tmp_fit_result.additional[0];
-
+    Double_t t3_adc_max = tmp_fit_result.additional[1];
+    
     // -- T4 -----
     tmp_fit_result = ana_helper::trig_counter_tdc_fit(h_t4t, c_trig2, 3);
     Double_t t4_tdc_min = tmp_fit_result.additional[0];
     Double_t t4_tdc_max = tmp_fit_result.additional[1];
-    tmp_fit_result = ana_helper::trig_counter_adc_fit(h_t4a, c_trig2, 4);
+    tmp_fit_result = ana_helper::trig_counter_adc_gauss_fit(h_t4a, c_trig2, 4);
     Double_t t4_adc_min = tmp_fit_result.additional[0];    
+    Double_t t4_adc_max = tmp_fit_result.additional[1];    
 
 
     TCanvas *c_bact = ana_helper::add_tab(tab, "bac");
@@ -246,10 +248,8 @@ std::unordered_map<std::string, std::vector<FitResult>> analyze(Int_t run_num, I
         if ( t2_adc_min < t2a[0] ) do_hit_t2a = true;
         if ( t3_adc_min < t3a[0] ) do_hit_t3a = true;
         if ( t4_adc_min < t4a[0] ) do_hit_t4a = true;
-        // if ( t1_adc_min < t1a[0] && t1a[0] < 650.0 ) do_hit_t1a = true;
-        // if ( t2_adc_min < t2a[0] && t2a[0] < 550.0 ) do_hit_t2a = true;
-        // if ( t3_adc_min < t3a[0] && t3a[0] < 550.0 ) do_hit_t3a = true;
-        // if ( t4_adc_min < t4a[0] && t4a[0] < 600.0 ) do_hit_t4a = true;
+        // if ( t3_adc_min < t3a[0] && t3a[0] < t3_adc_max ) do_hit_t3a = true;
+        // if ( t4_adc_min < t4a[0] && t4a[0] < t4_adc_max ) do_hit_t4a = true;
         
         for (Int_t n_hit = 0; n_hit < conf.max_nhit_tdc; n_hit++) {
             if ( t1_tdc_min < t1t[n_hit] && t1t[n_hit] < t1_tdc_max ) do_hit_t1t = true;
@@ -270,7 +270,7 @@ std::unordered_map<std::string, std::vector<FitResult>> analyze(Int_t run_num, I
         //         && kvcsumt[ch] < shower_tdc_gate[ch].second 
         //     ) shower_flag = true;
         // }
-        if ( 600.0 < t3a[0] || 630.0 < t4a[0] ) shower_flag = true;
+        if ( t3_adc_max < t3a[0] || t4_adc_max < t4a[0] ) shower_flag = true;
 
 
         // -- event selection and fill data -----
