@@ -28,6 +28,7 @@ namespace ana_helper {
         f_fit->SetParameter(2, par[2]*0.9);
         f_fit->SetLineColor(kOrange);
         f_fit->SetLineWidth(2);
+        f_fit->SetNpx(1000);
         h->Fit(f_fit, "0Q", "", par[1]-n_sigma*par[2], par[1]+n_sigma*par[2]);
 
         FitResult result;
@@ -158,6 +159,7 @@ namespace ana_helper {
         h->Draw();
         f_poisson->SetLineColor(kOrange);
         f_poisson->SetLineWidth(2);
+        f_poisson->SetNpx(1000);
         f_poisson->Draw("same");
 
         auto *text = new TLatex();
@@ -221,6 +223,7 @@ namespace ana_helper {
         h->Draw();
         f_poisson->SetLineColor(kOrange);
         f_poisson->SetLineWidth(2);
+        f_poisson->SetNpx(1000);
         f_poisson->Draw("same");
 
         auto *text = new TLatex();
@@ -279,6 +282,7 @@ namespace ana_helper {
         h->Draw();
         f_fit->SetLineColor(kOrange);
         f_fit->SetLineWidth(2);
+        f_fit->SetNpx(1000);
         f_fit->Draw("same");
 
         auto *text = new TLatex();

@@ -169,7 +169,9 @@ std::unordered_map<std::string, std::vector<FitResult>> analyze(Int_t run_num, I
             h_t2t->Fill(t2t[n_hit]);
             h_t3t->Fill(t3t[n_hit]);
             h_t4t->Fill(t4t[n_hit]);
-            h_kvcsumt->Fill(kvcsumt[n_hit]);
+            for (Int_t ch = 0; ch < conf.max_kvc_ch; ch++) {
+                h_kvcsumt[ch]->Fill(kvcsumt[conf.max_nhit_tdc*ch+n_hit]);
+            }
         }
     }
 
@@ -192,6 +194,7 @@ std::unordered_map<std::string, std::vector<FitResult>> analyze(Int_t run_num, I
     Double_t t1_tdc_max = tmp_fit_result.additional[1];
     tmp_fit_result = ana_helper::trig_counter_adc_gauss_fit(h_t1a, c, ++nth_pad);
     Double_t t1_adc_min = tmp_fit_result.additional[0];
+    Double_t t1_adc_max = tmp_fit_result.additional[1];
 
     // -- T2 -----
     tmp_fit_result = ana_helper::trig_counter_tdc_fit(h_t2t, c, ++nth_pad);
@@ -199,6 +202,7 @@ std::unordered_map<std::string, std::vector<FitResult>> analyze(Int_t run_num, I
     Double_t t2_tdc_max = tmp_fit_result.additional[1];
     tmp_fit_result = ana_helper::trig_counter_adc_gauss_fit(h_t2a, c, ++nth_pad);
     Double_t t2_adc_min = tmp_fit_result.additional[0];
+    Double_t t2_adc_max = tmp_fit_result.additional[1];
 
     c->Print(pdf_name);
     c->Clear();
@@ -274,17 +278,19 @@ std::unordered_map<std::string, std::vector<FitResult>> analyze(Int_t run_num, I
     // | Fill event (2nd) |
     // +------------------+
     Int_t n_trig = 0, n_hitkvc = 0;
-    std::unordered_map<std::string, std::vector<std::pair<Bool_t, Double_t>>> online_sum_container{ {"raw", {}}, {"trig", {}} };
+    std::unordered_map<std::string, std::vector<std::vector<std::pair<Bool_t, Double_t>>>> online_sum_container{ {"raw", {{}, {}, {}, {}}}, {"trig", {{}, {}, {}, {}}} };
     
     reader.Restart();
     while (reader.Next()){
         // -- set up flag -----
         Bool_t do_hit_t1a = false, do_hit_t2a = false, do_hit_t3a = false, do_hit_t4a = false;
         Bool_t do_hit_t1t = false, do_hit_t2t = false, do_hit_t3t = false, do_hit_t4t = false, do_hit_kvc = false;
-        if ( t1_adc_min < t1a[0] ) do_hit_t1a = true;
-        if ( t2_adc_min < t2a[0] ) do_hit_t2a = true;
+        // if ( t1_adc_min < t1a[0] ) do_hit_t1a = true;
+        // if ( t2_adc_min < t2a[0] ) do_hit_t2a = true;
         // if ( t3_adc_min < t3a[0] ) do_hit_t3a = true;
         // if ( t4_adc_min < t4a[0] ) do_hit_t4a = true;
+        if ( t1_adc_min < t1a[0] && t1a[0] < t1_adc_max ) do_hit_t1a = true;
+        if ( t2_adc_min < t2a[0] && t2a[0] < t2_adc_max ) do_hit_t2a = true;
         if ( t3_adc_min < t3a[0] && t3a[0] < t3_adc_max ) do_hit_t3a = true;
         if ( t4_adc_min < t4a[0] && t4a[0] < t4_adc_max ) do_hit_t4a = true;
 
@@ -293,57 +299,71 @@ std::unordered_map<std::string, std::vector<FitResult>> analyze(Int_t run_num, I
             if ( t2_tdc_min < t2t[n_hit] && t2t[n_hit] < t2_tdc_max ) do_hit_t2t = true;
             if ( t3_tdc_min < t3t[n_hit] && t3t[n_hit] < t3_tdc_max ) do_hit_t3t = true;
             if ( t4_tdc_min < t4t[n_hit] && t4t[n_hit] < t4_tdc_max ) do_hit_t4t = true;
-            if ( kvc_tdc_min < kvcsumt[n_hit] && kvcsumt[n_hit] < kvc_tdc_max ) do_hit_kvc = true;
+            for (Int_t ch = 0; ch < conf.max_kvc_ch; ch++) if ( kvc_tdc_min[ch] < kvcsumt[conf.max_nhit_tdc*ch+n_hit] && kvcsumt[conf.max_nhit_tdc*ch+n_hit] < kvc_tdc_max[ch] ) do_hit_kvc = true;
         }
         Bool_t trig_flag_adc = do_hit_t4a && do_hit_t2a && do_hit_t3a && do_hit_t4a;
         Bool_t trig_flag_tdc = do_hit_t4t && do_hit_t2t && do_hit_t3t && do_hit_t4t;
 
         // -- check shower -----
         Bool_t shower_flag = false;
-        for (Int_t ch = 0; ch < conf.max_kvc_ch; ch++) {
-            if (!std::binary_search(should_hit_ch.begin(), should_hit_ch.end(), ch) 
-                && shower_adc_min[ch] < kvcsuma[ch] 
-                && shower_tdc_gate[ch].first < kvcsumt[ch]
-                && kvcsumt[ch] < shower_tdc_gate[ch].second 
-            ) shower_flag = true;
-        }
+        // for (Int_t ch = 0; ch < conf.max_kvc_ch; ch++) {
+        //     if (!std::binary_search(should_hit_ch.begin(), should_hit_ch.end(), ch) && shower_adc_min[ch] < kvcsuma[ch] ) {
+        //         for (Int_t n_hit = 0; n_hit < conf.max_nhit_tdc; n_hit++) {
+        //             if (shower_tdc_gate[ch].first < kvcsumt[conf.max_nhit_tdc*ch+n_hit] && kvcsumt[conf.max_nhit_tdc*ch+n_hit] < shower_tdc_gate[ch].second ) shower_flag = true;
+        //         }
+        //     }
+        // }
 
         // -- event selection and fill data -----
         if ( trig_flag_tdc && trig_flag_adc ) {
             n_trig++;
-            Double_t offline_sum_a   = 0.;
-            Double_t offline_sum_npe = 0.;
+            Double_t offline_sum_a[2]   = {0., 0.}; // for seg2, 3
+            Double_t offline_sum_npe[2] = {0., 0.};
             for (Int_t ch = 0; ch < conf.max_kvc_ch; ch++) {
                 h_kvca[ch].raw->Fill(kvca[ch]);
-                h_npe[ch].raw->Fill( (kvca[ch] - kvc_ped_pos_val[ch]) / conf.kvc_opg[58][ch].first );
-                offline_sum_a   +=  kvca[ch] - kvc_ped_pos_val[ch];
-                offline_sum_npe += (kvca[ch] - kvc_ped_pos_val[ch]) / conf.kvc_opg[58][ch].first;
+                Int_t index_opg = conf.max_kvc_ch * (ch/2) + 1 + ch%2;
+                h_npe[ch].raw->Fill( (kvca[ch] - kvc_ped_pos_val[ch]) / conf.kvc_thin_opg[58][index_opg].first );
+                offline_sum_a[ch/2]   +=  kvca[ch] - kvc_ped_pos_val[ch];
+                offline_sum_npe[ch/2] += (kvca[ch] - kvc_ped_pos_val[ch]) / conf.kvc_thin_opg[58][index_opg].first;
+
+                h_onsum_adc[ch].raw->Fill(kvcsuma[ch] - kvcsum_ped_pos_val[ch]);
+                online_sum_container["raw"][ch].emplace_back(shower_flag, kvcsuma[ch]);
             }
-            h_offsum_adc.raw->Fill(offline_sum_a);
-            h_onsum_adc.raw->Fill(kvcsuma[0] - kvcsum_ped_pos_val[0]);
-            h_offsum_npe.raw->Fill(offline_sum_npe);
-            online_sum_container["raw"].emplace_back(shower_flag, kvcsuma[0]);
+            h_offsum_adc[1].raw->Fill(offline_sum_a[0]); // seg 2
+            h_offsum_npe[1].raw->Fill(offline_sum_npe[0]);
+
+            h_offsum_adc[2].raw->Fill(offline_sum_a[1]); // seg 3
+            h_offsum_npe[2].raw->Fill(offline_sum_npe[1]);
             
             if (do_hit_kvc) {
                 n_hitkvc++;
-                offline_sum_a   = 0.;
-                offline_sum_npe = 0.;
+                offline_sum_a[0] = 0.; offline_sum_a[1] = 0.;
+                offline_sum_npe[0] = 0.; offline_sum_npe[1] = 0.;
                 for (Int_t ch = 0; ch < conf.max_kvc_ch; ch++) {
-                    h_kvca[ch].trig->Fill( kvca[ch] );
-                    h_npe[ch].trig->Fill( (kvca[ch] - kvc_ped_pos_val[ch]) / conf.kvc_opg[58][ch].first );
-                    if (shower_flag) h_npe_shower[ch]->Fill( (kvca[ch] - kvc_ped_pos_val[ch]) / conf.kvc_opg[58][ch].first );
-                    offline_sum_a   +=  kvca[ch] - kvc_ped_pos_val[ch];
-                    offline_sum_npe += (kvca[ch] - kvc_ped_pos_val[ch]) / conf.kvc_opg[58][ch].first;
+                    h_kvca[ch].trig->Fill(kvca[ch]);
+                    Int_t index_opg = conf.max_kvc_ch * (ch/2) + 1 + ch%2;
+                    h_npe[ch].trig->Fill( (kvca[ch] - kvc_ped_pos_val[ch]) / conf.kvc_thin_opg[58][index_opg].first );
+                    if (shower_flag) h_npe_shower[ch]->Fill( (kvca[ch] - kvc_ped_pos_val[ch]) / conf.kvc_thin_opg[58][index_opg].first );
+                    offline_sum_a[ch/2]   +=  kvca[ch] - kvc_ped_pos_val[ch];
+                    offline_sum_npe[ch/2] += (kvca[ch] - kvc_ped_pos_val[ch]) / conf.kvc_thin_opg[58][index_opg].first;
+
+                    h_onsum_adc[ch].trig->Fill(kvcsuma[ch] - kvcsum_ped_pos_val[ch]);
+                    online_sum_container["trig"][ch].emplace_back(shower_flag, kvcsuma[ch]);
                 }
-                h_offsum_adc.trig->Fill(offline_sum_a);
-                h_onsum_adc.trig->Fill(kvcsuma[0] - kvcsum_ped_pos_val[0]);
-                h_offsum_npe.trig->Fill(offline_sum_npe);
-                online_sum_container["trig"].emplace_back(shower_flag, kvcsuma[0]);
+                h_offsum_adc[1].trig->Fill(offline_sum_a[0]); // seg 2
+                h_offsum_npe[1].trig->Fill(offline_sum_npe[0]);
+
+                h_offsum_adc[2].trig->Fill(offline_sum_a[1]); // seg 3
+                h_offsum_npe[2].trig->Fill(offline_sum_npe[1]);
 
                 // 最初にOnline sumのone photon gainをoffline sumとの相関より推測する
-                h_correlation->Fill( kvcsuma[0] - kvcsum_ped_pos_val[0], offline_sum_npe );
+                h_correlation[0]->Fill( kvcsuma[1] - kvcsum_ped_pos_val[1], offline_sum_npe[0] );
+                h_correlation[1]->Fill( kvcsuma[2] - kvcsum_ped_pos_val[2], offline_sum_npe[1] );
 
-                if (shower_flag) h_offsum_npe_shower->Fill(offline_sum_npe);
+                if (shower_flag) {
+                    h_offsum_npe_shower[1]->Fill(offline_sum_npe[0]);
+                    h_offsum_npe_shower[2]->Fill(offline_sum_npe[1]);
+                }
             }
         }
     }
@@ -361,14 +381,45 @@ std::unordered_map<std::string, std::vector<FitResult>> analyze(Int_t run_num, I
     c->Clear();
     c->Divide(1, 1);
     nth_pad = 1;
-    FitResult linear_fit_result = ana_helper::correlation_fit(h_correlation, c, nth_pad);
-    result_container["linear"].push_back(linear_fit_result);
+    FitResult linear_fit_result_seg2 = ana_helper::correlation_fit(h_correlation[0], c, nth_pad);
+    result_container["linear_seg2"].push_back(linear_fit_result_seg2);
+
+    c->Print(pdf_name);
+    c->Clear();
+    c->Divide(1, 1);
+    nth_pad = 1;
+    FitResult linear_fit_result_seg3 = ana_helper::correlation_fit(h_correlation[1], c, nth_pad);
+    result_container["linear_seg3"].push_back(linear_fit_result_seg3);
 
     // -- calc and fill -----
-    for (const auto& pair : online_sum_container["raw"]) h_onsum_npe.raw->Fill( linear_fit_result.par[0]*(pair.second - kvcsum_ped_pos_val[0]) + linear_fit_result.par[1] );
-    for (const auto& pair : online_sum_container["trig"]) {
-        h_onsum_npe.trig->Fill( linear_fit_result.par[0]*(pair.second - kvcsum_ped_pos_val[0]) + linear_fit_result.par[1] );
-        if (pair.first) h_onsum_npe_shower->Fill( linear_fit_result.par[0]*(pair.second - kvcsum_ped_pos_val[0]) + linear_fit_result.par[1] );
+    for (Int_t ch = 0; ch < conf.max_kvc_ch; ch++) {
+        Double_t coeff_a, coeff_b;
+        if (ch == 1) {
+            coeff_a = linear_fit_result_seg2.par[0];
+            coeff_b = linear_fit_result_seg2.par[1];
+        } else if (ch == 2) {
+            coeff_a = linear_fit_result_seg3.par[0];
+            coeff_b = linear_fit_result_seg3.par[1];
+        } else {
+            Double_t scale_factor = (conf.kvc_thin_opg[58][ch].first + conf.kvc_thin_opg[58][ch+conf.max_kvc_ch].first) / (conf.kvc_thin_opg[58][1].first + conf.kvc_thin_opg[58][5].first);
+            coeff_a = linear_fit_result_seg2.par[0] * scale_factor;
+            coeff_b = linear_fit_result_seg2.par[1] * scale_factor;
+            std::cout << scale_factor << ", " << coeff_a << ", " << coeff_b << std::endl;
+
+            scale_factor = (conf.kvc_thin_opg[58][ch].first + conf.kvc_thin_opg[58][ch+conf.max_kvc_ch].first) / (conf.kvc_thin_opg[58][2].first + conf.kvc_thin_opg[58][6].first);
+            coeff_a = linear_fit_result_seg3.par[0] * scale_factor;
+            coeff_b = linear_fit_result_seg3.par[1] * scale_factor;
+            std::cout << scale_factor << ", " << coeff_a << ", " << coeff_b << std::endl;
+
+            
+        }
+
+        for (const auto& pair : online_sum_container["raw"][ch]) h_onsum_npe[ch].raw->Fill( coeff_a*(pair.second - kvcsum_ped_pos_val[ch]) + coeff_b );
+        
+        for (const auto& pair : online_sum_container["trig"][ch]) {
+            h_onsum_npe[ch].trig->Fill( coeff_a*(pair.second - kvcsum_ped_pos_val[ch]) + coeff_b );
+            if (pair.first) h_onsum_npe_shower[ch]->Fill( coeff_a*(pair.second - kvcsum_ped_pos_val[0]) + coeff_b );
+        }
     }
 
 
@@ -429,74 +480,76 @@ std::unordered_map<std::string, std::vector<FitResult>> analyze(Int_t run_num, I
     }
 
     // -- sum adc -----
-    {
-        c->Print(pdf_name);
-        c->Clear();
-        c->Divide(2, 1);
-        nth_pad = 1;
-
+    for (Int_t ch = 0; ch < conf.max_kvc_ch; ch++) {
+        if (nth_pad > max_pads) {
+            c->Print(pdf_name);
+            c->Clear();
+            c->Divide(cols, rows);
+            nth_pad = 1;
+        }
         c->cd(nth_pad);
-        Double_t peak_pos = h_offsum_adc.raw->GetMean();
-        Double_t stdev = h_offsum_adc.raw->GetStdDev();
-        // h_offsum_adc.raw->GetXaxis()->SetRangeUser(peak_pos - 5.0*stdev, peak_pos + 5.0*stdev);
-        // h_offsum_adc.raw->SetLineColor(kBlue);
-        // h_offsum_adc.raw->Draw();
-        // h_offsum_adc.trig->SetLineColor(kRed);
-        // h_offsum_adc.trig->SetFillColor(kRed);
-        // h_offsum_adc.trig->SetFillStyle(3003);
-        h_offsum_adc.trig->GetXaxis()->SetRangeUser(peak_pos - 5.0*stdev, peak_pos + 5.0*stdev);
-        h_offsum_adc.trig->Draw("same");
+        Double_t peak_pos = h_offsum_adc[ch].raw->GetMean();
+        Double_t stdev = h_offsum_adc[ch].raw->GetStdDev();
+        // h_offsum_adc[ch].raw->GetXaxis()->SetRangeUser(peak_pos - 5.0*stdev, peak_pos + 5.0*stdev);
+        // h_offsum_adc[ch].raw->SetLineColor(kBlue);
+        // h_offsum_adc[ch].raw->Draw();
+        // h_offsum_adc[ch].trig->SetLineColor(kRed);
+        // h_offsum_adc[ch].trig->SetFillColor(kRed);
+        // h_offsum_adc[ch].trig->SetFillStyle(3003);
+        h_offsum_adc[ch].trig->GetXaxis()->SetRangeUser(peak_pos - 5.0*stdev, peak_pos + 5.0*stdev);
+        h_offsum_adc[ch].trig->Draw("same");
         nth_pad++;
 
         c->cd(nth_pad);
-        // h_onsum_adc.raw->GetXaxis()->SetRangeUser(peak_pos - 5.0*stdev, peak_pos + 5.0*stdev);
-        // h_onsum_adc.raw->SetLineColor(kBlue);
-        // h_onsum_adc.raw->Draw();
-        // h_onsum_adc.trig->SetLineColor(kRed);
-        // h_onsum_adc.trig->SetFillColor(kRed);
-        // h_onsum_adc.trig->SetFillStyle(3003);
-        h_onsum_adc.trig->GetXaxis()->SetRangeUser(peak_pos - 5.0*stdev, peak_pos + 5.0*stdev);
-        h_onsum_adc.trig->Draw("same");
+        // h_onsum_adc[ch].raw->GetXaxis()->SetRangeUser(peak_pos - 5.0*stdev, peak_pos + 5.0*stdev);
+        // h_onsum_adc[ch].raw->SetLineColor(kBlue);
+        // h_onsum_adc[ch].raw->Draw();
+        // h_onsum_adc[ch].trig->SetLineColor(kRed);
+        // h_onsum_adc[ch].trig->SetFillColor(kRed);
+        // h_onsum_adc[ch].trig->SetFillStyle(3003);
+        h_onsum_adc[ch].trig->GetXaxis()->SetRangeUser(peak_pos - 5.0*stdev, peak_pos + 5.0*stdev);
+        h_onsum_adc[ch].trig->Draw("same");
         nth_pad++;
     }
 
     // -- sum npe -----
-    {
-        c->Print(pdf_name);
-        c->Clear();
-        c->Divide(2, 1);
-        nth_pad = 1;
-        
+    for (Int_t ch = 0; ch < conf.max_kvc_ch; ch++) {
+        if (nth_pad > max_pads) {
+            c->Print(pdf_name);
+            c->Clear();
+            c->Divide(cols, rows);
+            nth_pad = 1;
+        }
         c->cd(nth_pad);
-        // Double_t peak_pos = h_offsum_npe.raw->GetMean();
-        // Double_t stdev = h_offsum_npe.raw->GetStdDev();
-        // h_offsum_npe.raw->GetXaxis()->SetRangeUser(peak_pos - 5.0*stdev, peak_pos + 5.0*stdev);
-        // h_offsum_npe.raw->SetLineColor(kBlue);
-        // h_offsum_npe.raw->Draw();
-        // h_offsum_npe.trig->SetLineColor(kRed);
-        // h_offsum_npe.trig->SetFillColor(kRed);
-        // h_offsum_npe.trig->SetFillStyle(3003);
-        FitResult offsum_result = ana_helper::npe_gauss_fit(h_offsum_npe.trig, c, nth_pad, 1.5);
+        // Double_t peak_pos = h_offsum_npe[ch].raw->GetMean();
+        // Double_t stdev = h_offsum_npe[ch].raw->GetStdDev();
+        // h_offsum_npe[ch].raw->GetXaxis()->SetRangeUser(peak_pos - 5.0*stdev, peak_pos + 5.0*stdev);
+        // h_offsum_npe[ch].raw->SetLineColor(kBlue);
+        // h_offsum_npe[ch].raw->Draw();
+        // h_offsum_npe[ch].trig->SetLineColor(kRed);
+        // h_offsum_npe[ch].trig->SetFillColor(kRed);
+        // h_offsum_npe[ch].trig->SetFillStyle(3003);
+        FitResult offsum_result = ana_helper::npe_gauss_fit(h_offsum_npe[ch].trig, c, nth_pad, 1.5);
         result_container["offsum_npe"].push_back(offsum_result);
-        h_offsum_npe_shower->SetLineColor(kGreen);
-        h_offsum_npe_shower->SetFillColor(kGreen);
-        h_offsum_npe_shower->SetFillStyle(3003);
-        h_offsum_npe_shower->Draw("same");
+        h_offsum_npe_shower[ch]->SetLineColor(kGreen);
+        h_offsum_npe_shower[ch]->SetFillColor(kGreen);
+        h_offsum_npe_shower[ch]->SetFillStyle(3003);
+        h_offsum_npe_shower[ch]->Draw("same");
         nth_pad++;
 
         c->cd(nth_pad);
-        // h_onsum_npe.raw->GetXaxis()->SetRangeUser(peak_pos - 5.0*stdev, peak_pos + 5.0*stdev);
-        // h_onsum_npe.raw->SetLineColor(kBlue);
-        // h_onsum_npe.raw->Draw();
-        // h_onsum_npe.trig->SetLineColor(kRed);
-        // h_onsum_npe.trig->SetFillColor(kRed);
-        // h_onsum_npe.trig->SetFillStyle(3003);
-        FitResult onsum_result = ana_helper::npe_gauss_fit(h_onsum_npe.trig, c, nth_pad, 1.5);
+        // h_onsum_npe[ch].raw->GetXaxis()->SetRangeUser(peak_pos - 5.0*stdev, peak_pos + 5.0*stdev);
+        // h_onsum_npe[ch].raw->SetLineColor(kBlue);
+        // h_onsum_npe[ch].raw->Draw();
+        // h_onsum_npe[ch].trig->SetLineColor(kRed);
+        // h_onsum_npe[ch].trig->SetFillColor(kRed);
+        // h_onsum_npe[ch].trig->SetFillStyle(3003);
+        FitResult onsum_result = ana_helper::npe_gauss_fit(h_onsum_npe[ch].trig, c, nth_pad, 1.5);
         result_container["onsum_npe"].push_back(onsum_result);
-        h_onsum_npe_shower->SetLineColor(kGreen);
-        h_onsum_npe_shower->SetFillColor(kGreen);
-        h_onsum_npe_shower->SetFillStyle(3003);
-        h_onsum_npe_shower->Draw("same");
+        h_onsum_npe_shower[ch]->SetLineColor(kGreen);
+        h_onsum_npe_shower[ch]->SetFillColor(kGreen);
+        h_onsum_npe_shower[ch]->SetFillStyle(3003);
+        h_onsum_npe_shower[ch]->Draw("same");
         nth_pad++;
     }
 
@@ -511,127 +564,127 @@ Int_t main(int argc, char** argv) {
     Config& conf = Config::getInstance();
     // conf.kvc_initialize();
 
-    // // +-------------+
-    // // | dev version |
-    // // +-------------+
-    // // -- check argments -----
-    // if (argc < 2) {
-    //     std::cerr << "Usage: " << argv[0] << " <run number>" << std::endl;
-    //     return 1;
-    // }
-    // Int_t run_num = std::atoi(argv[1]);
+    // +-------------+
+    // | dev version |
+    // +-------------+
+    // -- check argments -----
+    if (argc < 2) {
+        std::cerr << "Usage: " << argv[0] << " <run number>" << std::endl;
+        return 1;
+    }
+    Int_t run_num = std::atoi(argv[1]);
 
-    // analyze(run_num, 3);
+    analyze(run_num, 3);
     
 
-    // +-------------+
-    // | pro version |
-    // +-------------+
-    std::vector<Int_t> ana_run_num{ 
-        // Condition 1
-        379, 380, 381, 382, 383, 384, 385,
-        365, 366, 368, 371, 372, 373, 374,
-        345, 346, 347, 348, 349, 350, 351,
-        301, 302, 303, 304, 305, 306, 307, 
-        312, 313, 314, 315, 316, 317, 318,
-        323, 324, 325, 329, 327, 328, 330,
-        334, 335, 336, 338, 339, 340, 341,
-        // again and additional
-        353, 352, 361, 360, 388, 390, 391, 392,
+    // // +-------------+
+    // // | pro version |
+    // // +-------------+
+    // std::vector<Int_t> ana_run_num{ 
+    //     // Condition 1
+    //     379, 380, 381, 382, 383, 384, 385,
+    //     365, 366, 368, 371, 372, 373, 374,
+    //     345, 346, 347, 348, 349, 350, 351,
+    //     301, 302, 303, 304, 305, 306, 307, 
+    //     312, 313, 314, 315, 316, 317, 318,
+    //     323, 324, 325, 329, 327, 328, 330,
+    //     334, 335, 336, 338, 339, 340, 341,
+    //     // again and additional
+    //     353, 352, 361, 360, 388, 390, 391, 392,
 
-        // Condition 2
-        508, 509, 510, 511, 512, 513, 514,
-        498, 499, 500, 501, 502, 503, 504,
-        488, 489, 490, 491, 492, 493, 494,
-        448, 449, 450, 451, 452, 453, 454,
-        458, 459, 460, 461, 462, 463, 464,
-        468, 469, 470, 471, 472, 473, 474,
-        478, 479, 480, 481, 482, 483, 484,
-        // additional
-        517, 521, 518, 522, 519, 523, 525, 526, 527, 529, 530, 531
-    };
+    //     // Condition 2
+    //     508, 509, 510, 511, 512, 513, 514,
+    //     498, 499, 500, 501, 502, 503, 504,
+    //     488, 489, 490, 491, 492, 493, 494,
+    //     448, 449, 450, 451, 452, 453, 454,
+    //     458, 459, 460, 461, 462, 463, 464,
+    //     468, 469, 470, 471, 472, 473, 474,
+    //     478, 479, 480, 481, 482, 483, 484,
+    //     // additional
+    //     517, 521, 518, 522, 519, 523, 525, 526, 527, 529, 530, 531
+    // };
 
-    // +--------------------------+
-    // | prepare output root file |
-    // +--------------------------+
-    TString output_path = OUTPUT_DIR + "/root/kvc_pos_scan_analysis.root";
-    if (std::ifstream(output_path.Data())) std::remove(output_path.Data());
-    TFile fout(output_path.Data(), "create");
-    TTree output_tree("tree", ""); 
+    // // +--------------------------+
+    // // | prepare output root file |
+    // // +--------------------------+
+    // TString output_path = OUTPUT_DIR + "/root/kvc_pos_scan_analysis.root";
+    // if (std::ifstream(output_path.Data())) std::remove(output_path.Data());
+    // TFile fout(output_path.Data(), "create");
+    // TTree output_tree("tree", ""); 
 
-    // -- prepare root file branch -----
-    Int_t tmp_run_num, pos_x, pos_y;
-    Double_t n_trig, n_hit;
-    std::vector<Double_t> linear_a, linear_b;
-    std::vector<Double_t> indiv_npe_val, indiv_npe_err, onsum_npe_val, onsum_npe_err, offsum_npe_val, offsum_npe_err;
+    // // -- prepare root file branch -----
+    // Int_t tmp_run_num, pos_x, pos_y;
+    // Double_t n_trig, n_hit;
+    // std::vector<Double_t> linear_a, linear_b;
+    // std::vector<Double_t> indiv_npe_val, indiv_npe_err, onsum_npe_val, onsum_npe_err, offsum_npe_val, offsum_npe_err;
 
-    output_tree.Branch("run_num", &tmp_run_num, "run_num/I");
-    output_tree.Branch("pos_x", &pos_x, "pos_x/I");
-    output_tree.Branch("pos_y", &pos_y, "pos_y/I");
-    output_tree.Branch("n_trig", &n_trig, "n_trig/D");
-    output_tree.Branch("n_hit", &n_hit, "n_hit/D");
-    output_tree.Branch("linear_a", &linear_a);
-    output_tree.Branch("linear_b", &linear_b);
-    output_tree.Branch("indiv_npe_val", &indiv_npe_val);
-    output_tree.Branch("indiv_npe_err", &indiv_npe_err);
-    output_tree.Branch("onsum_npe_val", &onsum_npe_val);
-    output_tree.Branch("onsum_npe_err", &onsum_npe_err);
-    output_tree.Branch("offsum_npe_val", &offsum_npe_val);
-    output_tree.Branch("offsum_npe_err", &offsum_npe_err);
+    // output_tree.Branch("run_num", &tmp_run_num, "run_num/I");
+    // output_tree.Branch("pos_x", &pos_x, "pos_x/I");
+    // output_tree.Branch("pos_y", &pos_y, "pos_y/I");
+    // output_tree.Branch("n_trig", &n_trig, "n_trig/D");
+    // output_tree.Branch("n_hit", &n_hit, "n_hit/D");
+    // output_tree.Branch("linear_a", &linear_a);
+    // output_tree.Branch("linear_b", &linear_b);
+    // output_tree.Branch("indiv_npe_val", &indiv_npe_val);
+    // output_tree.Branch("indiv_npe_err", &indiv_npe_err);
+    // output_tree.Branch("onsum_npe_val", &onsum_npe_val);
+    // output_tree.Branch("onsum_npe_err", &onsum_npe_err);
+    // output_tree.Branch("offsum_npe_val", &offsum_npe_val);
+    // output_tree.Branch("offsum_npe_err", &offsum_npe_err);
 
-    for (Int_t i = 0, n_run_num = ana_run_num.size(); i < n_run_num; i++) {
-        tmp_run_num = ana_run_num[i];
-        std::pair<Int_t, Int_t> position = ana_helper::get_scan_position(ana_run_num[i]);
-        pos_x = position.first;
-        pos_y = position.second;
+    // for (Int_t i = 0, n_run_num = ana_run_num.size(); i < n_run_num; i++) {
+    //     tmp_run_num = ana_run_num[i];
+    //     std::pair<Int_t, Int_t> position = ana_helper::get_scan_position(ana_run_num[i]);
+    //     pos_x = position.first;
+    //     pos_y = position.second;
         
-        // -- analyze -----
-        Int_t pdf_save_mode = 0;
-        if (i == 0) pdf_save_mode = 1;
-        else if (i == n_run_num-1) pdf_save_mode = 2;
-        std::unordered_map<std::string, std::vector<FitResult>> result_container = analyze(ana_run_num[i], pdf_save_mode);
+    //     // -- analyze -----
+    //     Int_t pdf_save_mode = 0;
+    //     if (i == 0) pdf_save_mode = 1;
+    //     else if (i == n_run_num-1) pdf_save_mode = 2;
+    //     std::unordered_map<std::string, std::vector<FitResult>> result_container = analyze(ana_run_num[i], pdf_save_mode);
 
-        // -- initialize -----
-        linear_a.clear(); linear_b.clear();
-        indiv_npe_val.clear(); indiv_npe_err.clear();
-        onsum_npe_val.clear(); onsum_npe_err.clear();
-        offsum_npe_val.clear(); offsum_npe_err.clear();
+    //     // -- initialize -----
+    //     linear_a.clear(); linear_b.clear();
+    //     indiv_npe_val.clear(); indiv_npe_err.clear();
+    //     onsum_npe_val.clear(); onsum_npe_err.clear();
+    //     offsum_npe_val.clear(); offsum_npe_err.clear();
 
-        // -- efficiency -----
-        n_trig = result_container["eff"][0].additional[0];
-        n_hit  = result_container["eff"][0].additional[1];
+    //     // -- efficiency -----
+    //     n_trig = result_container["eff"][0].additional[0];
+    //     n_hit  = result_container["eff"][0].additional[1];
         
-        // -- linear -----
-        for (const auto &result : result_container["linear"]) {
-            linear_a.push_back(  result.par[0] );
-            linear_b.push_back(  result.par[1] );
-        }
+    //     // -- linear -----
+    //     for (const auto &result : result_container["linear"]) {
+    //         linear_a.push_back(  result.par[0] );
+    //         linear_b.push_back(  result.par[1] );
+    //     }
 
-        // -- indiv -----
-        for (const auto &result : result_container["indiv_npe"]) {
-            indiv_npe_val.push_back( result.par[1] );
-            indiv_npe_err.push_back( result.err[1] );
-        }
+    //     // -- indiv -----
+    //     for (const auto &result : result_container["indiv_npe"]) {
+    //         indiv_npe_val.push_back( result.par[1] );
+    //         indiv_npe_err.push_back( result.err[1] );
+    //     }
 
-        // -- onsum -----
-        for (const auto &result : result_container["onsum_npe"]) {
-            onsum_npe_val.push_back( result.par[1] );
-            onsum_npe_err.push_back( result.err[1] );
-        }
-        for (const auto &result : result_container["offsum_npe"]) {
-            offsum_npe_val.push_back( result.par[1] );
-            offsum_npe_err.push_back( result.err[1] );
-        }
+    //     // -- onsum -----
+    //     for (const auto &result : result_container["onsum_npe"]) {
+    //         onsum_npe_val.push_back( result.par[1] );
+    //         onsum_npe_err.push_back( result.err[1] );
+    //     }
+    //     for (const auto &result : result_container["offsum_npe"]) {
+    //         offsum_npe_val.push_back( result.par[1] );
+    //         offsum_npe_err.push_back( result.err[1] );
+    //     }
 
-        output_tree.Fill();
-    }
+    //     output_tree.Fill();
+    // }
 
-    // +------------+
-    // | Write data |
-    // +------------+
-    fout.cd(); // 明示的にカレントディレクトリを設定
-    output_tree.Write();
-    fout.Close(); 
+    // // +------------+
+    // // | Write data |
+    // // +------------+
+    // fout.cd(); // 明示的にカレントディレクトリを設定
+    // output_tree.Write();
+    // fout.Close(); 
 
 
     return 0;
