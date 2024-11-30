@@ -187,6 +187,9 @@ std::unordered_map<std::string, std::vector<FitResult>> analyze(Int_t run_num, I
     c->Divide(cols, rows);
     if (start_or_end == 1 || start_or_end == 3) c->Print(pdf_name + "["); // start
 
+    std::cout << "-----\n" << run_num  << std::endl;
+
+
     // -- T1 -----
     FitResult tmp_fit_result;
     tmp_fit_result = ana_helper::trig_counter_tdc_fit(h_t1t, c, nth_pad);
@@ -229,6 +232,9 @@ std::unordered_map<std::string, std::vector<FitResult>> analyze(Int_t run_num, I
     c->Clear();
     c->Divide(cols, rows);
     nth_pad = 1;
+
+
+    std::cout << "kvc tdc" << std::endl;
 
     // -- kvc sum -----
     Double_t kvc_tdc_min[conf.max_kvc_ch];
@@ -376,6 +382,7 @@ std::unordered_map<std::string, std::vector<FitResult>> analyze(Int_t run_num, I
     // +----------------------------------------+
     // | Estimate one photon gain of online sum |
     // +----------------------------------------+
+    std::cout << "linear" << std::endl;
     // -- fitting and estimate -----
     c->Print(pdf_name);
     c->Clear();
@@ -455,6 +462,8 @@ std::unordered_map<std::string, std::vector<FitResult>> analyze(Int_t run_num, I
         nth_pad++;
     }
 
+    std::cout << "indiv npe" << std::endl;
+
     // -- indiv NPE -----
     for (Int_t ch = 0; ch < conf.max_kvc_ch; ch++) {
         if (nth_pad > max_pads) {
@@ -512,6 +521,8 @@ std::unordered_map<std::string, std::vector<FitResult>> analyze(Int_t run_num, I
         h_onsum_adc[ch].trig->Draw("same");
         nth_pad++;
     }
+
+    std::cout << "sum npe" << std::endl;
 
     // -- sum npe -----
     for (Int_t ch = 0; ch < conf.max_kvc_ch; ch++) {
