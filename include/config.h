@@ -22,7 +22,7 @@ public:
     Double_t adc_max = 4096.0;
 
     // TDCのbin設定
-    Int_t tdc_bin_num = 0x10000;
+    Int_t tdc_bin_num = 65536;
     Double_t tdc_min = 0.0;
     Double_t tdc_max = 2097152.0;
 
@@ -194,6 +194,7 @@ public:
         adjust_adc_bin_num = 1024;
         sumadc_bin_num = 512;
         npe_bin_num = 525;
+        tdc_bin_num = 32768;
     }
     
 
