@@ -24,6 +24,7 @@
 #include <TBox.h>
 #include <TROOT.h>
 #include <TLatex.h>
+#include <TProfile.h>
 
 #include "config.h"
 #include "fit_functions.h"

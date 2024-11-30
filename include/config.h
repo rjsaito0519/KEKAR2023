@@ -59,10 +59,11 @@ public:
     Double_t trig_counter_tdc_n_sigma = 5.0;
     Double_t trig_counter_adc_min_n_sigma = 3.0;
     Double_t trig_counter_adc_max_n_sigma = 4.0;
-
     
 
     // -- cherenkov counter -----
+    Double_t default_cherenkov_tdc_gate_min = 105000;
+    Double_t default_cherenkov_tdc_gate_max = 140000;
     Double_t cherenkov_tdc_n_sigma = 5.0;
 
     // BAC one photon gain
@@ -188,6 +189,13 @@ public:
         sumadc_bin_num = 1024;
         npe_bin_num = 840;
     }
+
+    void kvc_thin_initialize() {
+        adjust_adc_bin_num = 1024;
+        sumadc_bin_num = 512;
+        npe_bin_num = 525;
+    }
+    
 
 private:
     Config() = default; // コンストラクタをプライベートにして外部からのインスタンス生成を禁止

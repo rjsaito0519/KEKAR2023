@@ -6,6 +6,16 @@ namespace ana_helper {
     FitResult cherenkov_tdc_fit(TH1D *h, TCanvas *c, Int_t n_c) {
         // -- almost same as trigger_counter_tdc_fit -----
         Config& conf = Config::getInstance();
+
+        if (h->GetEntries() < 10) {
+            h->GetXaxis()->SetRangeUser(conf.default_cherenkov_tdc_gate_min, conf.default_cherenkov_tdc_gate_max);
+            h->Draw();
+            FitResult result;
+            result.additional.push_back(conf.default_cherenkov_tdc_gate_min);
+            result.additional.push_back(conf.default_cherenkov_tdc_gate_max);
+            return result;
+        }
+
         c->cd(n_c);
 
         std::vector<Double_t> par, err;
@@ -82,12 +92,18 @@ namespace ana_helper {
         Double_t fit_range_min = 0.0;
         Double_t fit_range_max = 3500.0;
 
+        // make TProfile
+        Int_t ymin = h->GetYaxis()->FindBin(fit_range_min);
+        Int_t ymax = h->GetYaxis()->FindBin(fit_range_max);
+        TProfile *pf = h->ProfileX(Form("profile_%s", h->GetName()), ymin, ymax);
+        pf->SetLineColor(kRed);
+
         // -- linear fit -----
         auto *f_linear = new TF1("linear", "[0]*x+[1]", fit_range_min, fit_range_max);
         f_linear->SetParameters(1., 0.);
-        f_linear->SetLineColor(kRed);
+        f_linear->SetLineColor(kOrange);
         f_linear->SetLineWidth(2.0);
-        h->Fit(f_linear, "0Q", "", fit_range_min, fit_range_max);
+        pf->Fit(f_linear, "0QW", "", fit_range_min, fit_range_max);
 
         FitResult result;
         par.clear();
@@ -105,6 +121,7 @@ namespace ana_helper {
         // -- draw -----
         h->GetXaxis()->SetRangeUser(0.0, 4096.0);
         h->Draw("colz");
+        pf->Draw("same");
         f_linear->Draw("same");
         c->Update();
 
@@ -114,6 +131,13 @@ namespace ana_helper {
     // ____________________________________________________________________________________________
     FitResult poisson_fit(TH1D *h, TCanvas *c, Int_t n_c) {
         c->cd(n_c);
+
+        if (h->GetEntries() < 10) {
+            h->Draw();
+            FitResult result;
+            return result;
+        }
+
         std::vector<Double_t> par, err;
 
         Double_t peak_pos = h->GetMean();
@@ -174,6 +198,13 @@ namespace ana_helper {
     // ____________________________________________________________________________________________
     FitResult conv_poisson_fit(TH1D *h, TCanvas *c, Int_t n_c, Double_t pedestal_sigma) {
         c->cd(n_c);
+
+        if (h->GetEntries() < 10) {
+            h->Draw();
+            FitResult result;
+            return result;
+        }
+
         std::vector<Double_t> par, err;
 
         Double_t peak_pos = h->GetMean();
@@ -238,6 +269,13 @@ namespace ana_helper {
     // ____________________________________________________________________________________________
     FitResult npe_gauss_fit(TH1D *h, TCanvas *c, Int_t n_c, Double_t n_sigma) {
         c->cd(n_c);
+
+        if (h->GetEntries() < 10) {
+            h->Draw();
+            FitResult result;
+            return result;
+        }
+
         std::vector<Double_t> par, err;
 
         Double_t peak_pos = h->GetMean();
@@ -247,7 +285,8 @@ namespace ana_helper {
         Int_t n_iter = 3;
         par.insert(par.end(), {0.0, peak_pos, 2.0*stdev});
         for (Int_t dummy = 0; dummy < n_iter; dummy++) {
-            TF1 *f_prefit = new TF1("pre_fit_gauss", "gausn", par[1]-n_sigma*par[2], par[1]+n_sigma*par[2]);
+            Double_t fit_range_min = par[1]-n_sigma*par[2] > 5.0 ? par[1]-n_sigma*par[2] : 5.0;
+            TF1 *f_prefit = new TF1("pre_fit_gauss", "gausn", fit_range_min, par[1]+n_sigma*par[2]);
             f_prefit->SetParameter(1, par[1]);
             f_prefit->SetParameter(2, par[2]*0.5);
             h->Fit(f_prefit, "0Q", "", par[1]-n_sigma*par[2], par[1]+n_sigma*par[2]);
@@ -278,7 +317,8 @@ namespace ana_helper {
         result.reduced_chi2 = (Double_t) chi2/ndf;
 
         // -- draw -----
-        h->GetXaxis()->SetRangeUser(-3.0, 3.0*result.par[1]);
+        // h->GetXaxis()->SetRangeUser(-3.0, 3.0*result.par[1]);
+        h->GetXaxis()->SetRangeUser(-3.0, 100.0);
         h->Draw();
         f_fit->SetLineColor(kOrange);
         f_fit->SetLineWidth(2);
