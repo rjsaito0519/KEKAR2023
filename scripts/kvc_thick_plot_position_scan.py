@@ -26,13 +26,13 @@ plt.rcParams["xtick.minor.size"] = 5                 #x軸補助目盛り線の�
 plt.rcParams["ytick.minor.size"] = 5                 #y軸補助目盛り線の長さ
 
 
-class KVC_thin(pos_scan_tool.pos_scan):
+class KVC_thick(pos_scan_tool.pos_scan):
     def __init__(self, root_file_path):
         super().__init__(root_file_path)
 
     def plot(self, key, cbar_range = (np.nan, np.nan)):
-        x_pos = np.array([ -48, -32, -16, 0, 16, 32 ])
-        y_pos = np.array([ -54, -36, -18, 0, 18, 36, 54 ])
+        x_pos = np.array([ -48, -32, -16, 0, 16, 32, -48 ])
+        y_pos = np.array([ -54, -36, -18, 0, 18 ])
 
         # -- data selection -----
         data = {
@@ -70,7 +70,7 @@ class KVC_thin(pos_scan_tool.pos_scan):
             data["eff_val"].append([it.val*100 for it in eff_container])
             data["eff_err"].append([it.err*100 for it in eff_container])
             for ch in range(4):
-                data[f"sum_npe{ch}_val"].append([it.val if it.val > 5 else np.nan for it in sum_npe_container[ch]])
+                data[f"sum_npe{ch}_val"].append([it.val if it.val > 50 else np.nan for it in sum_npe_container[ch]])
                 data[f"sum_npe{ch}_err"].append([it.err for it in sum_npe_container[ch]])
 
         # DataFrameの作成
@@ -91,11 +91,15 @@ class KVC_thin(pos_scan_tool.pos_scan):
         df_err.loc[np.min(y_pos)-18] = np.nan
         df_err.loc[np.max(y_pos)+18] = np.nan
 
+        # 全部転置する
+        df_val = df_val.T
+        df_err = df_err.T
+
         # 両方の DataFrame をソート
         df_val = df_val.sort_index(axis=0, ascending=False)
-        df_val = df_val.sort_index(axis=1)
+        df_val = df_val.sort_index(axis=1, ascending=False)
         df_err = df_err.sort_index(axis=0, ascending=False)
-        df_err = df_err.sort_index(axis=1)
+        df_err = df_err.sort_index(axis=1, ascending=False)
 
         # annot を作成する
         annot = df_val.copy()  # 元の DataFrame をコピー
@@ -114,18 +118,18 @@ class KVC_thin(pos_scan_tool.pos_scan):
 
         if key == "eff":
             color_map = "viridis"
-            title = "KVC Efficiency (1 cm)"
-            img_save_path = os.path.join(self.script_dir, "../results/img/kvc/kvc_1cm_eff.pdf")
+            title = "KVC Efficiency (2 cm)"
+            img_save_path = os.path.join(self.script_dir, "../results/img/kvc/kvc_2cm_eff.pdf")
         else:
             color_map = "cividis"
-            title = "KVC seg{} NPE (1 cm)".format(int(key[-1])+1)
-            img_save_path = os.path.join(self.script_dir, "../results/img/kvc/kvc_1cm_seg{}_sumnpe.pdf".format(int(key[-1])+1))
+            title = "KVC seg{} NPE (2 cm)".format(int(key[-1])+1)
+            img_save_path = os.path.join(self.script_dir, "../results/img/kvc/kvc_2cm_seg{}_sumnpe.pdf".format(int(key[-1])+1))
             
         os.makedirs(os.path.dirname(img_save_path), exist_ok=True)
         
         plt.figure(figsize=(10, 8))
         plt.grid(which="major", alpha=0.3)
-        sns.heatmap(df_val, cmap=color_map, annot=annot, vmin=cbar_range[0], vmax=cbar_range[1], cbar=True, fmt='', annot_kws={'fontsize': 18}, cbar_kws=dict(pad=-0.08, shrink=0.78))
+        sns.heatmap(df_val, cmap=color_map, annot=annot, vmin=cbar_range[0], vmax=cbar_range[1], cbar=True, fmt='', annot_kws={'fontsize': 18}, cbar_kws=dict(pad=-0.08, shrink=0.84))
 
         # -- set radiator size ------
         kvc_height = 120
@@ -134,26 +138,27 @@ class KVC_thin(pos_scan_tool.pos_scan):
         edge_right  =  kvc_seg_width+kvc_seg_width/2
         edge_top    =  kvc_height/2
         edge_bottom = -kvc_height/2
-        for i in range(5):
-            plt.vlines(self.convert_x(edge_left+i*kvc_seg_width, np.min(df_val.columns)), self.convert_y(edge_top, np.max(df_val.index)), self.convert_y(edge_bottom, np.max(df_val.index)), color = "red", ls = "dashed", lw = 1.5, zorder = 1)
-        # 上端
-        plt.hlines(self.convert_y(edge_top, np.max(df_val.index)), self.convert_x(edge_left, np.min(df_val.columns)), self.convert_x(edge_right, np.min(df_val.columns)), color = "red", ls = "dashed", lw = 1.5, zorder = 1)
-        # 下端
-        plt.hlines(self.convert_y(edge_bottom, np.max(df_val.index)), self.convert_x(edge_left, np.min(df_val.columns)), self.convert_x(edge_right, np.min(df_val.columns)), color = "red", ls = "dashed", lw = 1.5, zorder = 1)
 
-        plt.text(self.convert_x((edge_left+edge_right)/2.0, np.min(df_val.columns)), self.convert_y(edge_top+6, np.max(df_val.index)), title, ha='center', va='bottom', zorder = 1)
-        plt.xlabel("x position [mm]")
-        plt.ylabel("y position [mm]")
+        # 転置しているのでconvert_x, yを入れ替えて使えばOK.min, maxなども
+        for i in range(5):
+            plt.vlines(self.convert_y(edge_left+i*kvc_seg_width, np.max(df_val.columns)), self.convert_x(edge_top, np.min(df_val.index)), self.convert_x(edge_bottom, np.min(df_val.index)), color = "red", ls = "dashed", lw = 1.5, zorder = 1)
+        # 上端
+        plt.hlines(self.convert_x(edge_top, np.min(df_val.index)), self.convert_y(edge_left, np.max(df_val.columns)), self.convert_y(edge_right, np.max(df_val.columns)), color = "red", ls = "dashed", lw = 1.5, zorder = 1)
+        # 下端
+        plt.hlines(self.convert_x(edge_bottom, np.min(df_val.index)), self.convert_y(edge_left, np.max(df_val.columns)), self.convert_y(edge_right, np.max(df_val.columns)), color = "red", ls = "dashed", lw = 1.5, zorder = 1)
+
+        plt.text(self.convert_y((edge_left+edge_right)/2.0, np.max(df_val.columns)), self.convert_x(edge_bottom-3, np.min(df_val.index)), title, ha='center', va='bottom', zorder = 1)
+        plt.xlabel("y position [mm]")
+        plt.ylabel("x position [mm]")
         plt.savefig(img_save_path,  format='pdf', bbox_inches='tight', dpi=600, transparent=True)
         plt.subplots_adjust(left = 0.1, right = 1.0, top = 0.96, bottom = 0.1)
         plt.show()
 
 if __name__ == '__main__':
-    bac = KVC_thin("../results/root/kvc_thin_pos_scan_analysis.root")
+    bac = KVC_thick("../results/root/kvc_thick_pos_scan_analysis.root")
     bac.plot("eff", cbar_range=(91, 100))
     
     for ch in range(4):
-        # bac.plot(f"sum_npe{ch}", cbar_range=(37, 81)) # use a, b
-        bac.plot(f"sum_npe{ch}", cbar_range=(30, 76)) # use average one photon gain
+        bac.plot(f"sum_npe{ch}", cbar_range=(111, 183)) # use average one photon gain
     
     

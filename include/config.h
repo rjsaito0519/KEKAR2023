@@ -209,7 +209,7 @@ public:
     void kvc_thick_initialize() {
         adjust_adc_bin_num = 1024;
         sumadc_bin_num = 512;
-        npe_bin_num = 1050;
+        npe_bin_num = 420;
         npe_max = 835.;
         adjust_tdc_bin_num = 32768;
         log_flag = true;

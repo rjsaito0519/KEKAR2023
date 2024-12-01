@@ -416,6 +416,11 @@ std::unordered_map<std::string, std::vector<FitResult>> analyze(Int_t run_num, I
 
             coeff_a = 2.0/(conf.kvc_thin_opg[58][ch].first + conf.kvc_thin_opg[58][ch+conf.max_kvc_ch].first);
             coeff_b = 0.0;
+
+            coeff_a = (1.0/conf.kvc_thin_opg[58][ch].first + 1.0/conf.kvc_thin_opg[58][ch+conf.max_kvc_ch].first)/2.0;
+            coeff_b = 0.0;
+
+
             // std::cout << linear_fit_result_seg2.par[0]*(conf.kvc_thin_opg[58][1].first + conf.kvc_thin_opg[58][5].first)  << ", " << linear_fit_result_seg2.par[1] << std::endl;
             // std::cout << linear_fit_result_seg3.par[0]*(conf.kvc_thin_opg[58][2].first + conf.kvc_thin_opg[58][6].first) << ", " << linear_fit_result_seg3.par[1] << std::endl;
             // std::cout << coeff_a << ", " << coeff_b << std::endl;
@@ -575,118 +580,118 @@ Int_t main(int argc, char** argv) {
     Config& conf = Config::getInstance();
     conf.kvc_thin_initialize();
 
-    // // +-------------+
-    // // | dev version |
-    // // +-------------+
-    // // -- check argments -----
-    // if (argc < 2) {
-    //     std::cerr << "Usage: " << argv[0] << " <run number>" << std::endl;
-    //     return 1;
-    // }
-    // Int_t run_num = std::atoi(argv[1]);
+    // +-------------+
+    // | dev version |
+    // +-------------+
+    // -- check argments -----
+    if (argc < 2) {
+        std::cerr << "Usage: " << argv[0] << " <run number>" << std::endl;
+        return 1;
+    }
+    Int_t run_num = std::atoi(argv[1]);
 
-    // analyze(run_num, 3);
+    analyze(run_num, 3);
     
 
-    // +-------------+
-    // | pro version |
-    // +-------------+
-    std::vector<Int_t> ana_run_num{ 
-        // Condition 1
-        378, 379, 380, 381, 382, 383, 384,
-        363, 365, 366, 368, 371, 372, 373, 
-        344, 345, 346, 347, 348, 349, 350, 
-        300, 301, 302, 303, 304, 305, 306,  
-        310, 312, 313, 314, 315, 316, 317, 
-        322, 323, 324, 325, 329, 327, 328, 
-        333, 334, 335, 336, 338, 339, 340, 
-        // again
-        353, 352, 361, 360
-    };
+    // // +-------------+
+    // // | pro version |
+    // // +-------------+
+    // std::vector<Int_t> ana_run_num{ 
+    //     // Condition 1
+    //     378, 379, 380, 381, 382, 383, 384,
+    //     363, 365, 366, 368, 371, 372, 373, 
+    //     344, 345, 346, 347, 348, 349, 350, 
+    //     300, 301, 302, 303, 304, 305, 306,  
+    //     310, 312, 313, 314, 315, 316, 317, 
+    //     322, 323, 324, 325, 329, 327, 328, 
+    //     333, 334, 335, 336, 338, 339, 340, 
+    //     // again
+    //     353, 352, 361, 360
+    // };
 
-    // +--------------------------+
-    // | prepare output root file |
-    // +--------------------------+
-    TString output_path = OUTPUT_DIR + "/root/kvc_thin_pos_scan_analysis.root";
-    if (std::ifstream(output_path.Data())) std::remove(output_path.Data());
-    TFile fout(output_path.Data(), "create");
-    TTree output_tree("tree", ""); 
+    // // +--------------------------+
+    // // | prepare output root file |
+    // // +--------------------------+
+    // TString output_path = OUTPUT_DIR + "/root/kvc_thin_pos_scan_analysis.root";
+    // if (std::ifstream(output_path.Data())) std::remove(output_path.Data());
+    // TFile fout(output_path.Data(), "create");
+    // TTree output_tree("tree", ""); 
 
-    // -- prepare root file branch -----
-    Int_t tmp_run_num, pos_x, pos_y;
-    Double_t n_trig, n_hit;
-    std::vector<Double_t> linear_a, linear_b;
-    std::vector<Double_t> indiv_npe_val, indiv_npe_err, onsum_npe_val, onsum_npe_err, offsum_npe_val, offsum_npe_err;
+    // // -- prepare root file branch -----
+    // Int_t tmp_run_num, pos_x, pos_y;
+    // Double_t n_trig, n_hit;
+    // std::vector<Double_t> linear_a, linear_b;
+    // std::vector<Double_t> indiv_npe_val, indiv_npe_err, onsum_npe_val, onsum_npe_err, offsum_npe_val, offsum_npe_err;
 
-    output_tree.Branch("run_num", &tmp_run_num, "run_num/I");
-    output_tree.Branch("pos_x", &pos_x, "pos_x/I");
-    output_tree.Branch("pos_y", &pos_y, "pos_y/I");
-    output_tree.Branch("n_trig", &n_trig, "n_trig/D");
-    output_tree.Branch("n_hit", &n_hit, "n_hit/D");
-    output_tree.Branch("linear_a", &linear_a);
-    output_tree.Branch("linear_b", &linear_b);
-    output_tree.Branch("indiv_npe_val", &indiv_npe_val);
-    output_tree.Branch("indiv_npe_err", &indiv_npe_err);
-    output_tree.Branch("onsum_npe_val", &onsum_npe_val);
-    output_tree.Branch("onsum_npe_err", &onsum_npe_err);
-    output_tree.Branch("offsum_npe_val", &offsum_npe_val);
-    output_tree.Branch("offsum_npe_err", &offsum_npe_err);
+    // output_tree.Branch("run_num", &tmp_run_num, "run_num/I");
+    // output_tree.Branch("pos_x", &pos_x, "pos_x/I");
+    // output_tree.Branch("pos_y", &pos_y, "pos_y/I");
+    // output_tree.Branch("n_trig", &n_trig, "n_trig/D");
+    // output_tree.Branch("n_hit", &n_hit, "n_hit/D");
+    // output_tree.Branch("linear_a", &linear_a);
+    // output_tree.Branch("linear_b", &linear_b);
+    // output_tree.Branch("indiv_npe_val", &indiv_npe_val);
+    // output_tree.Branch("indiv_npe_err", &indiv_npe_err);
+    // output_tree.Branch("onsum_npe_val", &onsum_npe_val);
+    // output_tree.Branch("onsum_npe_err", &onsum_npe_err);
+    // output_tree.Branch("offsum_npe_val", &offsum_npe_val);
+    // output_tree.Branch("offsum_npe_err", &offsum_npe_err);
 
-    for (Int_t i = 0, n_run_num = ana_run_num.size(); i < n_run_num; i++) {
-        tmp_run_num = ana_run_num[i];
-        std::pair<Int_t, Int_t> position = ana_helper::get_scan_position(ana_run_num[i]);
-        pos_x = position.first;
-        pos_y = position.second;
+    // for (Int_t i = 0, n_run_num = ana_run_num.size(); i < n_run_num; i++) {
+    //     tmp_run_num = ana_run_num[i];
+    //     std::pair<Int_t, Int_t> position = ana_helper::get_scan_position(ana_run_num[i]);
+    //     pos_x = position.first;
+    //     pos_y = position.second;
         
-        // -- analyze -----
-        Int_t pdf_save_mode = 0;
-        if (i == 0) pdf_save_mode = 1;
-        else if (i == n_run_num-1) pdf_save_mode = 2;
-        std::unordered_map<std::string, std::vector<FitResult>> result_container = analyze(ana_run_num[i], pdf_save_mode);
+    //     // -- analyze -----
+    //     Int_t pdf_save_mode = 0;
+    //     if (i == 0) pdf_save_mode = 1;
+    //     else if (i == n_run_num-1) pdf_save_mode = 2;
+    //     std::unordered_map<std::string, std::vector<FitResult>> result_container = analyze(ana_run_num[i], pdf_save_mode);
 
-        // -- initialize -----
-        linear_a.clear(); linear_b.clear();
-        indiv_npe_val.clear(); indiv_npe_err.clear();
-        onsum_npe_val.clear(); onsum_npe_err.clear();
-        offsum_npe_val.clear(); offsum_npe_err.clear();
+    //     // -- initialize -----
+    //     linear_a.clear(); linear_b.clear();
+    //     indiv_npe_val.clear(); indiv_npe_err.clear();
+    //     onsum_npe_val.clear(); onsum_npe_err.clear();
+    //     offsum_npe_val.clear(); offsum_npe_err.clear();
 
-        // -- efficiency -----
-        n_trig = result_container["eff"][0].additional[0];
-        n_hit  = result_container["eff"][0].additional[1];
+    //     // -- efficiency -----
+    //     n_trig = result_container["eff"][0].additional[0];
+    //     n_hit  = result_container["eff"][0].additional[1];
         
-        // -- linear -----
-        for (const auto &result : result_container["linear"]) {
-            linear_a.push_back(result.par.size() > 0 ? result.par[0] : 0.0);  // par[0] が存在しない場合は 0.0 を詰める
-            linear_b.push_back(result.par.size() > 1 ? result.par[1] : 0.0);  // par[1] が存在しない場合も 0.0 を詰める
-        }
+    //     // -- linear -----
+    //     for (const auto &result : result_container["linear"]) {
+    //         linear_a.push_back(result.par.size() > 0 ? result.par[0] : 0.0);  // par[0] が存在しない場合は 0.0 を詰める
+    //         linear_b.push_back(result.par.size() > 1 ? result.par[1] : 0.0);  // par[1] が存在しない場合も 0.0 を詰める
+    //     }
 
-        // -- indiv -----
-        for (const auto &result : result_container["indiv_npe"]) {
-            indiv_npe_val.push_back(result.par.size() > 1 ? result.par[1] : 0.0);  // par[1] がなければ 0.0
-            indiv_npe_err.push_back(result.err.size() > 1 ? result.err[1] : 0.0);  // err[1] がなければ 0.0
-        }
+    //     // -- indiv -----
+    //     for (const auto &result : result_container["indiv_npe"]) {
+    //         indiv_npe_val.push_back(result.par.size() > 1 ? result.par[1] : 0.0);  // par[1] がなければ 0.0
+    //         indiv_npe_err.push_back(result.err.size() > 1 ? result.err[1] : 0.0);  // err[1] がなければ 0.0
+    //     }
 
-        // -- onsum -----
-        for (const auto &result : result_container["onsum_npe"]) {
-            onsum_npe_val.push_back(result.par.size() > 1 ? result.par[1] : 0.0);  // par[1] がなければ 0.0
-            onsum_npe_err.push_back(result.err.size() > 1 ? result.err[1] : 0.0);  // err[1] がなければ 0.0
-        }
+    //     // -- onsum -----
+    //     for (const auto &result : result_container["onsum_npe"]) {
+    //         onsum_npe_val.push_back(result.par.size() > 1 ? result.par[1] : 0.0);  // par[1] がなければ 0.0
+    //         onsum_npe_err.push_back(result.err.size() > 1 ? result.err[1] : 0.0);  // err[1] がなければ 0.0
+    //     }
 
-        for (const auto &result : result_container["offsum_npe"]) {
-            offsum_npe_val.push_back(result.par.size() > 1 ? result.par[1] : 0.0);  // par[1] がなければ 0.0
-            offsum_npe_err.push_back(result.err.size() > 1 ? result.err[1] : 0.0);  // err[1] がなければ 0.0
-        }
+    //     for (const auto &result : result_container["offsum_npe"]) {
+    //         offsum_npe_val.push_back(result.par.size() > 1 ? result.par[1] : 0.0);  // par[1] がなければ 0.0
+    //         offsum_npe_err.push_back(result.err.size() > 1 ? result.err[1] : 0.0);  // err[1] がなければ 0.0
+    //     }
 
 
-        output_tree.Fill();
-    }
+    //     output_tree.Fill();
+    // }
 
-    // +------------+
-    // | Write data |
-    // +------------+
-    fout.cd(); // 明示的にカレントディレクトリを設定
-    output_tree.Write();
-    fout.Close(); 
+    // // +------------+
+    // // | Write data |
+    // // +------------+
+    // fout.cd(); // 明示的にカレントディレクトリを設定
+    // output_tree.Write();
+    // fout.Close(); 
 
 
     return 0;
