@@ -26,64 +26,52 @@ plt.rcParams["xtick.minor.size"] = 5                 #x軸補助目盛り線の�
 plt.rcParams["ytick.minor.size"] = 5                 #y軸補助目盛り線の長さ
 
 
-class BAC(pos_scan_tool.pos_scan):
+class KVC_thin(pos_scan_tool.pos_scan):
     def __init__(self, root_file_path):
         super().__init__(root_file_path)
 
-    def plot(self, key, cbar_range = (np.nan, np.nan), is_2layer = False):
-        x_pos = np.array([ -48, -32, -16, 0, 16, 32, 48 ])
-        y_pos = np.array([ -36, -18, 0, 18, 36 ])
+    def plot(self, key, cbar_range = (np.nan, np.nan)):
+        x_pos = np.array([ -48, -32, -16, 0, 16, 32 ])
+        y_pos = np.array([ -54, -36, -18, 0, 18, 36, 54 ])
 
         # -- data selection -----
         data = {
             "eff_val": [],
             "eff_err": [],
-            "sum_npe_val": [],
-            "sum_npe_err": [],
-            "indiv_npe0_val": [],
-            "indiv_npe0_err": [],
-            "indiv_npe1_val": [],
-            "indiv_npe1_err": [],
-            "indiv_npe2_val": [],
-            "indiv_npe2_err": [],
-            "indiv_npe3_val": [],
-            "indiv_npe3_err": [],
+            "sum_npe0_val": [],
+            "sum_npe0_err": [],
+            "sum_npe1_val": [],
+            "sum_npe1_err": [],
+            "sum_npe2_val": [],
+            "sum_npe2_err": [],
+            "sum_npe3_val": [],
+            "sum_npe3_err": [],
         }
-        run_min, run_max = 0, 392
-        if is_2layer:
-            run_min, run_max = 392, np.inf 
 
         for y in y_pos:
             eff_container = []
-            sum_npe_container = []
-            indiv_npe_container = [[], [], [], []]
+            sum_npe_container = [[], [], [], []]
             for x in x_pos:
-                indices = np.where((run_min < self.tree["run_num"]) * (self.tree["run_num"] <= run_max) * (self.tree["pos_y"] == y) * (self.tree["pos_x"] == x))[0]
+                indices = np.where((self.tree["pos_y"] == y) * (self.tree["pos_x"] == x))[0]
                 # 検出効率が一番よかったrunを採用することにする。個々の最大値を取るのではなく、基準を検出効率にしてrunをそろえる
                 eff_max = pos_scan_tool.pair(0, 0)
-                sum_npe = pos_scan_tool.pair(0, 0)
-                indiv_npe = [pos_scan_tool.pair(0, 0), pos_scan_tool.pair(0, 0), pos_scan_tool.pair(0, 0), pos_scan_tool.pair(0, 0)]
+                sum_npe = [pos_scan_tool.pair(0, 0), pos_scan_tool.pair(0, 0), pos_scan_tool.pair(0, 0), pos_scan_tool.pair(0, 0)]
                 for index in indices:
                     eff = self.tree["n_hit"][index]/self.tree["n_trig"][index]
                     if eff_max.val < eff:
                         eff_max.val = eff
                         eff_max.err = np.sqrt(eff*(1-eff)/self.tree["n_trig"][index])
-                        sum_npe.val = self.tree["offsum_npe_val"][index][0]
-                        sum_npe.err = self.tree["offsum_npe_err"][index][0]
                         for ch in range(4):
-                            indiv_npe[ch].val = self.tree["indiv_npe_val"][index][ch]
-                            indiv_npe[ch].err = self.tree["indiv_npe_err"][index][ch]
+                            sum_npe[ch].val = self.tree["onsum_npe_val"][index][ch]
+                            sum_npe[ch].err = self.tree["onsum_npe_err"][index][ch]
                 eff_container.append(eff_max)
-                sum_npe_container.append(sum_npe)
                 for ch in range(4):
-                    indiv_npe_container[ch].append(indiv_npe[ch])
+                    sum_npe_container[ch].append(sum_npe[ch])
             data["eff_val"].append([it.val*100 for it in eff_container])
             data["eff_err"].append([it.err*100 for it in eff_container])
-            data["sum_npe_val"].append([it.val for it in sum_npe_container])
-            data["sum_npe_err"].append([it.err for it in sum_npe_container])
             for ch in range(4):
-                data[f"indiv_npe{ch}_val"].append([it.val for it in indiv_npe_container[ch]])
-                data[f"indiv_npe{ch}_err"].append([it.err for it in indiv_npe_container[ch]])
+                data[f"sum_npe{ch}_val"].append([it.val if it.val > 5 else np.nan for it in sum_npe_container[ch]])
+                data[f"sum_npe{ch}_err"].append([it.err for it in sum_npe_container[ch]])
 
         # DataFrameの作成
         df_val = pd.DataFrame(data[f"{key}_val"], columns=x_pos, index=y_pos)
@@ -126,38 +114,34 @@ class BAC(pos_scan_tool.pos_scan):
 
         if key == "eff":
             color_map = "viridis"
-            title = "BAC Efficiency ({}-layer)".format(2 if is_2layer else 3)
-            img_save_path = os.path.join(self.script_dir, "../results/img/bac/bac_{}layer_eff.pdf".format(2 if is_2layer else 3))
-        elif key == "sum_npe":
-            color_map = "cividis"
-            title = "BACSUM NPE ({}-layer)".format(2 if is_2layer else 3)
-            img_save_path = os.path.join(self.script_dir, "../results/img/bac/bac_{}layer_sumnpe.pdf".format(2 if is_2layer else 3))
+            title = "KVC Efficiency (1 cm)"
+            img_save_path = os.path.join(self.script_dir, "../results/img/kvc/kvc_1cm_eff.pdf")
         else:
             color_map = "cividis"
-            title = "BAC ch{} NPE ({}-layer)".format(int(key[-1])+1, 2 if is_2layer else 3)
-            img_save_path = os.path.join(self.script_dir, "../results/img/bac/bac_{}layer_ch{}npe.pdf".format(int(key[-1])+1, 2 if is_2layer else 3))
+            title = "KVC seg{} NPE (1 cm)".format(int(key[-1])+1)
+            img_save_path = os.path.join(self.script_dir, "../results/img/kvc/kvc_1cm_seg{}_sumnpe.pdf".format(int(key[-1])+1))
             
         os.makedirs(os.path.dirname(img_save_path), exist_ok=True)
         
         plt.figure(figsize=(10, 8))
         plt.grid(which="major", alpha=0.3)
-        sns.heatmap(df_val, cmap=color_map, annot=annot, vmin=cbar_range[0], vmax=cbar_range[1], cbar=True, fmt='', annot_kws={'fontsize': 18}, cbar_kws=dict(pad=-0.06, shrink=0.92))
+        sns.heatmap(df_val, cmap=color_map, annot=annot, vmin=cbar_range[0], vmax=cbar_range[1], cbar=True, fmt='', annot_kws={'fontsize': 18}, cbar_kws=dict(pad=-0.08, shrink=0.78))
 
         # -- set radiator size ------
-        edge_left   = -115/2
-        edge_right  =  115/2
-        edge_top    =  115/2
-        edge_bottom = -115/2
-        # 左端
-        plt.vlines(self.convert_x(edge_left, np.min(df_val.columns)), self.convert_y(edge_top, np.max(df_val.index)), self.convert_y(edge_bottom, np.max(df_val.index)), color = "red", ls = "dashed", lw = 2, zorder = 1)
-        # 右端
-        plt.vlines(self.convert_x(edge_right, np.min(df_val.columns)), self.convert_y(edge_top, np.max(df_val.index)), self.convert_y(edge_bottom, np.max(df_val.index)), color = "red", ls = "dashed", lw = 2, zorder = 1)
+        kvc_height = 120
+        kvc_seg_width = 26
+        edge_left   = -kvc_seg_width*2-kvc_seg_width/2
+        edge_right  =  kvc_seg_width+kvc_seg_width/2
+        edge_top    =  kvc_height/2
+        edge_bottom = -kvc_height/2
+        for i in range(5):
+            plt.vlines(self.convert_x(edge_left+i*kvc_seg_width, np.min(df_val.columns)), self.convert_y(edge_top, np.max(df_val.index)), self.convert_y(edge_bottom, np.max(df_val.index)), color = "red", ls = "dashed", lw = 1.5, zorder = 1)
         # 上端
-        plt.hlines(self.convert_y(edge_top, np.max(df_val.index)), self.convert_x(edge_left, np.min(df_val.columns)), self.convert_x(edge_right, np.min(df_val.columns)), color = "red", ls = "dashed", lw = 2, zorder = 1)
+        plt.hlines(self.convert_y(edge_top, np.max(df_val.index)), self.convert_x(edge_left, np.min(df_val.columns)), self.convert_x(edge_right, np.min(df_val.columns)), color = "red", ls = "dashed", lw = 1.5, zorder = 1)
         # 下端
-        plt.hlines(self.convert_y(edge_bottom, np.max(df_val.index)), self.convert_x(edge_left, np.min(df_val.columns)), self.convert_x(edge_right, np.min(df_val.columns)), color = "red", ls = "dashed", lw = 2, zorder = 1)
+        plt.hlines(self.convert_y(edge_bottom, np.max(df_val.index)), self.convert_x(edge_left, np.min(df_val.columns)), self.convert_x(edge_right, np.min(df_val.columns)), color = "red", ls = "dashed", lw = 1.5, zorder = 1)
 
-        plt.text(self.convert_x(0, np.min(df_val.columns)), self.convert_y(edge_top+3, np.max(df_val.index)), title, ha='center', va='bottom', zorder = 1)
+        plt.text(self.convert_x((edge_left+edge_right)/2.0, np.min(df_val.columns)), self.convert_y(edge_top+6, np.max(df_val.index)), title, ha='center', va='bottom', zorder = 1)
         plt.xlabel("x position [mm]")
         plt.ylabel("y position [mm]")
         plt.savefig(img_save_path,  format='pdf', bbox_inches='tight', dpi=600, transparent=True)
@@ -165,15 +149,11 @@ class BAC(pos_scan_tool.pos_scan):
         plt.show()
 
 if __name__ == '__main__':
-    bac = BAC("../results/root/bac_pos_scan_analysis.root")
-    bac.plot("eff", cbar_range=(97, 100), is_2layer=True)
-    bac.plot("eff", cbar_range=(97, 100), is_2layer=False)
-    bac.plot("sum_npe", cbar_range=(43, 93), is_2layer=True)
-    bac.plot("sum_npe", cbar_range=(43, 93), is_2layer=False)
+    bac = KVC_thin("../results/root/kvc_thin_pos_scan_analysis.root")
+    bac.plot("eff", cbar_range=(94, 100))
     
     for ch in range(4):
-        bac.plot(f"indiv_npe{ch}", cbar_range=(3, 34), is_2layer=True)
-        bac.plot(f"indiv_npe{ch}", cbar_range=(3, 34), is_2layer=False)
-        
+        # bac.plot(f"sum_npe{ch}", cbar_range=(37, 81)) # use a, b
+        bac.plot(f"sum_npe{ch}", cbar_range=(30, 76)) # use average one photon gain
     
     
