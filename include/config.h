@@ -65,8 +65,13 @@ public:
     // -- cherenkov counter -----
     Double_t default_cherenkov_tdc_gate_min = 105000;
     Double_t default_cherenkov_tdc_gate_max = 140000;
+    
     Double_t cherenkov_tdc_n_sigma = 5.0;
+    
     Bool_t log_flag = false;
+    
+    Double_t linear_fit_range_min = 0.0;
+    Double_t linear_fit_range_max = 3500.0;
 
     // BAC one photon gain
     std::unordered_map<Int_t, std::vector<std::pair<Double_t, Double_t>>> bac_opg{
@@ -198,6 +203,7 @@ public:
         npe_bin_num = 525;
         adjust_tdc_bin_num = 32768;
         log_flag = true;
+        linear_fit_range_max = 1500.0;
     }
     
     void kvc_thick_initialize() {
@@ -207,6 +213,7 @@ public:
         npe_max = 835.;
         adjust_tdc_bin_num = 32768;
         log_flag = true;
+        linear_fit_range_max = 2000.0;
     }
     
 

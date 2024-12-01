@@ -89,12 +89,12 @@ namespace ana_helper {
 
         std::vector<Double_t> par, err;
 
-        Double_t fit_range_min = 0.0;
-        Double_t fit_range_max = 3500.0;
+        Double_t fit_range_min = conf.linear_fit_range_min;
+        Double_t fit_range_max = conf.linear_fit_range_max;
 
         // make TProfile
-        Int_t ymin = h->GetYaxis()->FindBin(fit_range_min);
-        Int_t ymax = h->GetYaxis()->FindBin(fit_range_max);
+        Int_t ymin = h->GetYaxis()->FindBin(conf.npe_min);
+        Int_t ymax = h->GetYaxis()->FindBin(conf.npe_max);
         TProfile *pf = h->ProfileX(Form("profile_%s", h->GetName()), ymin, ymax);
         pf->SetLineColor(kRed);
 
