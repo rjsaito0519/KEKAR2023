@@ -387,8 +387,12 @@ std::unordered_map<std::string, std::vector<FitResult>> analyze(Int_t run_num, I
                       * (conf.kvc_thick_opg[56][1].first + conf.kvc_thick_opg[56][5].first + conf.kvc_thick_opg[56][9].first + conf.kvc_thick_opg[56][13].first)
                       / (conf.kvc_thick_opg[56][ch].first + conf.kvc_thick_opg[56][ch+conf.max_kvc_ch].first + conf.kvc_thick_opg[56][ch+2*conf.max_kvc_ch].first + conf.kvc_thick_opg[56][ch+3*conf.max_kvc_ch].first);
 
-            // coeff_a = 4.0/(conf.kvc_thick_opg[56][ch].first + conf.kvc_thick_opg[56][ch+conf.max_kvc_ch].first + conf.kvc_thick_opg[56][ch+2*conf.max_kvc_ch].first + conf.kvc_thick_opg[56][ch+3*conf.max_kvc_ch].first);
+            coeff_a = 4.0/(conf.kvc_thick_opg[56][ch].first + conf.kvc_thick_opg[56][ch+conf.max_kvc_ch].first + conf.kvc_thick_opg[56][ch+2*conf.max_kvc_ch].first + conf.kvc_thick_opg[56][ch+3*conf.max_kvc_ch].first);
+            coeff_b = 0.0;
+
+            // coeff_a = (1.0/conf.kvc_thick_opg[56][ch].first + 1.0/conf.kvc_thick_opg[56][ch+conf.max_kvc_ch].first + 1.0/conf.kvc_thick_opg[56][ch+2*conf.max_kvc_ch].first + 1.0/conf.kvc_thick_opg[56][ch+3*conf.max_kvc_ch].first)/4.0;
             // coeff_b = 0.0;
+
             // std::cout << linear_fit_result.par[0] << ", " << linear_fit_result.par[1] << std::endl;
             // std::cout << 4.0/(conf.kvc_thick_opg[56][1].first + conf.kvc_thick_opg[56][5].first + conf.kvc_thick_opg[56][9].first + conf.kvc_thick_opg[56][13].first) << std::endl;
             // std::cout << coeff_a << ", " << coeff_b << std::endl;
@@ -502,7 +506,7 @@ std::unordered_map<std::string, std::vector<FitResult>> analyze(Int_t run_num, I
         }
 
         Double_t cutoff_threshold = 0.0;
-        if (std::binary_search(should_hit_ch.begin(), should_hit_ch.end(), ch)) cutoff_threshold = 80.0;
+        if (std::binary_search(should_hit_ch.begin(), should_hit_ch.end(), ch)) cutoff_threshold = 50.0;
 
         c->cd(nth_pad);
         // Double_t peak_pos = h_offsum_npe[ch].raw->GetMean();

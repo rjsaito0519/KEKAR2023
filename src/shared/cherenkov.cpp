@@ -280,6 +280,12 @@ namespace ana_helper {
 
         std::vector<Double_t> par, err;
         h->GetXaxis()->SetRangeUser(cutoff_threshold, conf.npe_max);
+        if ( h->GetMaximum() < 30) {
+                        h->Draw();
+            FitResult result;
+            return result;
+        }
+
         Double_t peak_pos = h->GetMean();
         Double_t stdev = h->GetStdDev();
 
