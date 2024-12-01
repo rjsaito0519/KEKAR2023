@@ -23,6 +23,7 @@ public:
 
     // TDCのbin設定
     Int_t tdc_bin_num = 65536;
+    Int_t adjust_tdc_bin_num = 65536; // for adjustment
     Double_t tdc_min = 0.0;
     Double_t tdc_max = 2097152.0;
 
@@ -65,6 +66,7 @@ public:
     Double_t default_cherenkov_tdc_gate_min = 105000;
     Double_t default_cherenkov_tdc_gate_max = 140000;
     Double_t cherenkov_tdc_n_sigma = 5.0;
+    Bool_t log_flag = false;
 
     // BAC one photon gain
     std::unordered_map<Int_t, std::vector<std::pair<Double_t, Double_t>>> bac_opg{
@@ -194,7 +196,17 @@ public:
         adjust_adc_bin_num = 1024;
         sumadc_bin_num = 512;
         npe_bin_num = 525;
-        tdc_bin_num = 32768;
+        adjust_tdc_bin_num = 32768;
+        log_flag = true;
+    }
+    
+    void kvc_thick_initialize() {
+        adjust_adc_bin_num = 1024;
+        sumadc_bin_num = 512;
+        npe_bin_num = 1050;
+        npe_max = 835.;
+        adjust_tdc_bin_num = 32768;
+        log_flag = true;
     }
     
 
