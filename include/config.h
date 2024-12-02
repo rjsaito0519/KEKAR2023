@@ -73,7 +73,7 @@ public:
     Double_t linear_fit_range_min = 0.0;
     Double_t linear_fit_range_max = 3500.0;
 
-    Double_t threshold_fit_range_min = 20.0;
+    Double_t threshold_fit_range_min = 0.0;
     Double_t threshold_fit_range_max = 250.0;
 
     // BAC one photon gain
@@ -198,6 +198,7 @@ public:
         adjust_adc_bin_num = 1024;
         sumadc_bin_num = 1024;
         npe_bin_num = tmp_npe_bin_num;
+        threshold_fit_range_max = 100.0;
     }
 
     void kvc_thin_initialize() {

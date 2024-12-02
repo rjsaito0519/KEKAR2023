@@ -30,7 +30,7 @@
 
 static const TString pdf_name =  OUTPUT_DIR + "/img/bac_hv_threshold_scan.pdf";
 
-std::unordered_map<std::string, std::vector<FitResult>> analyze(Int_t run_num_beam, Int_t run_num_ped, Int_t HV, Int_t start_or_end = 0) // 0: mid_page, 1:start_page, 2: end_page, 3: both
+std::unordered_map<std::string, std::vector<FitResult>> analyze(Int_t run_num_beam, Int_t run_num_ped, Int_t hv, Int_t start_or_end = 0) // 0: mid_page, 1:start_page, 2: end_page, 3: both
 {   
     // +---------+
     // | setting |
@@ -199,9 +199,9 @@ std::unordered_map<std::string, std::vector<FitResult>> analyze(Int_t run_num_be
         Double_t offline_sum_npe = 0.;
         for (Int_t ch = 0; ch < conf.max_bac_ch; ch++) {
             h_baca[ch].raw->Fill(baca_beam[ch]);
-            h_npe[ch].raw->Fill( (baca_beam[ch] - result_container["BAC_ped"][ch].par[1]) / conf.bac_opg[HV][ch].first );
+            h_npe[ch].raw->Fill( (baca_beam[ch] - result_container["BAC_ped"][ch].par[1]) / conf.bac_opg[hv][ch].first );
             offline_sum_a   +=  baca_beam[ch] - result_container["BAC_ped"][ch].par[1];
-            offline_sum_npe += (baca_beam[ch] - result_container["BAC_ped"][ch].par[1]) / conf.bac_opg[HV][ch].first;
+            offline_sum_npe += (baca_beam[ch] - result_container["BAC_ped"][ch].par[1]) / conf.bac_opg[hv][ch].first;
         }
         h_offsum_adc.raw->Fill(offline_sum_a);
         h_onsum_adc.raw->Fill(bacsuma_beam[0] - result_container["BACSUM_ped"][0].par[1]);
@@ -214,9 +214,9 @@ std::unordered_map<std::string, std::vector<FitResult>> analyze(Int_t run_num_be
             offline_sum_npe = 0.;
             for (Int_t ch = 0; ch < conf.max_bac_ch; ch++) {
                 h_baca[ch].trig->Fill(baca_beam[ch]);
-                h_npe[ch].trig->Fill( (baca_beam[ch] - result_container["BAC_ped"][ch].par[1]) / conf.bac_opg[HV][ch].first );
+                h_npe[ch].trig->Fill( (baca_beam[ch] - result_container["BAC_ped"][ch].par[1]) / conf.bac_opg[hv][ch].first );
                 offline_sum_a   +=  baca_beam[ch] - result_container["BAC_ped"][ch].par[1];
-                offline_sum_npe += (baca_beam[ch] - result_container["BAC_ped"][ch].par[1]) / conf.bac_opg[HV][ch].first;
+                offline_sum_npe += (baca_beam[ch] - result_container["BAC_ped"][ch].par[1]) / conf.bac_opg[hv][ch].first;
             }
             h_offsum_adc.trig->Fill(offline_sum_a);
             h_onsum_adc.trig->Fill(bacsuma_beam[0] - result_container["BACSUM_ped"][0].par[1]);
@@ -389,7 +389,7 @@ std::unordered_map<std::string, std::vector<FitResult>> analyze(Int_t run_num_be
         // h_offsum_ratio->GetXaxis()->SetRangeUser(conf.threshold_fit_range_min - 10, conf.threshold_fit_range_max + 10);
         // h_offsum_ratio->Draw();
         FitResult offsum_result = ana_helper::threshold_erf_fit(h_offsum_ratio, c, nth_pad);
-        result_container["offsum_threshold"].push_back(offsum_result);
+        result_container["offsum_thre"].push_back(offsum_result);
         nth_pad++;
 
         c->cd(nth_pad);
@@ -397,7 +397,7 @@ std::unordered_map<std::string, std::vector<FitResult>> analyze(Int_t run_num_be
         // h_onsum_ratio->GetXaxis()->SetRangeUser(conf.threshold_fit_range_min - 10, conf.threshold_fit_range_max + 10);
         // h_onsum_ratio->Draw();
         FitResult onsum_result = ana_helper::threshold_erf_fit(h_onsum_ratio, c, nth_pad);
-        result_container["onsum_threshold"].push_back(onsum_result);
+        result_container["onsum_thre"].push_back(onsum_result);
         nth_pad++;
     }
 
@@ -411,17 +411,7 @@ std::unordered_map<std::string, std::vector<FitResult>> analyze(Int_t run_num_be
 
 Int_t main(int argc, char** argv) {
     Config& conf = Config::getInstance();
-    conf.bac_initialize(420);
-
-    // +-------------+
-    // | dev version |
-    // +-------------+
-    // -- check argments -----
-    // if (argc < 2) {
-    //     std::cerr << "Usage: " << argv[0] << " <run number>" << std::endl;
-    //     return 1;
-    // }
-    // Int_t run_num = std::atoi(argv[1]);
+    conf.bac_initialize(525);
 
     analyze(269, 295, 58, 1);
     analyze(270, 296, 58, 0);
@@ -441,114 +431,128 @@ Int_t main(int argc, char** argv) {
     analyze(283, 288, 56, 0);
     analyze(284, 289, 56, 2);
 
-    // // +-------------+
-    // // | pro version |
-    // // +-------------+
-    // std::vector<Int_t> ana_run_num{ 
-    //     // Condition 1
-    //     379, 380, 381, 382, 383, 384, 385,
-    //     365, 366, 368, 371, 372, 373, 374,
-    //     345, 346, 347, 348, 349, 350, 351,
-    //     301, 302, 303, 304, 305, 306, 307, 
-    //     312, 313, 314, 315, 316, 317, 318,
-    //     323, 324, 325, 329, 327, 328, 330,
-    //     334, 335, 336, 338, 339, 340, 341,
-    //     // again and additional
-    //     353, 352, 361, 360, 388, 390, 391, 392,
-
-    //     // Condition 2
-    //     508, 509, 510, 511, 512, 513, 514,
-    //     498, 499, 500, 501, 502, 503, 504,
-    //     488, 489, 490, 491, 492, 493, 494,
-    //     448, 449, 450, 451, 452, 453, 454,
-    //     458, 459, 460, 461, 462, 463, 464,
-    //     468, 469, 470, 471, 472, 473, 474,
-    //     478, 479, 480, 481, 482, 483, 484,
-    //     // additional
-    //     517, 521, 518, 522, 519, 523, 525, 526, 527, 529, 530, 531
-    // };
-
-    // // +--------------------------+
-    // // | prepare output root file |
-    // // +--------------------------+
-    // TString output_path = OUTPUT_DIR + "/root/bac_pos_scan_analysis.root";
-    // if (std::ifstream(output_path.Data())) std::remove(output_path.Data());
-    // TFile fout(output_path.Data(), "create");
-    // TTree output_tree("tree", ""); 
-
-    // // -- prepare root file branch -----
-    // Int_t tmp_run_num, pos_x, pos_y;
-    // Double_t n_trig, n_hit;
-    // std::vector<Double_t> linear_a, linear_b;
-    // std::vector<Double_t> indiv_npe_val, indiv_npe_err, onsum_npe_val, onsum_npe_err, offsum_npe_val, offsum_npe_err;
-
-    // output_tree.Branch("run_num", &tmp_run_num, "run_num/I");
-    // output_tree.Branch("pos_x", &pos_x, "pos_x/I");
-    // output_tree.Branch("pos_y", &pos_y, "pos_y/I");
-    // output_tree.Branch("n_trig", &n_trig, "n_trig/D");
-    // output_tree.Branch("n_hit", &n_hit, "n_hit/D");
-    // output_tree.Branch("linear_a", &linear_a);
-    // output_tree.Branch("linear_b", &linear_b);
-    // output_tree.Branch("indiv_npe_val", &indiv_npe_val);
-    // output_tree.Branch("indiv_npe_err", &indiv_npe_err);
-    // output_tree.Branch("onsum_npe_val", &onsum_npe_val);
-    // output_tree.Branch("onsum_npe_err", &onsum_npe_err);
-    // output_tree.Branch("offsum_npe_val", &offsum_npe_val);
-    // output_tree.Branch("offsum_npe_err", &offsum_npe_err);
-
-    // for (Int_t i = 0, n_run_num = ana_run_num.size(); i < n_run_num; i++) {
-    //     tmp_run_num = ana_run_num[i];
-    //     std::pair<Int_t, Int_t> position = ana_helper::get_scan_position(ana_run_num[i]);
-    //     pos_x = position.first;
-    //     pos_y = position.second;
+    // +-------------+
+    // | pro version |
+    // +-------------+
+    std::vector<std::vector<Double_t>> run_info{
+    //   beam ped  HV  Vth
+    
+        // Condition 1
+        {269, 295, 58,  50},
+        {270, 296, 58,  75},
+        {271, 297, 58, 100},
+        {272, 298, 58, 125},
+        {273, 299, 58, 150},
         
-    //     // -- analyze -----
-    //     Int_t pdf_save_mode = 0;
-    //     if (i == 0) pdf_save_mode = 1;
-    //     else if (i == n_run_num-1) pdf_save_mode = 2;
-    //     std::unordered_map<std::string, std::vector<FitResult>> result_container = analyze(ana_run_num[i], pdf_save_mode);
-
-    //     // -- initialize -----
-    //     linear_a.clear(); linear_b.clear();
-    //     indiv_npe_val.clear(); indiv_npe_err.clear();
-    //     onsum_npe_val.clear(); onsum_npe_err.clear();
-    //     offsum_npe_val.clear(); offsum_npe_err.clear();
-
-    //     // -- efficiency -----
-    //     n_trig = result_container["eff"][0].additional[0];
-    //     n_hit  = result_container["eff"][0].additional[1];
+        {274, 290, 57,  50},
+        {275, 291, 57,  75},
+        {276, 292, 57, 100},
+        {277, 293, 57, 125},
+        {278, 294, 57, 150},
         
-    //     // -- linear -----
-    //     for (const auto &result : result_container["linear"]) {
-    //         linear_a.push_back(  result.par[0] );
-    //         linear_b.push_back(  result.par[1] );
-    //     }
+        {280, 285, 56,  50},
+        {281, 286, 56,  75},
+        {282, 287, 56, 100},
+        {283, 288, 56, 125},
+        {284, 289, 56, 150},
 
-    //     // -- indiv -----
-    //     for (const auto &result : result_container["indiv_npe"]) {
-    //         indiv_npe_val.push_back( result.par[1] );
-    //         indiv_npe_err.push_back( result.err[1] );
-    //     }
+        // Condition 2
+        {412, 429, 58,  50},
+        {445, 446, 58,  60},
+        {414, 430, 58,  75},
+        {415, 431, 58, 100},
+        {416, 432, 58, 125},
+        {417, 433, 58, 150},
+        
+        {418, 434, 57,  50},
+        {419, 435, 57,  75},
+        {420, 436, 57, 100},
+        {421, 437, 57, 125},
+        {422, 438, 57, 150},
+        
+        {423, 439, 56,  50},
+        {424, 440, 56,  75},
+        {425, 441, 56, 100},
+        {426, 442, 56, 125},
+        {427, 443, 56, 150},
+    };
 
-    //     // -- onsum -----
-    //     for (const auto &result : result_container["onsum_npe"]) {
-    //         onsum_npe_val.push_back( result.par[1] );
-    //         onsum_npe_err.push_back( result.err[1] );
-    //     }
-    //     for (const auto &result : result_container["offsum_npe"]) {
-    //         offsum_npe_val.push_back( result.par[1] );
-    //         offsum_npe_err.push_back( result.err[1] );
-    //     }
+    // +--------------------------+
+    // | prepare output root file |
+    // +--------------------------+
+    TString output_path = OUTPUT_DIR + "/root/bac_hv_threshold_scan.root";
+    if (std::ifstream(output_path.Data())) std::remove(output_path.Data());
+    TFile fout(output_path.Data(), "create");
+    TTree output_tree("tree", ""); 
 
-    //     output_tree.Fill();
-    // }
+    // -- prepare root file branch -----
+    Int_t run_num_beam, hv, threshold;
+    Double_t n_entry_beam, n_hit_beam, n_entry_ped, n_hit_ped;
+    std::vector<Double_t> linear_a, linear_b;
+    std::vector<Double_t> onsum_thre_val, onsum_thre_err, offsum_thre_val, offsum_thre_err;
 
-    // // +------------+
-    // // | Write data |
-    // // +------------+
-    // fout.cd(); // 明示的にカレントディレクトリを設定
-    // output_tree.Write();
-    // fout.Close(); 
+    output_tree.Branch("run_num", &run_num_beam, "run_num/I");
+    output_tree.Branch("hv", &hv, "hv/I");
+    output_tree.Branch("threshold", &threshold, "threshold/I");
+    output_tree.Branch("n_entry_beam", &n_entry_beam, "n_entry_beam/D");
+    output_tree.Branch("n_hit_beam", &n_hit_beam, "n_hit_beam/D");
+    output_tree.Branch("n_entry_ped", &n_entry_ped, "n_entry_ped/D");
+    output_tree.Branch("n_hit_ped", &n_hit_ped, "n_hit_ped/D");    
+    output_tree.Branch("linear_a", &linear_a);
+    output_tree.Branch("linear_b", &linear_b);
+    output_tree.Branch("onsum_thre_val", &onsum_thre_val);
+    output_tree.Branch("onsum_thre_err", &onsum_thre_err);
+    output_tree.Branch("offsum_thre_val", &offsum_thre_val);
+    output_tree.Branch("offsum_thre_err", &offsum_thre_err);
+
+    for (Int_t i = 0, n_run_info = run_info.size(); i < n_run_info; i++) {
+        run_num_beam = run_info[i][0];
+        hv = run_info[i][2];
+        threshold = run_info[i][3];
+        
+        // -- analyze -----
+        Int_t pdf_save_mode = 0;
+        if (i == 0) pdf_save_mode = 1;
+        else if (i == n_run_info-1) pdf_save_mode = 2;
+        std::unordered_map<std::string, std::vector<FitResult>> result_container = analyze(run_info[i][0], run_info[i][1], run_info[i][2], pdf_save_mode);
+
+        // -- initialize -----
+        linear_a.clear(); linear_b.clear();
+        onsum_thre_val.clear(); onsum_thre_err.clear();
+        offsum_thre_val.clear(); offsum_thre_err.clear();
+
+        // -- efficiency -----
+        n_entry_beam = result_container["eff"][0].additional[0];
+        n_hit_beam   = result_container["eff"][0].additional[1];
+        n_entry_ped  = result_container["eff"][1].additional[0];
+        n_hit_ped    = result_container["eff"][1].additional[1];
+        
+
+        // -- linear -----
+        for (const auto &result : result_container["linear"]) {
+            linear_a.push_back(  result.par[0] );
+            linear_b.push_back(  result.par[1] );
+        }
+
+        // -- onsum -----
+        for (const auto &result : result_container["onsum_thre"]) {
+            onsum_thre_val.push_back( result.par[1] );
+            onsum_thre_err.push_back( result.err[1] );
+        }
+        for (const auto &result : result_container["offsum_thre"]) {
+            offsum_thre_val.push_back( result.par[1] );
+            offsum_thre_err.push_back( result.err[1] );
+        }
+
+        output_tree.Fill();
+    }
+
+    // +------------+
+    // | Write data |
+    // +------------+
+    fout.cd(); // 明示的にカレントディレクトリを設定
+    output_tree.Write();
+    fout.Close(); 
 
 
     return 0;
