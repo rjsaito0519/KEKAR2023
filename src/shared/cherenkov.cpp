@@ -347,17 +347,22 @@ namespace ana_helper {
         c->cd(n_c);
         std::vector<Double_t> par, err;
 
+        // -- prepare smooth hist -----
+        TH1D *h_clone = (TH1D*)h->Clone(Form("%s_clone", h->GetName()));
+        h_clone->Smooth(10);
+
         // -- erf fit -----
         Double_t fit_range_min = conf.threshold_fit_range_min;
         Double_t fit_range_max = conf.threshold_fit_range_max;
+        h_clone->GetXaxis()->SetRangeUser(fit_range_min, fit_range_max);
         TF1 *f_fit_erf = new TF1( Form("erf_fit_%s", h->GetName()), "[0]*TMath::Erf( (x-[1])/[2] ) + 0.5", fit_range_min, fit_range_max);
         f_fit_erf->FixParameter(0, 0.5);
-        f_fit_erf->SetParameter(1, fit_range_min + 10);
+        f_fit_erf->SetParameter(1, h_clone->GetBinCenter(h_clone->GetMaximumBin()) - 10.0);
         f_fit_erf->SetParameter(2, 10.0);
         f_fit_erf->SetLineColor(kOrange);
         f_fit_erf->SetLineWidth(2);
         f_fit_erf->SetNpx(1000);
-        h->Fit(f_fit_erf, "0", "", fit_range_min, fit_range_max);
+        h_clone->Fit(f_fit_erf, "0", "", fit_range_min, fit_range_max);
 
         FitResult result;
         par.clear();
@@ -375,6 +380,8 @@ namespace ana_helper {
 
         h->GetXaxis()->SetRangeUser(result.par[1] - 5.0*result.par[2], result.par[1] + 5.0*result.par[2]);
         h->Draw();
+        h_clone->SetLineColor(kGreen);
+        h_clone->Draw("same");
         f_fit_erf->Draw("same");
 
         TLine *line = new TLine(result.par[1], 0, result.par[1], 1.0);
@@ -383,6 +390,7 @@ namespace ana_helper {
         line->SetLineColor(kRed);
         line->Draw("same");
 
+        // delete h_clone;
         return result;
     }
 
