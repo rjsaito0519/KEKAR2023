@@ -135,7 +135,7 @@ class BAC(pos_scan_tool.pos_scan):
         else:
             color_map = "cividis"
             title = "BAC ch{} NPE ({}-layer)".format(int(key[-1])+1, 2 if is_2layer else 3)
-            img_save_path = os.path.join(self.script_dir, "../results/img/bac/bac_{}layer_ch{}npe.pdf".format(int(key[-1])+1, 2 if is_2layer else 3))
+            img_save_path = os.path.join(self.script_dir, "../results/img/bac/bac_{}layer_ch{}npe.pdf".format(2 if is_2layer else 3, int(key[-1])+1))
             
         os.makedirs(os.path.dirname(img_save_path), exist_ok=True)
         

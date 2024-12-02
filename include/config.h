@@ -194,10 +194,10 @@ public:
                 {14.629, 0.044}}}   // down kvc seg4
     };
 
-    void bac_initialize() {
+    void bac_initialize(Int_t tmp_npe_bin_num = 525) {
         adjust_adc_bin_num = 1024;
         sumadc_bin_num = 1024;
-        npe_bin_num = 840;
+        npe_bin_num = tmp_npe_bin_num;
     }
 
     void kvc_thin_initialize() {
