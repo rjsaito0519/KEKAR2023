@@ -101,6 +101,11 @@ class KVC_thick(pos_scan_tool.pos_scan):
         df_err = df_err.sort_index(axis=0, ascending=False)
         df_err = df_err.sort_index(axis=1, ascending=False)
 
+        # NaNを含む列をすべてNaNで埋める（端の余白は除外）
+        nan_columns = df_val.iloc[1:-1].isna().any(axis=0)
+        df_val.loc[:, nan_columns] = np.nan
+        df_err.loc[:, nan_columns] = np.nan
+
         # annot を作成する
         annot = df_val.copy()  # 元の DataFrame をコピー
 

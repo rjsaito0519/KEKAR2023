@@ -379,13 +379,13 @@ std::unordered_map<std::string, std::vector<FitResult>> analyze(Int_t run_num, I
             coeff_a = linear_fit_result.par[0];
             coeff_b = linear_fit_result.par[1];
         } else {
-            coeff_a = linear_fit_result.par[0] 
-                      * (conf.kvc_thick_opg[56][1].first + conf.kvc_thick_opg[56][5].first + conf.kvc_thick_opg[56][9].first + conf.kvc_thick_opg[56][13].first)
-                      / (conf.kvc_thick_opg[56][ch].first + conf.kvc_thick_opg[56][ch+conf.max_kvc_ch].first + conf.kvc_thick_opg[56][ch+2*conf.max_kvc_ch].first + conf.kvc_thick_opg[56][ch+3*conf.max_kvc_ch].first);
+            // coeff_a = linear_fit_result.par[0] 
+            //           * (conf.kvc_thick_opg[56][1].first + conf.kvc_thick_opg[56][5].first + conf.kvc_thick_opg[56][9].first + conf.kvc_thick_opg[56][13].first)
+            //           / (conf.kvc_thick_opg[56][ch].first + conf.kvc_thick_opg[56][ch+conf.max_kvc_ch].first + conf.kvc_thick_opg[56][ch+2*conf.max_kvc_ch].first + conf.kvc_thick_opg[56][ch+3*conf.max_kvc_ch].first);
 
-            coeff_b = linear_fit_result.par[1] 
-                      * (conf.kvc_thick_opg[56][1].first + conf.kvc_thick_opg[56][5].first + conf.kvc_thick_opg[56][9].first + conf.kvc_thick_opg[56][13].first)
-                      / (conf.kvc_thick_opg[56][ch].first + conf.kvc_thick_opg[56][ch+conf.max_kvc_ch].first + conf.kvc_thick_opg[56][ch+2*conf.max_kvc_ch].first + conf.kvc_thick_opg[56][ch+3*conf.max_kvc_ch].first);
+            // coeff_b = linear_fit_result.par[1] 
+            //           * (conf.kvc_thick_opg[56][1].first + conf.kvc_thick_opg[56][5].first + conf.kvc_thick_opg[56][9].first + conf.kvc_thick_opg[56][13].first)
+            //           / (conf.kvc_thick_opg[56][ch].first + conf.kvc_thick_opg[56][ch+conf.max_kvc_ch].first + conf.kvc_thick_opg[56][ch+2*conf.max_kvc_ch].first + conf.kvc_thick_opg[56][ch+3*conf.max_kvc_ch].first);
 
             coeff_a = 4.0/(conf.kvc_thick_opg[56][ch].first + conf.kvc_thick_opg[56][ch+conf.max_kvc_ch].first + conf.kvc_thick_opg[56][ch+2*conf.max_kvc_ch].first + conf.kvc_thick_opg[56][ch+3*conf.max_kvc_ch].first);
             coeff_b = 0.0;

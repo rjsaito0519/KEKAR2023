@@ -280,12 +280,11 @@ namespace ana_helper {
 
         std::vector<Double_t> par, err;
         h->GetXaxis()->SetRangeUser(cutoff_threshold, conf.npe_max);
-        if ( h->GetMaximum() < 30) {
-                        h->Draw();
+        if ( h->GetMaximum() < 10) {
+            h->Draw();
             FitResult result;
             return result;
         }
-
         Double_t peak_pos = h->GetMean();
         Double_t stdev = h->GetStdDev();
 
@@ -351,15 +350,14 @@ namespace ana_helper {
         // -- erf fit -----
         Double_t fit_range_min = conf.threshold_fit_range_min;
         Double_t fit_range_max = conf.threshold_fit_range_max;
-        TF1 *f_fit_erf = new TF1( Form("erf_fit_%s", h->GetName()), "[0]*TMath::Erf( (x-[1])/[2] ) + [3]", fit_range_min, fit_range_max);
-        f_fit_erf->SetParameter(0, 0.5);
+        TF1 *f_fit_erf = new TF1( Form("erf_fit_%s", h->GetName()), "[0]*TMath::Erf( (x-[1])/[2] ) + 0.5", fit_range_min, fit_range_max);
+        f_fit_erf->FixParameter(0, 0.5);
         f_fit_erf->SetParameter(1, fit_range_min + 10);
         f_fit_erf->SetParameter(2, 10.0);
-        f_fit_erf->SetParameter(3, 0.5);
         f_fit_erf->SetLineColor(kOrange);
         f_fit_erf->SetLineWidth(2);
         f_fit_erf->SetNpx(1000);
-        h->Fit(f_fit_erf, "0Q", "", fit_range_min, fit_range_max);
+        h->Fit(f_fit_erf, "0", "", fit_range_min, fit_range_max);
 
         FitResult result;
         par.clear();
