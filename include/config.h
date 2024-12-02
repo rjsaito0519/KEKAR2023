@@ -73,6 +73,9 @@ public:
     Double_t linear_fit_range_min = 0.0;
     Double_t linear_fit_range_max = 3500.0;
 
+    Double_t threshold_fit_range_min = 20.0;
+    Double_t threshold_fit_range_max = 250.0;
+
     // BAC one photon gain
     std::unordered_map<Int_t, std::vector<std::pair<Double_t, Double_t>>> bac_opg{
     //    HV    val,   err
