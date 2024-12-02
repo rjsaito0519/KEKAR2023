@@ -87,6 +87,7 @@ namespace ana_helper {
     FitResult poisson_fit(TH1D *h, TCanvas *c, Int_t n_c);
     FitResult conv_poisson_fit(TH1D *h, TCanvas *c, Int_t n_c, Double_t pedestal_sigma);
     FitResult npe_gauss_fit(TH1D *h, TCanvas *c, Int_t n_c, Double_t n_sigma = 1.0, Double_t cutoff_threshold = 0.0);
+    FitResult threshold_erf_fit(TH1D *h, TCanvas *c, Int_t n_c);
 }
 
 #endif  // ANA_HELPER_
