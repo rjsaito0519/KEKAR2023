@@ -109,6 +109,7 @@ std::unordered_map<std::string, std::vector<FitResult>> analyze(Int_t run_num, I
         h_kvcsumt[ch] = new TH1D(Form("KVCSUMt_%d_%d", run_num, ch+1), Form("run%05d KVCSUM(TDC) seg%d;TDC;", run_num, ch+1), conf.adjust_tdc_bin_num, conf.tdc_min, conf.tdc_max);
     }
     
+    
     // -- NPE -----
     std::vector<HistPair> h_npe;
     std::vector<HistPair> h_onsum_npe;

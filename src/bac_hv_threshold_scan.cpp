@@ -413,24 +413,6 @@ Int_t main(int argc, char** argv) {
     Config& conf = Config::getInstance();
     conf.bac_initialize(525);
 
-    analyze(269, 295, 58, 1);
-    analyze(270, 296, 58, 0);
-    analyze(271, 297, 58, 0);
-    analyze(272, 298, 58, 0);
-    analyze(273, 299, 58, 0);
-    
-    analyze(274, 290, 57, 0);
-    analyze(275, 291, 57, 0);
-    analyze(276, 292, 57, 0);
-    analyze(277, 293, 57, 0);
-    analyze(278, 294, 57, 0);
-    
-    analyze(280, 285, 56, 0);
-    analyze(281, 286, 56, 0);
-    analyze(282, 287, 56, 0);
-    analyze(283, 288, 56, 0);
-    analyze(284, 289, 56, 2);
-
     // +-------------+
     // | pro version |
     // +-------------+
