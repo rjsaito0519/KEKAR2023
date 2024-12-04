@@ -28,7 +28,7 @@
 #include "ana_helper.h"
 #include "paths.h"
 
-static const TString pdf_name =  OUTPUT_DIR + "/img/kvc_thick_hv_threshold_scan.pdf";
+static const TString pdf_name =  OUTPUT_DIR + "/img/kvc_2cm_hv_threshold_scan.pdf";
 
 std::unordered_map<std::string, std::vector<FitResult>> analyze(Int_t run_num_beam, Int_t run_num_ped, Int_t hv, Int_t start_or_end = 0) // 0: mid_page, 1:start_page, 2: end_page, 3: both
 {   
@@ -65,6 +65,14 @@ std::unordered_map<std::string, std::vector<FitResult>> analyze(Int_t run_num_be
         return {};
     }
     TTreeReader reader_beam("tree", f_beam);
+    TTreeReaderArray<Double_t> t1a(reader_beam, "t1a");
+    TTreeReaderArray<Double_t> t1t(reader_beam, "t1t");
+    TTreeReaderArray<Double_t> t2a(reader_beam, "t2a");
+    TTreeReaderArray<Double_t> t2t(reader_beam, "t2t");
+    TTreeReaderArray<Double_t> t3a(reader_beam, "t3a");
+    TTreeReaderArray<Double_t> t3t(reader_beam, "t3t");
+    TTreeReaderArray<Double_t> t4a(reader_beam, "t4a");
+    TTreeReaderArray<Double_t> t4t(reader_beam, "t4t");
     TTreeReaderArray<Double_t> kvca_beam(reader_beam, "kvca");
     TTreeReaderArray<Double_t> kvcsuma_beam(reader_beam, "kvcsuma");
     TTreeReaderArray<Double_t> kvcsumt_beam(reader_beam, "kvcsumt");
@@ -85,6 +93,15 @@ std::unordered_map<std::string, std::vector<FitResult>> analyze(Int_t run_num_be
     // +-------------------+
     // | Prepare histogram |
     // +-------------------+
+    auto *h_t1a = new TH1D(Form("T1a_%d", run_num_beam), Form("run%05d T1(ADC);ADC;", run_num_beam), conf.adc_bin_num, conf.adc_min, conf.adc_max);
+    auto *h_t1t = new TH1D(Form("T1t_%d", run_num_beam), Form("run%05d T1(TDC);TDC;", run_num_beam), conf.tdc_bin_num, conf.tdc_min, conf.tdc_max);
+    auto *h_t2a = new TH1D(Form("T2a_%d", run_num_beam), Form("run%05d T2(ADC);ADC;", run_num_beam), conf.adc_bin_num, conf.adc_min, conf.adc_max);
+    auto *h_t2t = new TH1D(Form("T2t_%d", run_num_beam), Form("run%05d T2(TDC);TDC;", run_num_beam), conf.tdc_bin_num, conf.tdc_min, conf.tdc_max);
+    auto *h_t3a = new TH1D(Form("T3a_%d", run_num_beam), Form("run%05d T3(ADC);ADC;", run_num_beam), conf.adc_bin_num, conf.adc_min, conf.adc_max);
+    auto *h_t3t = new TH1D(Form("T3t_%d", run_num_beam), Form("run%05d T3(TDC);TDC;", run_num_beam), conf.tdc_bin_num, conf.tdc_min, conf.tdc_max);
+    auto *h_t4a = new TH1D(Form("T4a_%d", run_num_beam), Form("run%05d T4(ADC);ADC;", run_num_beam), conf.adc_bin_num, conf.adc_min, conf.adc_max);
+    auto *h_t4t = new TH1D(Form("T4t_%d", run_num_beam), Form("run%05d T4(TDC);TDC;", run_num_beam), conf.tdc_bin_num, conf.tdc_min, conf.tdc_max);
+
     std::vector<HistPair> h_kvca;
     std::vector<HistPair> h_onsum_adc;
     std::vector<HistPair> h_offsum_adc;
@@ -147,7 +164,15 @@ std::unordered_map<std::string, std::vector<FitResult>> analyze(Int_t run_num_be
     // -- for TDC -----
     reader_beam.Restart();
     while (reader_beam.Next()){
+        h_t1a->Fill(t1a[0]);
+        h_t2a->Fill(t2a[0]);
+        h_t3a->Fill(t3a[0]);
+        h_t4a->Fill(t4a[0]);
         for (Int_t n_hit = 0; n_hit < conf.max_nhit_tdc; n_hit++) {
+            h_t1t->Fill(t1t[n_hit]);
+            h_t2t->Fill(t2t[n_hit]);
+            h_t3t->Fill(t3t[n_hit]);
+            h_t4t->Fill(t4t[n_hit]);
             for (Int_t ch = 0; ch < conf.max_kvc_ch; ch++) h_kvcsumt[ch]->Fill(kvcsumt_beam[conf.max_nhit_tdc*ch+n_hit]);
         }
     }
@@ -159,10 +184,6 @@ std::unordered_map<std::string, std::vector<FitResult>> analyze(Int_t run_num_be
             h_onsum_ped[ch]->Fill(kvcsuma_ped[ch]);
         }
     }
-    
-    std::cout << "------------------------" << std::endl;
-
-
 
 
     // +--------------+
@@ -176,6 +197,46 @@ std::unordered_map<std::string, std::vector<FitResult>> analyze(Int_t run_num_be
     auto *c = new TCanvas("", "", 1500, 1200);
     c->Divide(cols, rows);
     if (start_or_end == 1 || start_or_end == 3) c->Print(pdf_name + "["); // start
+
+    // -- T1 -----
+    FitResult tmp_fit_result;
+    tmp_fit_result = ana_helper::trig_counter_tdc_fit(h_t1t, c, nth_pad);
+    Double_t t1_tdc_min = tmp_fit_result.additional[0];
+    Double_t t1_tdc_max = tmp_fit_result.additional[1];
+    tmp_fit_result = ana_helper::trig_counter_adc_gauss_fit(h_t1a, c, ++nth_pad);
+    Double_t t1_adc_min = tmp_fit_result.additional[0];
+    Double_t t1_adc_max = tmp_fit_result.additional[1];
+
+    // -- T2 -----
+    tmp_fit_result = ana_helper::trig_counter_tdc_fit(h_t2t, c, ++nth_pad);
+    Double_t t2_tdc_min = tmp_fit_result.additional[0];
+    Double_t t2_tdc_max = tmp_fit_result.additional[1];
+    tmp_fit_result = ana_helper::trig_counter_adc_gauss_fit(h_t2a, c, ++nth_pad);
+    Double_t t2_adc_min = tmp_fit_result.additional[0];
+    Double_t t2_adc_max = tmp_fit_result.additional[1];
+
+    c->Print(pdf_name);
+    c->Clear();
+    c->Divide(cols, rows);
+    nth_pad = 1;
+
+    // -- T3 -----
+    tmp_fit_result = ana_helper::trig_counter_tdc_fit(h_t3t, c, nth_pad);
+    Double_t t3_tdc_min = tmp_fit_result.additional[0];
+    Double_t t3_tdc_max = tmp_fit_result.additional[1];
+    tmp_fit_result = ana_helper::trig_counter_adc_gauss_fit(h_t3a, c, ++nth_pad);
+    Double_t t3_adc_min = tmp_fit_result.additional[0];
+    Double_t t3_adc_max = tmp_fit_result.additional[1];
+
+    // -- T4 -----
+    tmp_fit_result = ana_helper::trig_counter_tdc_fit(h_t4t, c, ++nth_pad);
+    Double_t t4_tdc_min = tmp_fit_result.additional[0];
+    Double_t t4_tdc_max = tmp_fit_result.additional[1];
+    tmp_fit_result = ana_helper::trig_counter_adc_gauss_fit(h_t4a, c, ++nth_pad);
+    Double_t t4_adc_min = tmp_fit_result.additional[0];
+    Double_t t4_adc_max = tmp_fit_result.additional[1];
+    nth_pad++;
+
 
     // -- KVC pedestal -----
     for (Int_t ch = 0; ch < conf.max_kvc_ch; ch++) {
@@ -211,7 +272,7 @@ std::unordered_map<std::string, std::vector<FitResult>> analyze(Int_t run_num_be
             c->Divide(cols, rows);
             nth_pad = 1;
         }
-        FitResult tmp_fit_result = ana_helper::cherenkov_tdc_fit(h_kvcsumt[ch], c, nth_pad);
+        tmp_fit_result = ana_helper::cherenkov_tdc_fit(h_kvcsumt[ch], c, nth_pad);
         kvc_tdc_min[ch] = tmp_fit_result.additional[0];
         kvc_tdc_max[ch] = tmp_fit_result.additional[1];
         nth_pad++;
@@ -227,12 +288,25 @@ std::unordered_map<std::string, std::vector<FitResult>> analyze(Int_t run_num_be
     reader_beam.Restart();
     while (reader_beam.Next()){
         // -- set up flag -----
-        Bool_t do_hit_kvc = false;
+        Bool_t do_hit_t1a = false, do_hit_t2a = false, do_hit_t3a = false, do_hit_t4a = false;
+        Bool_t do_hit_t1t = false, do_hit_t2t = false, do_hit_t3t = false, do_hit_t4t = false, do_hit_kvc = false;
+        if ( t1_adc_min < t1a[0] && t1a[0] < t1_adc_max ) do_hit_t1a = true;
+        if ( t2_adc_min < t2a[0] && t2a[0] < t2_adc_max ) do_hit_t2a = true;
+        if ( t3_adc_min < t3a[0] && t3a[0] < t3_adc_max ) do_hit_t3a = true;
+        if ( t4_adc_min < t4a[0] && t4a[0] < t4_adc_max ) do_hit_t4a = true;
+
         for (Int_t n_hit = 0; n_hit < conf.max_nhit_tdc; n_hit++) {
+            if ( t1_tdc_min < t1t[n_hit] && t1t[n_hit] < t1_tdc_max ) do_hit_t1t = true;
+            if ( t2_tdc_min < t2t[n_hit] && t2t[n_hit] < t2_tdc_max ) do_hit_t2t = true;
+            if ( t3_tdc_min < t3t[n_hit] && t3t[n_hit] < t3_tdc_max ) do_hit_t3t = true;
+            if ( t4_tdc_min < t4t[n_hit] && t4t[n_hit] < t4_tdc_max ) do_hit_t4t = true;
             for (Int_t ch = 0; ch < conf.max_kvc_ch; ch++) {
                 if ( kvc_tdc_min[ch] < kvcsumt_beam[conf.max_nhit_tdc*ch+n_hit] && kvcsumt_beam[conf.max_nhit_tdc*ch+n_hit] < kvc_tdc_max[ch] ) do_hit_kvc = true;
             }
         }
+        Bool_t trig_flag_adc = do_hit_t4a && do_hit_t2a && do_hit_t3a && do_hit_t4a;
+        Bool_t trig_flag_tdc = do_hit_t4t && do_hit_t2t && do_hit_t3t && do_hit_t4t;
+
 
         // -- event selection and fill data -----
         Double_t offline_sum_a   = 0.;
@@ -266,7 +340,7 @@ std::unordered_map<std::string, std::vector<FitResult>> analyze(Int_t run_num_be
             h_offsum_npe[1].trig->Fill(offline_sum_npe);
 
             // 最初にOnline sumのone photon gainをoffline sumとの相関より推測する
-            h_correlation->Fill( kvcsuma_beam[1] - result_container["KVCSUM_ped"][1].par[1], offline_sum_npe );
+            if (trig_flag_adc && trig_flag_tdc) h_correlation->Fill( kvcsuma_beam[1] - result_container["KVCSUM_ped"][1].par[1], offline_sum_npe );
         }
     }
     FitResult eff_result_beam;
@@ -488,7 +562,7 @@ Int_t main(int argc, char** argv) {
     conf.kvc_thick_initialize();
 
     // analyze(269, 295, 58, 3);
-    analyze(273, 299, 58, 3);
+    analyze(412, 429, 58, 3);
         //     {273, 299, 58, 150},
 
 
