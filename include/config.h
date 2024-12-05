@@ -66,6 +66,13 @@ public:
     Double_t default_cherenkov_tdc_gate_min = 105000;
     Double_t default_cherenkov_tdc_gate_max = 140000;
     
+    Double_t hv_th_scan_bac_tdc_gate_min = 100000;
+    Double_t hv_th_scan_bac_tdc_gate_max = 145000;
+
+    Double_t hv_th_scan_kvc_tdc_gate_min = 100000;
+    Double_t hv_th_scan_kvc_tdc_gate_max = 140000;
+
+
     Double_t cherenkov_tdc_n_sigma = 5.0;
     
     Bool_t log_flag = false;
@@ -210,14 +217,15 @@ public:
         linear_fit_range_max = 1500.0;
     }
     
-    void kvc_thick_initialize() {
+    void kvc_thick_initialize(Double_t tmp_linear_fit_range_max = 2000.0) {
         adjust_adc_bin_num = 1024;
         sumadc_bin_num = 512;
         npe_bin_num = 420;
         npe_max = 835.;
         adjust_tdc_bin_num = 32768;
         log_flag = true;
-        linear_fit_range_max = 2000.0;
+        linear_fit_range_max = tmp_linear_fit_range_max;
+        threshold_fit_range_max = 700.0;
     }
     
 
