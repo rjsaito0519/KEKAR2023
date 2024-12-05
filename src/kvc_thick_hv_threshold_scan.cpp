@@ -283,7 +283,7 @@ std::unordered_map<std::string, std::vector<FitResult>> analyze(Int_t run_num_be
     // | Fill event (2nd) |
     // +------------------+
     // -- for w/ beam data -----
-    Int_t n_hitkvc_beam = 0;
+    std::vector<Int_t> n_hitkvc_beam(conf.max_kvc_ch, 0);
     std::unordered_map<std::string, std::vector<std::vector<Double_t>>> online_sum_container{ {"raw", {{}, {}, {}, {}}}, {"trig", {{}, {}, {}, {}}} };
     reader_beam.Restart();
     while (reader_beam.Next()){
@@ -301,7 +301,12 @@ std::unordered_map<std::string, std::vector<FitResult>> analyze(Int_t run_num_be
             if ( t3_tdc_min < t3t[n_hit] && t3t[n_hit] < t3_tdc_max ) do_hit_t3t = true;
             if ( t4_tdc_min < t4t[n_hit] && t4t[n_hit] < t4_tdc_max ) do_hit_t4t = true;
             for (Int_t ch = 0; ch < conf.max_kvc_ch; ch++) {
-                if ( kvc_tdc_min[ch] < kvcsumt_beam[conf.max_nhit_tdc*ch+n_hit] && kvcsumt_beam[conf.max_nhit_tdc*ch+n_hit] < kvc_tdc_max[ch] ) do_hit_kvc = true;
+                // if ( kvc_tdc_min[ch] < kvcsumt_beam[conf.max_nhit_tdc*ch+n_hit] && kvcsumt_beam[conf.max_nhit_tdc*ch+n_hit] < kvc_tdc_max[ch] ) do_hit_kvc = true;
+                
+                if ( conf.hv_th_scan_kvc_tdc_gate_min < kvcsumt_beam[conf.max_nhit_tdc*ch+n_hit] && kvcsumt_beam[conf.max_nhit_tdc*ch+n_hit] < conf.hv_th_scan_kvc_tdc_gate_min ) {
+                    do_hit_kvc = true;
+                    n_hitkvc_beam[ch]++;
+                }
             }
         }
         Bool_t trig_flag_adc = do_hit_t4a && do_hit_t2a && do_hit_t3a && do_hit_t4a;
@@ -324,7 +329,6 @@ std::unordered_map<std::string, std::vector<FitResult>> analyze(Int_t run_num_be
         h_offsum_npe[1].raw->Fill(offline_sum_npe);
         
         if (do_hit_kvc) {
-            n_hitkvc_beam++;
             offline_sum_a   = 0.;
             offline_sum_npe = 0.;
             for (Int_t ch = 0; ch < conf.max_kvc_ch; ch++) {
@@ -345,28 +349,33 @@ std::unordered_map<std::string, std::vector<FitResult>> analyze(Int_t run_num_be
     }
     FitResult eff_result_beam;
     eff_result_beam.additional.push_back( static_cast<Double_t>( reader_beam.GetEntries() ) );
-    eff_result_beam.additional.push_back( static_cast<Double_t>(n_hitkvc_beam) );
+    for (Int_t ch = 0; ch < conf.max_kvc_ch; ch++) eff_result_beam.additional.push_back( static_cast<Double_t>(n_hitkvc_beam[ch]) );
     result_container["eff"].push_back(eff_result_beam);
-    std::cout << (Double_t) n_hitkvc_beam / reader_beam.GetEntries() << std::endl;
+    std::cout << (Double_t) n_hitkvc_beam[1] / reader_beam.GetEntries() << std::endl;
 
     // -- for w/0 beam data (check noise level) -----
-    Int_t n_hitkvc_ped = 0;
+    std::vector<Int_t> n_hitkvc_ped(conf.max_kvc_ch, 0);
     reader_ped.Restart();
     while (reader_ped.Next()){
         // -- set up flag -----
         Bool_t do_hit_kvc = false;        
         for (Int_t n_hit = 0; n_hit < conf.max_nhit_tdc; n_hit++) {
             for (Int_t ch = 0; ch < conf.max_kvc_ch; ch++) {
-                if ( kvc_tdc_min[ch] < kvcsumt_ped[conf.max_nhit_tdc*ch+n_hit] && kvcsumt_ped[conf.max_nhit_tdc*ch+n_hit] < kvc_tdc_max[ch] ) do_hit_kvc = true;
+                // if ( kvc_tdc_min[ch] < kvcsumt_ped[conf.max_nhit_tdc*ch+n_hit] && kvcsumt_ped[conf.max_nhit_tdc*ch+n_hit] < kvc_tdc_max[ch] ) do_hit_kvc = true;
+
+                if ( conf.hv_th_scan_kvc_tdc_gate_min < kvcsumt_ped[conf.max_nhit_tdc*ch+n_hit] && kvcsumt_ped[conf.max_nhit_tdc*ch+n_hit] < conf.hv_th_scan_kvc_tdc_gate_min ) {
+                    do_hit_kvc = true;
+                    n_hitkvc_ped[ch]++;
+                }
             }
         }
-        if (do_hit_kvc) n_hitkvc_ped++;
+        // if (do_hit_kvc) n_hitkvc_ped++;
     }
     FitResult eff_result_ped;
     eff_result_ped.additional.push_back( static_cast<Double_t>( reader_ped.GetEntries() ) );
-    eff_result_ped.additional.push_back( static_cast<Double_t>(n_hitkvc_ped) );
+    for (Int_t ch = 0; ch < conf.max_kvc_ch; ch++) eff_result_ped.additional.push_back( static_cast<Double_t>(n_hitkvc_ped[ch]) );
     result_container["eff"].push_back(eff_result_ped);
-    std::cout << (Double_t) n_hitkvc_ped / reader_ped.GetEntries() << std::endl;
+    std::cout << (Double_t) n_hitkvc_ped[ch] / reader_ped.GetEntries() << std::endl;
 
 
     // +----------------------------------------+
@@ -525,29 +534,29 @@ std::unordered_map<std::string, std::vector<FitResult>> analyze(Int_t run_num_be
         nth_pad++;
     }
 
-    // // -- check threshold -----
-    // {
-    //     c->Print(pdf_name);
-    //     c->Clear();
-    //     c->Divide(2, 1);
-    //     nth_pad = 1;
+    // -- check threshold -----
+    {
+        c->Print(pdf_name);
+        c->Clear();
+        c->Divide(2, 1);
+        nth_pad = 1;
 
-    //     c->cd(nth_pad);
-    //     h_offsum_ratio->Divide( h_offsum_npe.trig, h_offsum_npe.raw, 1, 1 );
-    //     // h_offsum_ratio->GetXaxis()->SetRangeUser(conf.threshold_fit_range_min - 10, conf.threshold_fit_range_max + 10);
-    //     // h_offsum_ratio->Draw();
-    //     FitResult offsum_result = ana_helper::threshold_erf_fit(h_offsum_ratio, c, nth_pad);
-    //     result_container["offsum_thre"].push_back(offsum_result);
-    //     nth_pad++;
+        c->cd(nth_pad);
+        h_offsum_ratio->Divide( h_offsum_npe[1].trig, h_offsum_npe[1].raw, 1, 1 );
+        // h_offsum_ratio->GetXaxis()->SetRangeUser(conf.threshold_fit_range_min - 10, conf.threshold_fit_range_max + 10);
+        // h_offsum_ratio->Draw();
+        FitResult offsum_result = ana_helper::threshold_erf_fit(h_offsum_ratio, c, nth_pad);
+        result_container["offsum_thre"].push_back(offsum_result);
+        nth_pad++;
 
-    //     c->cd(nth_pad);
-    //     h_onsum_ratio->Divide( h_onsum_npe.trig, h_onsum_npe.raw, 1, 1 );
-    //     // h_onsum_ratio->GetXaxis()->SetRangeUser(conf.threshold_fit_range_min - 10, conf.threshold_fit_range_max + 10);
-    //     // h_onsum_ratio->Draw();
-    //     FitResult onsum_result = ana_helper::threshold_erf_fit(h_onsum_ratio, c, nth_pad);
-    //     result_container["onsum_thre"].push_back(onsum_result);
-    //     nth_pad++;
-    // }
+        c->cd(nth_pad);
+        h_onsum_ratio->Divide( h_onsum_npe[1].trig, h_onsum_npe[1].raw, 1, 1 );
+        // h_onsum_ratio->GetXaxis()->SetRangeUser(conf.threshold_fit_range_min - 10, conf.threshold_fit_range_max + 10);
+        // h_onsum_ratio->Draw();
+        FitResult onsum_result = ana_helper::threshold_erf_fit(h_onsum_ratio, c, nth_pad);
+        result_container["onsum_thre"].push_back(onsum_result);
+        nth_pad++;
+    }
 
 
     c->Print(pdf_name);
@@ -559,135 +568,110 @@ std::unordered_map<std::string, std::vector<FitResult>> analyze(Int_t run_num_be
 
 Int_t main(int argc, char** argv) {
     Config& conf = Config::getInstance();
-    conf.kvc_thick_initialize();
+    conf.kvc_thick_initialize(3000.0);
 
-    // analyze(269, 295, 58, 3);
-    analyze(412, 429, 58, 3);
-        //     {273, 299, 58, 150},
-
-
-    // // +-------------+
-    // // | pro version |
-    // // +-------------+
-    // std::vector<std::vector<Double_t>> run_info{
-    // //   beam ped  HV  Vth
+    // +-------------+
+    // | pro version |
+    // +-------------+
+    std::vector<std::vector<Double_t>> run_info{
+    //   beam ped  HV  Vth
     
-    //     // Condition 1
-    //     {269, 295, 58,  50},
-    //     {270, 296, 58,  75},
-    //     {271, 297, 58, 100},
-    //     {272, 298, 58, 125},
-    //     {273, 299, 58, 150},
+        // Condition 2
+        {412, 429, 58,  50},
+        {414, 430, 58,  75},
+        {415, 431, 58, 100},
+        {416, 432, 58, 125},
+        {417, 433, 58, 150},
         
-    //     {274, 290, 57,  50},
-    //     {275, 291, 57,  75},
-    //     {276, 292, 57, 100},
-    //     {277, 293, 57, 125},
-    //     {278, 294, 57, 150},
+        {418, 434, 57,  50},
+        {419, 435, 57,  75},
+        {420, 436, 57, 100},
+        {421, 437, 57, 125},
+        {422, 438, 57, 150},
         
-    //     {280, 285, 56,  50},
-    //     {281, 286, 56,  75},
-    //     {282, 287, 56, 100},
-    //     {283, 288, 56, 125},
-    //     {284, 289, 56, 150},
+        {423, 439, 56,  50},
+        {424, 440, 56,  75},
+        {425, 441, 56, 100},
+        {426, 442, 56, 125},
+        {427, 443, 56, 150},
+    };
 
-    //     // Condition 2
-    //     {412, 429, 58,  50},
-    //     {445, 446, 58,  60},
-    //     {414, 430, 58,  75},
-    //     {415, 431, 58, 100},
-    //     {416, 432, 58, 125},
-    //     {417, 433, 58, 150},
+    // +--------------------------+
+    // | prepare output root file |
+    // +--------------------------+
+    TString output_path = OUTPUT_DIR + "/root/kvc_2cm_hv_threshold_scan.root";
+    if (std::ifstream(output_path.Data())) std::remove(output_path.Data());
+    TFile fout(output_path.Data(), "create");
+    TTree output_tree("tree", ""); 
+
+    // -- prepare root file branch -----
+    Int_t run_num_beam, hv, threshold;
+    Double_t n_entry_beam, n_hit_beam, n_entry_ped, n_hit_ped;
+    std::vector<Double_t> linear_a, linear_b;
+    std::vector<Double_t> onsum_thre_val, onsum_thre_err, offsum_thre_val, offsum_thre_err;
+
+    output_tree.Branch("run_num", &run_num_beam, "run_num/I");
+    output_tree.Branch("hv", &hv, "hv/I");
+    output_tree.Branch("threshold", &threshold, "threshold/I");
+    output_tree.Branch("n_entry_beam", &n_entry_beam, "n_entry_beam/D");
+    output_tree.Branch("n_hit_beam", &n_hit_beam, "n_hit_beam/D");
+    output_tree.Branch("n_entry_ped", &n_entry_ped, "n_entry_ped/D");
+    output_tree.Branch("n_hit_ped", &n_hit_ped, "n_hit_ped/D");    
+    output_tree.Branch("linear_a", &linear_a);
+    output_tree.Branch("linear_b", &linear_b);
+    output_tree.Branch("onsum_thre_val", &onsum_thre_val);
+    output_tree.Branch("onsum_thre_err", &onsum_thre_err);
+    output_tree.Branch("offsum_thre_val", &offsum_thre_val);
+    output_tree.Branch("offsum_thre_err", &offsum_thre_err);
+
+    for (Int_t i = 0, n_run_info = run_info.size(); i < n_run_info; i++) {
+        run_num_beam = run_info[i][0];
+        hv = run_info[i][2];
+        threshold = run_info[i][3];
         
-    //     {418, 434, 57,  50},
-    //     {419, 435, 57,  75},
-    //     {420, 436, 57, 100},
-    //     {421, 437, 57, 125},
-    //     {422, 438, 57, 150},
-        
-    //     {423, 439, 56,  50},
-    //     {424, 440, 56,  75},
-    //     {425, 441, 56, 100},
-    //     {426, 442, 56, 125},
-    //     {427, 443, 56, 150},
-    // };
+        // -- analyze -----
+        Int_t pdf_save_mode = 0;
+        if (i == 0) pdf_save_mode = 1;
+        else if (i == n_run_info-1) pdf_save_mode = 2;
+        std::unordered_map<std::string, std::vector<FitResult>> result_container = analyze(run_info[i][0], run_info[i][1], run_info[i][2], pdf_save_mode);
 
-    // // +--------------------------+
-    // // | prepare output root file |
-    // // +--------------------------+
-    // TString output_path = OUTPUT_DIR + "/root/kvc_hv_threshold_scan.root";
-    // if (std::ifstream(output_path.Data())) std::remove(output_path.Data());
-    // TFile fout(output_path.Data(), "create");
-    // TTree output_tree("tree", ""); 
+        // -- initialize -----
+        linear_a.clear(); linear_b.clear();
+        onsum_thre_val.clear(); onsum_thre_err.clear();
+        offsum_thre_val.clear(); offsum_thre_err.clear();
 
-    // // -- prepare root file branch -----
-    // Int_t run_num_beam, hv, threshold;
-    // Double_t n_entry_beam, n_hit_beam, n_entry_ped, n_hit_ped;
-    // std::vector<Double_t> linear_a, linear_b;
-    // std::vector<Double_t> onsum_thre_val, onsum_thre_err, offsum_thre_val, offsum_thre_err;
-
-    // output_tree.Branch("run_num", &run_num_beam, "run_num/I");
-    // output_tree.Branch("hv", &hv, "hv/I");
-    // output_tree.Branch("threshold", &threshold, "threshold/I");
-    // output_tree.Branch("n_entry_beam", &n_entry_beam, "n_entry_beam/D");
-    // output_tree.Branch("n_hit_beam", &n_hit_beam, "n_hit_beam/D");
-    // output_tree.Branch("n_entry_ped", &n_entry_ped, "n_entry_ped/D");
-    // output_tree.Branch("n_hit_ped", &n_hit_ped, "n_hit_ped/D");    
-    // output_tree.Branch("linear_a", &linear_a);
-    // output_tree.Branch("linear_b", &linear_b);
-    // output_tree.Branch("onsum_thre_val", &onsum_thre_val);
-    // output_tree.Branch("onsum_thre_err", &onsum_thre_err);
-    // output_tree.Branch("offsum_thre_val", &offsum_thre_val);
-    // output_tree.Branch("offsum_thre_err", &offsum_thre_err);
-
-    // for (Int_t i = 0, n_run_info = run_info.size(); i < n_run_info; i++) {
-    //     run_num_beam = run_info[i][0];
-    //     hv = run_info[i][2];
-    //     threshold = run_info[i][3];
-        
-    //     // -- analyze -----
-    //     Int_t pdf_save_mode = 0;
-    //     if (i == 0) pdf_save_mode = 1;
-    //     else if (i == n_run_info-1) pdf_save_mode = 2;
-    //     std::unordered_map<std::string, std::vector<FitResult>> result_container = analyze(run_info[i][0], run_info[i][1], run_info[i][2], pdf_save_mode);
-
-    //     // -- initialize -----
-    //     linear_a.clear(); linear_b.clear();
-    //     onsum_thre_val.clear(); onsum_thre_err.clear();
-    //     offsum_thre_val.clear(); offsum_thre_err.clear();
-
-    //     // -- efficiency -----
-    //     n_entry_beam = result_container["eff"][0].additional[0];
-    //     n_hit_beam   = result_container["eff"][0].additional[1];
-    //     n_entry_ped  = result_container["eff"][1].additional[0];
-    //     n_hit_ped    = result_container["eff"][1].additional[1];
+        // -- efficiency -----
+        n_entry_beam = result_container["eff"][0].additional[0];
+        n_hit_beam   = result_container["eff"][0].additional[1];
+        n_entry_ped  = result_container["eff"][1].additional[0];
+        n_hit_ped    = result_container["eff"][1].additional[1];
         
 
-    //     // -- linear -----
-    //     for (const auto &result : result_container["linear"]) {
-    //         linear_a.push_back(  result.par[0] );
-    //         linear_b.push_back(  result.par[1] );
-    //     }
+        // -- linear -----
+        for (const auto &result : result_container["linear"]) {
+            linear_a.push_back(  result.par[0] );
+            linear_b.push_back(  result.par[1] );
+        }
 
-    //     // -- onsum -----
-    //     for (const auto &result : result_container["onsum_thre"]) {
-    //         onsum_thre_val.push_back( result.par[1] );
-    //         onsum_thre_err.push_back( result.err[1] );
-    //     }
-    //     for (const auto &result : result_container["offsum_thre"]) {
-    //         offsum_thre_val.push_back( result.par[1] );
-    //         offsum_thre_err.push_back( result.err[1] );
-    //     }
+        // -- onsum -----
+        for (const auto &result : result_container["onsum_thre"]) {
+            onsum_thre_val.push_back( result.par[1] );
+            onsum_thre_err.push_back( result.err[1] );
+        }
+        for (const auto &result : result_container["offsum_thre"]) {
+            offsum_thre_val.push_back( result.par[1] );
+            offsum_thre_err.push_back( result.err[1] );
+        }
 
-    //     output_tree.Fill();
-    // }
+        output_tree.Fill();
+    }
 
-    // // +------------+
-    // // | Write data |
-    // // +------------+
-    // fout.cd(); // 明示的にカレントディレクトリを設定
-    // output_tree.Write();
-    // fout.Close(); 
+    // +------------+
+    // | Write data |
+    // +------------+
+    fout.cd(); // 明示的にカレントディレクトリを設定
+    output_tree.Write();
+    fout.Close(); 
 
 
     return 0;
