@@ -208,13 +208,14 @@ public:
         threshold_fit_range_max = 100.0;
     }
 
-    void kvc_thin_initialize() {
+    void kvc_thin_initialize(Int_t tmp_npe_bin_num = 525) {
         adjust_adc_bin_num = 1024;
         sumadc_bin_num = 512;
-        npe_bin_num = 525;
+        npe_bin_num = tmp_npe_bin_num;
         adjust_tdc_bin_num = 32768;
         log_flag = true;
         linear_fit_range_max = 1500.0;
+        threshold_fit_range_max = 100.0;
     }
     
     void kvc_thick_initialize(Double_t tmp_linear_fit_range_max = 2000.0) {
