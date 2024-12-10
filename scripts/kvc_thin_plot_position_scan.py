@@ -144,16 +144,65 @@ class KVC_thin(pos_scan_tool.pos_scan):
         plt.text(self.convert_x((edge_left+edge_right)/2.0, np.min(df_val.columns)), self.convert_y(edge_top+6, np.max(df_val.index)), title, ha='center', va='bottom', zorder = 1)
         plt.xlabel("x position [mm]")
         plt.ylabel("y position [mm]")
-        plt.savefig(img_save_path,  format='pdf', bbox_inches='tight', dpi=600, transparent=True)
         plt.subplots_adjust(left = 0.1, right = 1.0, top = 0.96, bottom = 0.1)
+        plt.savefig(img_save_path,  format='pdf', bbox_inches='tight', dpi=600, transparent=True)
+        plt.show()
+        
+        return df_val, annot
+    
+    def plot_summary(self, df_val, annot, cbar_range):
+        title = "KVCSUM NPE (1 cm)"
+        img_save_path = os.path.join(self.script_dir, "../results/img/kvc/kvc_1cm_sumnpe.pdf")
+
+        plt.figure(figsize=(10, 8))
+        plt.grid(which="major", alpha=0.3)
+        sns.heatmap(df_val, cmap="cividis", annot=annot, vmin=cbar_range[0], vmax=cbar_range[1], cbar=True, fmt='', annot_kws={'fontsize': 18}, cbar_kws=dict(pad=-0.08, shrink=0.78))
+
+        # -- set radiator size ------
+        kvc_height = 120
+        kvc_seg_width = 26
+        edge_left   = -kvc_seg_width*2-kvc_seg_width/2
+        edge_right  =  kvc_seg_width+kvc_seg_width/2
+        edge_top    =  kvc_height/2
+        edge_bottom = -kvc_height/2
+        for i in range(5):
+            plt.vlines(self.convert_x(edge_left+i*kvc_seg_width, np.min(df_val.columns)), self.convert_y(edge_top, np.max(df_val.index)), self.convert_y(edge_bottom, np.max(df_val.index)), color = "red", ls = "dashed", lw = 1.5, zorder = 1)
+        # 上端
+        plt.hlines(self.convert_y(edge_top, np.max(df_val.index)), self.convert_x(edge_left, np.min(df_val.columns)), self.convert_x(edge_right, np.min(df_val.columns)), color = "red", ls = "dashed", lw = 1.5, zorder = 1)
+        # 下端
+        plt.hlines(self.convert_y(edge_bottom, np.max(df_val.index)), self.convert_x(edge_left, np.min(df_val.columns)), self.convert_x(edge_right, np.min(df_val.columns)), color = "red", ls = "dashed", lw = 1.5, zorder = 1)
+
+        plt.text(self.convert_x((edge_left+edge_right)/2.0, np.min(df_val.columns)), self.convert_y(edge_top+6, np.max(df_val.index)), title, ha='center', va='bottom', zorder = 1)
+        plt.xlabel("x position [mm]")
+        plt.ylabel("y position [mm]")
+        plt.subplots_adjust(left = 0.1, right = 1.0, top = 0.96, bottom = 0.1)
+        plt.savefig(img_save_path, format='pdf', bbox_inches='tight', dpi=600, transparent=True)
         plt.show()
 
 if __name__ == '__main__':
-    bac = KVC_thin("../results/root/kvc_thin_pos_scan_analysis.root")
-    bac.plot("eff", cbar_range=(91, 100))
+    kvc = KVC_thin("../results/root/kvc_thin_pos_scan_analysis.root")
+    summary_df_val, summary_annot = kvc.plot("eff", cbar_range=(91, 100))
     
     for ch in range(4):
-        # bac.plot(f"sum_npe{ch}", cbar_range=(37, 81)) # use a, b
-        bac.plot(f"sum_npe{ch}", cbar_range=(30, 76)) # use average one photon gain
-    
-    
+        # kvc.plot(f"sum_npe{ch}", cbar_range=(37, 81)) # use a, b
+        tmp_df_val, tmp_annot = kvc.plot(f"sum_npe{ch}", cbar_range=(30, 76)) # use average one photon gain
+        if ch == 0:
+            summary_df_val[-48] = tmp_df_val[-48]
+            summary_annot[-48]  = tmp_annot[-48]
+        elif ch == 1:
+            summary_df_val[-32] = tmp_df_val[-32]
+            summary_annot[-32]  = tmp_annot[-32]
+            summary_df_val[-16] = tmp_df_val[-16]
+            summary_annot[-16]  = tmp_annot[-16]
+        elif ch == 2:
+            summary_df_val[0] = tmp_df_val[0]
+            summary_annot[0]  = tmp_annot[0]
+        elif ch == 3:
+            summary_df_val[16] = tmp_df_val[16]
+            summary_annot[16]  = tmp_annot[16]        
+            summary_df_val[32] = tmp_df_val[32]
+            summary_annot[32]  = tmp_annot[32]
+
+    print(summary_annot)
+
+    kvc.plot_summary(summary_df_val, summary_annot, (30, 76))

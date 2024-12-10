@@ -28,9 +28,8 @@
 #include "ana_helper.h"
 #include "paths.h"
 
-static const TString pdf_name =  OUTPUT_DIR + "/img/trig_explain.pdf";
 
-std::unordered_map<std::string, std::vector<FitResult>> analyze(Int_t run_num, Int_t start_or_end = 0) // 0: mid_page, 1:start_page, 2: end_page, 3: both
+std::unordered_map<std::string, std::vector<FitResult>> analyze(Int_t run_num)
 {   
     // +---------+
     // | setting |
@@ -466,7 +465,7 @@ Int_t main(int argc, char** argv) {
 
 
     TApplication *theApp = new TApplication("App", &argc, argv);
-    analyze(run_num, 3);
+    analyze(run_num);
     theApp->Run();
 
     return 0;

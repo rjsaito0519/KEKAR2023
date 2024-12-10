@@ -160,8 +160,8 @@ class BAC(pos_scan_tool.pos_scan):
         plt.text(self.convert_x(0, np.min(df_val.columns)), self.convert_y(edge_top+3, np.max(df_val.index)), title, ha='center', va='bottom', zorder = 1)
         plt.xlabel("x position [mm]")
         plt.ylabel("y position [mm]")
-        plt.savefig(img_save_path,  format='pdf', bbox_inches='tight', dpi=600, transparent=True)
         plt.subplots_adjust(left = 0.1, right = 1.0, top = 0.96, bottom = 0.1)
+        plt.savefig(img_save_path,  format='pdf', bbox_inches='tight', dpi=600, transparent=True)
         plt.show()
 
 if __name__ == '__main__':

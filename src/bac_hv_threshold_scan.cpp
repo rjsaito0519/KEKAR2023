@@ -191,7 +191,11 @@ std::unordered_map<std::string, std::vector<FitResult>> analyze(Int_t run_num_be
         // -- set up flag -----
         Bool_t do_hit_bac = false;
         for (Int_t n_hit = 0; n_hit < conf.max_nhit_tdc; n_hit++) {
-            if ( bac_tdc_min < bacsumt_beam[n_hit] && bacsumt_beam[n_hit] < bac_tdc_max ) do_hit_bac = true;
+            // if ( bac_tdc_min < bacsumt_beam[n_hit] && bacsumt_beam[n_hit] < bac_tdc_max ) do_hit_bac = true;
+            if ( conf.hv_th_scan_bac_tdc_gate_min < bacsumt_beam[n_hit] && bacsumt_beam[n_hit] < conf.hv_th_scan_bac_tdc_gate_max) {
+                do_hit_bac = true;
+                n_hitbac_beam++;
+            }
         }
 
         // -- event selection and fill data -----
@@ -209,7 +213,6 @@ std::unordered_map<std::string, std::vector<FitResult>> analyze(Int_t run_num_be
         online_sum_container["raw"].push_back(bacsuma_beam[0]);
         
         if (do_hit_bac) {
-            n_hitbac_beam++;
             offline_sum_a   = 0.;
             offline_sum_npe = 0.;
             for (Int_t ch = 0; ch < conf.max_bac_ch; ch++) {
@@ -240,9 +243,11 @@ std::unordered_map<std::string, std::vector<FitResult>> analyze(Int_t run_num_be
         // -- set up flag -----
         Bool_t do_hit_bac = false;
         for (Int_t n_hit = 0; n_hit < conf.max_nhit_tdc; n_hit++) {
-            if ( bac_tdc_min < bacsumt_ped[n_hit] && bacsumt_ped[n_hit] < bac_tdc_max ) do_hit_bac = true;
+            // if ( bac_tdc_min < bacsumt_ped[n_hit] && bacsumt_ped[n_hit] < bac_tdc_max ) do_hit_bac = true;
+            if ( conf.hv_th_scan_bac_tdc_gate_min < bacsumt_ped[n_hit] && bacsumt_ped[n_hit] < conf.hv_th_scan_bac_tdc_gate_max) {
+                n_hitbac_ped++;
+            }
         }
-        if (do_hit_bac) n_hitbac_ped++;
     }
     FitResult eff_result_ped;
     eff_result_ped.additional.push_back( static_cast<Double_t>( reader_ped.GetEntries() ) );
@@ -469,17 +474,17 @@ Int_t main(int argc, char** argv) {
 
     // -- prepare root file branch -----
     Int_t run_num_beam, hv, threshold;
-    Double_t n_entry_beam, n_hit_beam, n_entry_ped, n_hit_ped;
-    std::vector<Double_t> linear_a, linear_b;
+    Double_t n_entry_beam, n_entry_ped;
+    std::vector<Double_t> linear_a, linear_b, n_hit_beam, n_hit_ped;
     std::vector<Double_t> onsum_thre_val, onsum_thre_err, offsum_thre_val, offsum_thre_err;
 
     output_tree.Branch("run_num", &run_num_beam, "run_num/I");
     output_tree.Branch("hv", &hv, "hv/I");
     output_tree.Branch("threshold", &threshold, "threshold/I");
     output_tree.Branch("n_entry_beam", &n_entry_beam, "n_entry_beam/D");
-    output_tree.Branch("n_hit_beam", &n_hit_beam, "n_hit_beam/D");
+    output_tree.Branch("n_hit_beam", &n_hit_beam);
     output_tree.Branch("n_entry_ped", &n_entry_ped, "n_entry_ped/D");
-    output_tree.Branch("n_hit_ped", &n_hit_ped, "n_hit_ped/D");    
+    output_tree.Branch("n_hit_ped", &n_hit_ped);    
     output_tree.Branch("linear_a", &linear_a);
     output_tree.Branch("linear_b", &linear_b);
     output_tree.Branch("onsum_thre_val", &onsum_thre_val);
@@ -499,16 +504,17 @@ Int_t main(int argc, char** argv) {
         std::unordered_map<std::string, std::vector<FitResult>> result_container = analyze(run_info[i][0], run_info[i][1], run_info[i][2], pdf_save_mode);
 
         // -- initialize -----
-        linear_a.clear(); linear_b.clear();
+        linear_a.clear(); linear_b.clear(); n_hit_beam.clear(); n_hit_ped.clear();
         onsum_thre_val.clear(); onsum_thre_err.clear();
         offsum_thre_val.clear(); offsum_thre_err.clear();
 
         // -- efficiency -----
         n_entry_beam = result_container["eff"][0].additional[0];
-        n_hit_beam   = result_container["eff"][0].additional[1];
         n_entry_ped  = result_container["eff"][1].additional[0];
-        n_hit_ped    = result_container["eff"][1].additional[1];
-        
+        for (Int_t j = 1, n = result_container["eff"][0].additional.size(); j < n; j++) {
+            n_hit_beam.push_back(result_container["eff"][0].additional[j]);
+            n_hit_ped.push_back(result_container["eff"][1].additional[j]);        
+        }
 
         // -- linear -----
         for (const auto &result : result_container["linear"]) {
@@ -535,7 +541,6 @@ Int_t main(int argc, char** argv) {
     fout.cd(); // 明示的にカレントディレクトリを設定
     output_tree.Write();
     fout.Close(); 
-
 
     return 0;
 }
