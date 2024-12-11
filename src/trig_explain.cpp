@@ -21,6 +21,8 @@
 #include <TROOT.h>
 #include <TGTab.h>
 #include <TColor.h>
+#include <TDirectory.h>
+#include <TKey.h> 
 
 // Custom headers
 #include "config.h"
@@ -505,9 +507,10 @@ Int_t main(int argc, char** argv) {
 
     TApplication *theApp = new TApplication("App", &argc, argv);
     analyze(run_num, fout);
+    fout.Close();
+
     theApp->Run();
 
-    fout.Close();
 
     return 0;
 }
