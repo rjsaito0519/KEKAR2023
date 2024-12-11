@@ -39,11 +39,11 @@ namespace ana_helper {
         f_fit->SetLineColor(kOrange);
         f_fit->SetLineWidth(2);
         f_fit->SetNpx(1000);
+        h->Fit(f_fit, "0Q", "", par[1]-n_sigma*par[2], par[1]+n_sigma*par[2]);
         if (fout != nullptr) {
             fout->cd();
             f_fit->Write();
         } 
-        h->Fit(f_fit, "0Q", "", par[1]-n_sigma*par[2], par[1]+n_sigma*par[2]);
 
         FitResult result;
         par.clear();
@@ -107,11 +107,11 @@ namespace ana_helper {
         f_linear->SetParameters(0.1, 0.);
         f_linear->SetLineColor(kOrange);
         f_linear->SetLineWidth(2.0);
+        pf->Fit(f_linear, "0QW", "", fit_range_min, fit_range_max);
         if (fout != nullptr) {
             fout->cd();
             f_linear->Write();
         } 
-        pf->Fit(f_linear, "0QW", "", fit_range_min, fit_range_max);
 
         FitResult result;
         par.clear();
