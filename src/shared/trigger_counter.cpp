@@ -100,16 +100,16 @@ namespace ana_helper {
         // -- second fit -----
         Double_t fit_range_min = par[1] - 2.0*par[2];
         Double_t fit_range_max = par[1] + 2.0*par[2];
-        TF1 *f_fit = new TF1( Form("gauss_fit_%s", h->GetName()), "[0]*TMath::Gaus(x, [1], [2], true) + [3]*x + [4]", fit_range_min, fit_range_max);
+        TF1 *f_fit = new TF1( Form("gauss_%s", h->GetName()), "[0]*TMath::Gaus(x, [1], [2], true) + [3]*x + [4]", fit_range_min, fit_range_max);
         f_fit->SetParameters(par[0], par[1], par[2], 0.0, 0.0);
         f_fit->SetLineColor(kOrange);
         f_fit->SetLineWidth(2);
         f_fit->SetNpx(1000);
+        h->Fit(f_fit, "0Q", "", fit_range_min, fit_range_max);
         if (fout != nullptr) {
             fout->cd();
             f_fit->Write();
-        } 
-        h->Fit(f_fit, "0Q", "", fit_range_min, fit_range_max);
+        }
 
         FitResult result;
         par.clear();
@@ -175,11 +175,11 @@ namespace ana_helper {
         f_fit->SetLineColor(kOrange);
         f_fit->SetLineWidth(2);
         f_fit->SetNpx(1000);
+        h->Fit(f_fit, "0Q", "", par[1]-n_sigma*par[2], par[1]+n_sigma*par[2]);
         if (fout != nullptr) {
             fout->cd();
             f_fit->Write();
         } 
-        h->Fit(f_fit, "0Q", "", par[1]-n_sigma*par[2], par[1]+n_sigma*par[2]);
 
         FitResult result;
         par.clear();
