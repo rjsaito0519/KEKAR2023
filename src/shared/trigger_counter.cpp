@@ -75,7 +75,7 @@ namespace ana_helper {
     }
 
     // ____________________________________________________________________________________________
-    FitResult trig_counter_adc_gauss_fit(TH1D *h, TCanvas *c, Int_t n_c) {
+    FitResult trig_counter_adc_gauss_fit(TH1D *h, TCanvas *c, Int_t n_c, TFile* fout) {
         Config& conf = Config::getInstance();
         c->cd(n_c);
         std::vector<Double_t> par, err;
@@ -105,6 +105,10 @@ namespace ana_helper {
         f_fit->SetLineColor(kOrange);
         f_fit->SetLineWidth(2);
         f_fit->SetNpx(1000);
+        if (fout != nullptr) {
+            fout->cd();
+            f_fit->Write();
+        } 
         h->Fit(f_fit, "0Q", "", fit_range_min, fit_range_max);
 
         FitResult result;
@@ -146,7 +150,7 @@ namespace ana_helper {
     }
 
     // ____________________________________________________________________________________________
-    FitResult trig_counter_tdc_fit(TH1D *h, TCanvas *c, Int_t n_c) {
+    FitResult trig_counter_tdc_fit(TH1D *h, TCanvas *c, Int_t n_c, TFile* fout) {
         Config& conf = Config::getInstance();
         c->cd(n_c);
 
@@ -171,6 +175,10 @@ namespace ana_helper {
         f_fit->SetLineColor(kOrange);
         f_fit->SetLineWidth(2);
         f_fit->SetNpx(1000);
+        if (fout != nullptr) {
+            fout->cd();
+            f_fit->Write();
+        } 
         h->Fit(f_fit, "0Q", "", par[1]-n_sigma*par[2], par[1]+n_sigma*par[2]);
 
         FitResult result;

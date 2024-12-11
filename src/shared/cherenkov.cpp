@@ -3,7 +3,7 @@
 namespace ana_helper {
 
     // ____________________________________________________________________________________________
-    FitResult cherenkov_tdc_fit(TH1D *h, TCanvas *c, Int_t n_c) {
+    FitResult cherenkov_tdc_fit(TH1D *h, TCanvas *c, Int_t n_c, TFile* fout) {
         // -- almost same as trigger_counter_tdc_fit -----
         Config& conf = Config::getInstance();
 
@@ -39,6 +39,10 @@ namespace ana_helper {
         f_fit->SetLineColor(kOrange);
         f_fit->SetLineWidth(2);
         f_fit->SetNpx(1000);
+        if (fout != nullptr) {
+            fout->cd();
+            f_fit->Write();
+        } 
         h->Fit(f_fit, "0Q", "", par[1]-n_sigma*par[2], par[1]+n_sigma*par[2]);
 
         FitResult result;
@@ -80,7 +84,7 @@ namespace ana_helper {
     }
 
     // ____________________________________________________________________________________________
-    FitResult correlation_fit(TH2D *h, TCanvas *c, Int_t n_c) {
+    FitResult correlation_fit(TH2D *h, TCanvas *c, Int_t n_c, TFile* fout) {
         // -- almost same as trigger_counter_tdc_fit -----
         Config& conf = Config::getInstance();
         c->cd(n_c);
@@ -103,6 +107,10 @@ namespace ana_helper {
         f_linear->SetParameters(0.1, 0.);
         f_linear->SetLineColor(kOrange);
         f_linear->SetLineWidth(2.0);
+        if (fout != nullptr) {
+            fout->cd();
+            f_linear->Write();
+        } 
         pf->Fit(f_linear, "0QW", "", fit_range_min, fit_range_max);
 
         FitResult result;
