@@ -25,6 +25,8 @@
 #include <TROOT.h>
 #include <TLatex.h>
 #include <TProfile.h>
+#include <TFile.h>
+
 
 #include "config.h"
 #include "fit_functions.h"
@@ -78,12 +80,12 @@ namespace ana_helper {
 
     // -- trigger counter -----
     FitResult trig_counter_adc_erf_fit(TH1D *h, TCanvas *c, Int_t n_c);
-    FitResult trig_counter_adc_gauss_fit(TH1D *h, TCanvas *c, Int_t n_c);
-    FitResult trig_counter_tdc_fit(TH1D *h, TCanvas *c, Int_t n_c);
+    FitResult trig_counter_adc_gauss_fit(TH1D *h, TCanvas *c, Int_t n_c, TFile* fout = nullptr);
+    FitResult trig_counter_tdc_fit(TH1D *h, TCanvas *c, Int_t n_c, TFile* fout= nullptr);
 
     // -- cherenkov counter -----
-    FitResult cherenkov_tdc_fit(TH1D *h, TCanvas *c, Int_t n_c);
-    FitResult correlation_fit(TH2D *h, TCanvas *c, Int_t n_c);
+    FitResult cherenkov_tdc_fit(TH1D *h, TCanvas *c, Int_t n_c, TFile* fout= nullptr);
+    FitResult correlation_fit(TH2D *h, TCanvas *c, Int_t n_c, TFile* fout= nullptr);
     FitResult poisson_fit(TH1D *h, TCanvas *c, Int_t n_c);
     FitResult conv_poisson_fit(TH1D *h, TCanvas *c, Int_t n_c, Double_t pedestal_sigma);
     FitResult npe_gauss_fit(TH1D *h, TCanvas *c, Int_t n_c, Double_t n_sigma = 1.0, Double_t cutoff_threshold = 0.0);

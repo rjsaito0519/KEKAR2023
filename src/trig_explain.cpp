@@ -155,17 +155,17 @@ std::unordered_map<std::string, std::vector<FitResult>> analyze(Int_t run_num, T
 
     // -- T1 -----
     FitResult tmp_fit_result;
-    tmp_fit_result = ana_helper::trig_counter_tdc_fit(h_t1t, c_trig1, 1);
+    tmp_fit_result = ana_helper::trig_counter_tdc_fit(h_t1t, c_trig1, 1, &fout);
     Double_t t1_tdc_min = tmp_fit_result.additional[0];
     Double_t t1_tdc_max = tmp_fit_result.additional[1];
-    tmp_fit_result = ana_helper::trig_counter_adc_gauss_fit(h_t1a, c_trig1, 2);
+    tmp_fit_result = ana_helper::trig_counter_adc_gauss_fit(h_t1a, c_trig1, 2, &fout);
     Double_t t1_adc_min = tmp_fit_result.additional[0];
 
     // -- T2 -----
-    tmp_fit_result = ana_helper::trig_counter_tdc_fit(h_t2t, c_trig1, 3);
+    tmp_fit_result = ana_helper::trig_counter_tdc_fit(h_t2t, c_trig1, 3, &fout);
     Double_t t2_tdc_min = tmp_fit_result.additional[0];
     Double_t t2_tdc_max = tmp_fit_result.additional[1];
-    tmp_fit_result = ana_helper::trig_counter_adc_gauss_fit(h_t2a, c_trig1, 4);
+    tmp_fit_result = ana_helper::trig_counter_adc_gauss_fit(h_t2a, c_trig1, 4, &fout);
     Double_t t2_adc_min = tmp_fit_result.additional[0];
 
     
@@ -173,25 +173,25 @@ std::unordered_map<std::string, std::vector<FitResult>> analyze(Int_t run_num, T
     c_trig2->Divide(2, 2);
 
     // -- T3 -----
-    tmp_fit_result = ana_helper::trig_counter_tdc_fit(h_t3t, c_trig2, 1);
+    tmp_fit_result = ana_helper::trig_counter_tdc_fit(h_t3t, c_trig2, 1, &fout);
     Double_t t3_tdc_min = tmp_fit_result.additional[0];
     Double_t t3_tdc_max = tmp_fit_result.additional[1];
-    tmp_fit_result = ana_helper::trig_counter_adc_gauss_fit(h_t3a, c_trig2, 2);
+    tmp_fit_result = ana_helper::trig_counter_adc_gauss_fit(h_t3a, c_trig2, 2, &fout);
     Double_t t3_adc_min = tmp_fit_result.additional[0];
     Double_t t3_adc_max = tmp_fit_result.additional[1];
     
     // -- T4 -----
-    tmp_fit_result = ana_helper::trig_counter_tdc_fit(h_t4t, c_trig2, 3);
+    tmp_fit_result = ana_helper::trig_counter_tdc_fit(h_t4t, c_trig2, 3, &fout);
     Double_t t4_tdc_min = tmp_fit_result.additional[0];
     Double_t t4_tdc_max = tmp_fit_result.additional[1];
-    tmp_fit_result = ana_helper::trig_counter_adc_gauss_fit(h_t4a, c_trig2, 4);
+    tmp_fit_result = ana_helper::trig_counter_adc_gauss_fit(h_t4a, c_trig2, 4, &fout);
     Double_t t4_adc_min = tmp_fit_result.additional[0];    
     Double_t t4_adc_max = tmp_fit_result.additional[1];    
 
     TCanvas *c_bact = ana_helper::add_tab(tab, "bac");
     
     // -- bac sum -----
-    tmp_fit_result = ana_helper::cherenkov_tdc_fit(h_bacsumt, c_bact, 1);
+    tmp_fit_result = ana_helper::cherenkov_tdc_fit(h_bacsumt, c_bact, 1, &fout);
     Double_t bac_tdc_min = tmp_fit_result.additional[0];
     Double_t bac_tdc_max = tmp_fit_result.additional[1];
 
@@ -321,7 +321,7 @@ std::unordered_map<std::string, std::vector<FitResult>> analyze(Int_t run_num, T
     // -- fitting and estimate -----
     TCanvas *c_corr = ana_helper::add_tab(tab, "corr");
 
-    FitResult linear_fit_result = ana_helper::correlation_fit(h_correlation, c_corr, 1);
+    FitResult linear_fit_result = ana_helper::correlation_fit(h_correlation, c_corr, 1, &fout);
     result_container["linear"].push_back(linear_fit_result);
 
     // -- calc and fill -----
