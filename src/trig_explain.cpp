@@ -162,6 +162,12 @@ std::unordered_map<std::string, std::vector<FitResult>> analyze(Int_t run_num, T
     Double_t t1_tdc_max = tmp_fit_result.additional[1];
     tmp_fit_result = ana_helper::trig_counter_adc_gauss_fit(h_t1a, c_trig1, 2, &fout);
     Double_t t1_adc_min = tmp_fit_result.additional[0];
+    Double_t t1_adc_max = tmp_fit_result.additional[1];
+
+    std::cout << "-----\nT1" << std::endl;
+    std::cout << t1_tdc_min << ", " << t1_tdc_max << std::endl;
+    std::cout << t1_adc_min << ", " << t1_adc_max << std::endl;
+    
 
     // -- T2 -----
     tmp_fit_result = ana_helper::trig_counter_tdc_fit(h_t2t, c_trig1, 3, &fout);
@@ -169,8 +175,13 @@ std::unordered_map<std::string, std::vector<FitResult>> analyze(Int_t run_num, T
     Double_t t2_tdc_max = tmp_fit_result.additional[1];
     tmp_fit_result = ana_helper::trig_counter_adc_gauss_fit(h_t2a, c_trig1, 4, &fout);
     Double_t t2_adc_min = tmp_fit_result.additional[0];
+    Double_t t2_adc_max = tmp_fit_result.additional[1];
 
-    
+    std::cout << "-----\nT2" << std::endl;
+    std::cout << t2_tdc_min << ", " << t2_tdc_max << std::endl;
+    std::cout << t2_adc_min << ", " << t2_adc_max << std::endl;
+
+
     TCanvas *c_trig2 = ana_helper::add_tab(tab, "trigger");
     c_trig2->Divide(2, 2);
 
@@ -182,6 +193,11 @@ std::unordered_map<std::string, std::vector<FitResult>> analyze(Int_t run_num, T
     Double_t t3_adc_min = tmp_fit_result.additional[0];
     Double_t t3_adc_max = tmp_fit_result.additional[1];
     
+    std::cout << "-----\nT3" << std::endl;
+    std::cout << t3_tdc_min << ", " << t3_tdc_max << std::endl;
+    std::cout << t3_adc_min << ", " << t3_adc_max << std::endl;
+
+
     // -- T4 -----
     tmp_fit_result = ana_helper::trig_counter_tdc_fit(h_t4t, c_trig2, 3, &fout);
     Double_t t4_tdc_min = tmp_fit_result.additional[0];
@@ -190,6 +206,11 @@ std::unordered_map<std::string, std::vector<FitResult>> analyze(Int_t run_num, T
     Double_t t4_adc_min = tmp_fit_result.additional[0];    
     Double_t t4_adc_max = tmp_fit_result.additional[1];    
 
+    std::cout << "-----\nT4" << std::endl;
+    std::cout << t4_tdc_min << ", " << t4_tdc_max << std::endl;
+    std::cout << t4_adc_min << ", " << t4_adc_max << std::endl;
+
+
     TCanvas *c_bact = ana_helper::add_tab(tab, "bac");
     
     // -- bac sum -----
@@ -197,7 +218,8 @@ std::unordered_map<std::string, std::vector<FitResult>> analyze(Int_t run_num, T
     Double_t bac_tdc_min = tmp_fit_result.additional[0];
     Double_t bac_tdc_max = tmp_fit_result.additional[1];
 
-
+    std::cout << "-----\nBAC TDC" << std::endl;
+    std::cout << bac_tdc_min << ", " << bac_tdc_max << std::endl;
     
     // +--------------------------+
     // | Preparation for 2nd fill |
@@ -269,7 +291,7 @@ std::unordered_map<std::string, std::vector<FitResult>> analyze(Int_t run_num, T
         //         && kvcsumt[ch] < shower_tdc_gate[ch].second 
         //     ) shower_flag = true;
         // }
-        if ( t3_adc_max < t3a[0] || t4_adc_max < t4a[0] ) shower_flag = true;
+        if ( t1_adc_max < t1a[0] || t2_adc_max < t2a[0] || t3_adc_max < t3a[0] || t4_adc_max < t4a[0] ) shower_flag = true;
 
 
         // -- event selection and fill data -----
