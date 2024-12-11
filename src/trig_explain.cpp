@@ -28,8 +28,7 @@
 #include "ana_helper.h"
 #include "paths.h"
 
-
-std::unordered_map<std::string, std::vector<FitResult>> analyze(Int_t run_num)
+std::unordered_map<std::string, std::vector<FitResult>> analyze(Int_t run_num, TFile& fout)
 {   
     // +---------+
     // | setting |
@@ -188,7 +187,6 @@ std::unordered_map<std::string, std::vector<FitResult>> analyze(Int_t run_num)
     tmp_fit_result = ana_helper::trig_counter_adc_gauss_fit(h_t4a, c_trig2, 4);
     Double_t t4_adc_min = tmp_fit_result.additional[0];    
     Double_t t4_adc_max = tmp_fit_result.additional[1];    
-
 
     TCanvas *c_bact = ana_helper::add_tab(tab, "bac");
     
@@ -444,7 +442,42 @@ std::unordered_map<std::string, std::vector<FitResult>> analyze(Int_t run_num)
     main->MapSubwindows();
     main->Resize(main->GetDefaultSize());
     main->MapWindow();
+
+
+    // +-------+
+    // | write |
+    // +-------+
+    fout.cd();
+    h_t1a->Write();
+    h_t1t->Write();
+    h_t2a->Write();
+    h_t2t->Write();
+    h_t3a->Write();
+    h_t3t->Write();
+    h_t4a->Write();
+    h_t4t->Write();
     
+    for (Int_t ch = 0; ch < conf.max_bac_ch; ch++) {
+        h_baca[ch].raw->Write();
+        h_baca[ch].trig->Write();
+        h_npe[ch].raw->Write();
+        h_npe[ch].trig->Write();
+        h_npe_shower[ch]->Write();
+    }
+    h_onsum_adc.raw->Write();
+    h_onsum_adc.trig->Write();
+    h_offsum_adc.raw->Write();
+    h_offsum_adc.trig->Write();
+    h_bacsumt->Write();
+    
+    h_onsum_npe.raw->Write();
+    h_onsum_npe.trig->Write();
+    h_offsum_npe.raw->Write();
+    h_offsum_npe.trig->Write();
+    
+    h_onsum_npe_shower->Write();
+    h_offsum_npe_shower->Write();
+    h_correlation->Write();
 
     return result_container;
 }
@@ -463,10 +496,18 @@ Int_t main(int argc, char** argv) {
     }
     Int_t run_num = std::atoi(argv[1]);
 
+    // +--------------------------+
+    // | prepare output root file |
+    // +--------------------------+
+    TString output_path = OUTPUT_DIR + "/root/explain.root";
+    if (std::ifstream(output_path.Data())) std::remove(output_path.Data());
+    TFile fout(output_path.Data(), "create");
 
     TApplication *theApp = new TApplication("App", &argc, argv);
-    analyze(run_num);
+    analyze(run_num, fout);
     theApp->Run();
+
+    fout.Close();
 
     return 0;
 }
