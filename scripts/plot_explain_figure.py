@@ -5,6 +5,8 @@ import matplotlib.ticker as ptick
 import uproot
 import lmfit as lf
 import lmfit.models as lfm
+from scipy.stats import norm
+from scipy.integrate import quad
 
 plt.rcParams['font.family'] = 'Times New Roman' #全体のフォントを設定
 plt.rcParams['mathtext.fontset'] = 'stix'
@@ -278,6 +280,12 @@ def BAC_onsumnpe():
     ax2.axvline(result.result.params["center"].value, ls = "dashed", color = "gray", zorder = 0)
 
 
+    # def gaussian(x, mu, sigma):
+    #     return (1 / (np.sqrt(2 * np.pi * sigma**2))) * np.exp(-0.5 * ((x - mu) / sigma)**2)
+
+    # probability, error = quad(gaussian, 20, np.inf, args=(result.result.params["center"].value, result.result.params["sigma"].value))
+    # print(probability)
+
     ax2.legend(fontsize = 24)
     ax2.set_xlim(0, 280)
     ax2.set_ylim(y_min, y_max)
@@ -324,5 +332,5 @@ def linear_corr():
 
 if __name__ == '__main__':
     # BACSUMt()
-    # BAC_onsumnpe()
-    linear_corr()
+    BAC_onsumnpe()
+    # linear_corr()
