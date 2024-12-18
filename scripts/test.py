@@ -23,7 +23,7 @@ plt.rcParams["ytick.minor.size"] = 5                 #y軸補助目盛り線の�
 
 
 script_dir = os.path.dirname(os.path.abspath(__file__))
-root_file_path = os.path.join(script_dir, "../results/root/bac_hv_threshold_scan.root")
+root_file_path = os.path.join(script_dir, "../results/root/kvc_1cm_hv_threshold_scan.root")
 
 file = uproot.open(root_file_path)
 tree = file["tree"].arrays(library="np")
@@ -49,11 +49,13 @@ ax2 = fig.add_subplot(212)
 for HV in [56, 57, 58]:
     data = []
     for i in range(len(tree["hv"])):
-        if tree["run_num"][i] > 400 and HV == tree["hv"][i]:
+        if tree["run_num"][i] < 400 and HV == tree["hv"][i]:
             threshold = tree["threshold"][i]
             npe_thre_val = tree["onsum_thre_val"][i][0]
             npe_thre_err = tree["onsum_thre_err"][i][0]
             
+            print(threshold, npe_thre_val, npe_thre_err)
+
             data.append([ threshold, npe_thre_val, npe_thre_err ])
     data = np.array(data)
     ax1.errorbar(
@@ -67,22 +69,27 @@ for HV in [56, 57, 58]:
     # elif HV == 57:
     #     mask = data[:, 0] >= 100
     
+    # mask = data[:, 0] >= 60
+    # if HV == 58:
+    #     mask = data[:, 0] >= 100
+
     mask = data[:, 0] >= 60
     if HV == 58:
         mask = data[:, 0] >= 100
 
-    x = data[:, 0][mask]
-    y = data[:, 1][mask]
-    y_err = data[:, 2][mask]
-    model = lfm.LinearModel()
-    params = model.guess(x = x, data = y)
-    result = model.fit(x = x, data = y, weights = 1/y_err, params=params, method='leastsq')
-    print(result.fit_report())
-    fit_x = np.linspace(75, np.max(x), 100)
-    fit_y = result.eval_components(x=fit_x)["linear"]
-    ax1.plot(fit_x, fit_y, color = color[HV])
 
-    print(result.eval_components(x=60.0))
+    # x = data[:, 0][mask]
+    # y = data[:, 1][mask]
+    # y_err = data[:, 2][mask]
+    # model = lfm.LinearModel()
+    # params = model.guess(x = x, data = y)
+    # result = model.fit(x = x, data = y, weights = 1/y_err, params=params, method='leastsq')
+    # print(result.fit_report())
+    # fit_x = np.linspace(75, np.max(x), 100)
+    # fit_y = result.eval_components(x=fit_x)["linear"]
+    # ax1.plot(fit_x, fit_y, color = color[HV])
+
+    # print(result.eval_components(x=60.0))
 
 # ax1.set_ylim(0, 105)
 # ax1.set_ylabel("R [%] (w/ beam)")
