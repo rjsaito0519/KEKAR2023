@@ -219,49 +219,22 @@ def BACSUMt():
 
 def BAC_onsumnpe():
     fig = plt.figure(figsize=(8, 8))
-    ax1 = fig.add_subplot(211)
-    ax2 = fig.add_subplot(212)
-
+    ax1 = fig.add_subplot(111)
+    
     # +-----+
     # | TDC |
     # +-----+
     # -- histogram -----
     center, edge, value = get_hist_data(file, f"BAConsumnpe_{run_num}_trig")
-    ax1.hist(center, bins=edge, weights=value, lw = 1.5, histtype='step', color="k", zorder = 2, label = "Raw")
-
-    # -- histogram -----
-    _, _, value_shower = get_hist_data(file, f"BAConsumnpe_shower_{run_num}")
-    ax1.hist(center, bins=edge, weights=value_shower, lw = 1.5, histtype='step', color="C2", zorder = 2, label = r"Trigger ADC > +4$\sigma$")
+    ax1.hist(center, bins=edge, weights=value, lw = 1.5, histtype='step', color="C0", zorder = 2, label = r"Online SUM $N_{\rm p. e.}$")
     ax1.xaxis.set_major_formatter(ptick.EngFormatter())
     ax1.yaxis.set_major_formatter(ptick.EngFormatter())
-    ax1.set_xlim(0, 280)
-    y_min, y_max = ax1.get_ylim()
-    ax1.set_xticks([0, 50, 100, 150, 200, 250])
-    ax1.set_xticklabels(["", "", "", "", "", ""])
-    ax1.legend(fontsize=24)
-
-    # -- explain saturate -----
-    ax1.annotate("",
-        xy=(260, 35),                  # 矢印の先端 (終点)
-        xytext=(260, 100),            # 矢印の始点
-        arrowprops=dict(
-            arrowstyle="->",     # 矢印のスタイル
-            lw=1.5,             # 矢印の線の太さ
-            color="C3"        # 矢印の色
-        ),
-    )
-    ax1.text(255, 100, "saturated\nevents", va = "bottom", ha = "center", fontsize = 24, color="k")
-
-    # -- subtracted ----
-    ax2.hist(center, bins=edge, weights=value-value_shower, lw = 1.5, histtype='step', color="C0", zorder = 2, label="Subtracted dist.")
-    ax2.xaxis.set_major_formatter(ptick.EngFormatter())
-    ax2.yaxis.set_major_formatter(ptick.EngFormatter())
 
     # -- for fitting -----
     mask = (60 < center) * (center <120)
     for _ in range(3):
         x = center[mask]
-        y = (value-value_shower)[mask]
+        y = (value)[mask]
         model = lfm.GaussianModel()
         params = model.guess(x = x, data = y)
         result = model.fit(x = x, data = y, params=params, method='leastsq')
@@ -269,29 +242,21 @@ def BAC_onsumnpe():
         mask = (result.result.params["center"].value - 1.5*result.result.params["sigma"].value < center) * (center < result.result.params["center"].value + 1.5*result.result.params["sigma"].value)
 
     x = center[mask]
-    y = (value-value_shower)[mask]
+    y = (value)[mask]
     model = lfm.GaussianModel()
     params = model.guess(x = x, data = y)
     result = model.fit(x = x, data = y, params=params, method='leastsq')
     print(result.fit_report())
     fit_x = np.linspace(np.min(x), np.max(x), 100)
     fit_y = result.eval_components(x=fit_x)["gaussian"]
-    ax2.plot(fit_x, fit_y, color  = "C1", lw = 2.5, label = "Gaussian fit\n" + r"$N_{\rm p. e.}^{\rm mean}$" + " = {:.1f}".format(result.result.params["center"].value))
-    ax2.axvline(result.result.params["center"].value, ls = "dashed", color = "gray", zorder = 0)
+    ax1.plot(fit_x, fit_y, color  = "C1", lw = 2.5, label = "Gaussian fit\n" + r"$N_{\rm p. e.}^{\rm mean}$" + " = {:.1f}".format(result.result.params["center"].value))
+    ax1.axvline(result.result.params["center"].value, ls = "dashed", color = "gray", zorder = 0)
 
-
-    # def gaussian(x, mu, sigma):
-    #     return (1 / (np.sqrt(2 * np.pi * sigma**2))) * np.exp(-0.5 * ((x - mu) / sigma)**2)
-
-    # probability, error = quad(gaussian, 20, np.inf, args=(result.result.params["center"].value, result.result.params["sigma"].value))
-    # print(probability)
-
-    ax2.legend(fontsize = 24)
-    ax2.set_xlim(0, 280)
-    ax2.set_ylim(y_min, y_max)
+    ax1.legend(fontsize = 24)
+    ax1.set_xlim(0, 280)
 
     ax1.set_title(r"BAC online-sum $N_{\rm p. e.}$")
-    ax2.set_xlabel(r"$N_{\rm p. e.}$")
+    ax1.set_xlabel(r"$N_{\rm p. e.}$")
     plt.subplots_adjust(left = 0.1, right = 0.98, top = 0.9, bottom = 0.12, hspace=0.01)
     img_save_path = os.path.join(script_dir, f"../results/img/explain/NPE_fit.pdf")
     os.makedirs(os.path.dirname(img_save_path), exist_ok=True)

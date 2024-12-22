@@ -309,8 +309,8 @@ std::unordered_map<std::string, std::vector<FitResult>> analyze(Int_t run_num_be
                 }
             }
         }
-        Bool_t trig_flag_adc = do_hit_t4a && do_hit_t2a && do_hit_t3a && do_hit_t4a;
-        Bool_t trig_flag_tdc = do_hit_t4t && do_hit_t2t && do_hit_t3t && do_hit_t4t;
+        Bool_t trig_flag_adc = do_hit_t1a && do_hit_t2a && do_hit_t3a && do_hit_t4a;
+        Bool_t trig_flag_tdc = do_hit_t1t && do_hit_t2t && do_hit_t3t && do_hit_t4t;
 
 
         // -- event selection and fill data -----

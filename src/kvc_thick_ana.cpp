@@ -298,8 +298,8 @@ std::unordered_map<std::string, std::vector<FitResult>> analyze(Int_t run_num, I
             if ( t4_tdc_min < t4t[n_hit] && t4t[n_hit] < t4_tdc_max ) do_hit_t4t = true;
             for (Int_t ch = 0; ch < conf.max_kvc_ch; ch++) if ( kvc_tdc_min[ch] < kvcsumt[conf.max_nhit_tdc*ch+n_hit] && kvcsumt[conf.max_nhit_tdc*ch+n_hit] < kvc_tdc_max[ch] ) do_hit_kvc = true;
         }
-        Bool_t trig_flag_adc = do_hit_t4a && do_hit_t2a && do_hit_t3a && do_hit_t4a;
-        Bool_t trig_flag_tdc = do_hit_t4t && do_hit_t2t && do_hit_t3t && do_hit_t4t;
+        Bool_t trig_flag_adc = do_hit_t1a && do_hit_t2a && do_hit_t3a && do_hit_t4a;
+        Bool_t trig_flag_tdc = do_hit_t1t && do_hit_t2t && do_hit_t3t && do_hit_t4t;
 
         // -- check shower -----
         Bool_t shower_flag = false;
