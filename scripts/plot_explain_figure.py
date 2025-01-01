@@ -226,7 +226,7 @@ def BAC_onsumnpe():
     # +-----+
     # -- histogram -----
     center, edge, value = get_hist_data(file, f"BAConsumnpe_{run_num}_trig")
-    ax1.hist(center, bins=edge, weights=value, lw = 1.5, histtype='step', color="C0", zorder = 2, label = r"Online SUM $N_{\rm p. e.}$")
+    ax1.hist(center, bins=edge, weights=value, lw = 1.5, histtype='step', color="C0", zorder = 2, label = r"SUM $N_{\rm p. e.}$")
     ax1.xaxis.set_major_formatter(ptick.EngFormatter())
     ax1.yaxis.set_major_formatter(ptick.EngFormatter())
 
@@ -253,9 +253,9 @@ def BAC_onsumnpe():
     ax1.axvline(result.result.params["center"].value, ls = "dashed", color = "gray", zorder = 0)
 
     ax1.legend(fontsize = 24)
-    ax1.set_xlim(0, 280)
+    ax1.set_xlim(0, 210)
 
-    ax1.set_title(r"BAC online-sum $N_{\rm p. e.}$")
+    ax1.set_title(r"BAC SUM $N_{\rm p. e.}$")
     ax1.set_xlabel(r"$N_{\rm p. e.}$")
     plt.subplots_adjust(left = 0.1, right = 0.98, top = 0.9, bottom = 0.12, hspace=0.01)
     img_save_path = os.path.join(script_dir, f"../results/img/explain/NPE_fit.pdf")
