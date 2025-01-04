@@ -68,8 +68,8 @@ class BAC(pos_scan_tool.pos_scan):
                     if eff_max.val < eff:
                         eff_max.val = eff
                         eff_max.err = np.sqrt(eff*(1-eff)/self.tree["n_trig"][index])
-                        sum_npe.val = self.tree["offsum_npe_val"][index][0]
-                        sum_npe.err = self.tree["offsum_npe_err"][index][0]
+                        sum_npe.val = self.tree["onsum_npe_val"][index][0]
+                        sum_npe.err = self.tree["onsum_npe_err"][index][0]
                         for ch in range(4):
                             indiv_npe[ch].val = self.tree["indiv_npe_val"][index][ch]
                             indiv_npe[ch].err = self.tree["indiv_npe_err"][index][ch]
