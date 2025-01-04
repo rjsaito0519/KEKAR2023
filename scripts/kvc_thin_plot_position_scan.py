@@ -32,7 +32,8 @@ class KVC_thin(pos_scan_tool.pos_scan):
 
     def plot(self, key, cbar_range = (np.nan, np.nan)):
         x_pos = np.array([ -48, -32, -16, 0, 16, 32 ])
-        y_pos = np.array([ -54, -36, -18, 0, 18, 36, 54 ])
+        # y_pos = np.array([ -54, -36, -18, 0, 18, 36, 54 ])
+        y_pos = np.array([ -36, -18, 0, 18, 36 ])
 
         # -- data selection -----
         data = {
@@ -78,6 +79,12 @@ class KVC_thin(pos_scan_tool.pos_scan):
         df_err = pd.DataFrame(data[f"{key}_err"], columns=x_pos, index=y_pos)
         if np.isnan(cbar_range[0]):
             cbar_range = (np.min(df_val.values), np.max(df_val.values))
+
+        # # -- 上下1列ずつ表示しない -----
+        # df_val.loc[np.min(y_pos)] = np.nan
+        # df_val.loc[np.max(y_pos)] = np.nan
+        # df_err.loc[np.min(y_pos)] = np.nan
+        # df_err.loc[np.max(y_pos)] = np.nan
 
         # -- add margin left and right ----- 
         df_val[np.min(x_pos)-16] = [np.nan]*len(y_pos)
@@ -125,7 +132,9 @@ class KVC_thin(pos_scan_tool.pos_scan):
         
         plt.figure(figsize=(10, 8))
         plt.grid(which="major", alpha=0.3)
-        sns.heatmap(df_val, cmap=color_map, annot=annot, vmin=cbar_range[0], vmax=cbar_range[1], cbar=True, fmt='', annot_kws={'fontsize': 18}, cbar_kws=dict(pad=-0.08, shrink=0.78))
+        # sns.heatmap(df_val, cmap=color_map, annot=annot, vmin=cbar_range[0], vmax=cbar_range[1], cbar=True, fmt='', annot_kws={'fontsize': 18}, cbar_kws=dict(pad=-0.08, shrink=0.78))
+        sns.heatmap(df_val, cmap=color_map, annot=annot, vmin=cbar_range[0], vmax=cbar_range[1], cbar=True, fmt='', annot_kws={'fontsize': 18}, cbar_kws=dict(pad=-0.1, shrink=0.715))
+        
 
         # -- set radiator size ------
         kvc_height = 120
@@ -141,7 +150,16 @@ class KVC_thin(pos_scan_tool.pos_scan):
         # 下端
         plt.hlines(self.convert_y(edge_bottom, np.max(df_val.index)), self.convert_x(edge_left, np.min(df_val.columns)), self.convert_x(edge_right, np.min(df_val.columns)), color = "red", ls = "dashed", lw = 1.5, zorder = 1)
 
-        plt.text(self.convert_x((edge_left+edge_right)/2.0, np.min(df_val.columns)), self.convert_y(edge_top+6, np.max(df_val.index)), title, ha='center', va='bottom', zorder = 1)
+        # plt.text(self.convert_x((edge_left+edge_right)/2.0, np.min(df_val.columns)), self.convert_y(edge_top+6, np.max(df_val.index)), title, ha='center', va='bottom', zorder = 1)
+        plt.text(self.convert_x((edge_left+edge_right)/2.0, np.min(df_val.columns)), self.convert_y(edge_top, np.max(df_val.index)), title, ha='center', va='bottom', zorder = 1)
+
+        for ch in range(4):
+            plt.text(
+                self.convert_x(edge_left+(ch+0.5)*kvc_seg_width, np.min(df_val.columns)),
+                self.convert_y(edge_bottom, np.max(df_val.index)), 
+                f"seg. {ch+1}", ha='center', va='bottom', zorder = 1)
+
+
         plt.xlabel("x position [mm]")
         plt.ylabel("y position [mm]")
         plt.subplots_adjust(left = 0.1, right = 1.0, top = 0.96, bottom = 0.1)
@@ -156,7 +174,9 @@ class KVC_thin(pos_scan_tool.pos_scan):
 
         plt.figure(figsize=(10, 8))
         plt.grid(which="major", alpha=0.3)
-        sns.heatmap(df_val, cmap="cividis", annot=annot, vmin=cbar_range[0], vmax=cbar_range[1], cbar=True, fmt='', annot_kws={'fontsize': 18}, cbar_kws=dict(pad=-0.08, shrink=0.78))
+        # sns.heatmap(df_val, cmap="cividis", annot=annot, vmin=cbar_range[0], vmax=cbar_range[1], cbar=True, fmt='', annot_kws={'fontsize': 18}, cbar_kws=dict(pad=-0.08, shrink=0.78))
+        sns.heatmap(df_val, cmap="cividis", annot=annot, vmin=cbar_range[0], vmax=cbar_range[1], cbar=True, fmt='', annot_kws={'fontsize': 18}, cbar_kws=dict(pad=-0.1, shrink=0.715))
+        
 
         # -- set radiator size ------
         kvc_height = 120
@@ -172,7 +192,16 @@ class KVC_thin(pos_scan_tool.pos_scan):
         # 下端
         plt.hlines(self.convert_y(edge_bottom, np.max(df_val.index)), self.convert_x(edge_left, np.min(df_val.columns)), self.convert_x(edge_right, np.min(df_val.columns)), color = "red", ls = "dashed", lw = 1.5, zorder = 1)
 
-        plt.text(self.convert_x((edge_left+edge_right)/2.0, np.min(df_val.columns)), self.convert_y(edge_top+6, np.max(df_val.index)), title, ha='center', va='bottom', zorder = 1)
+        # plt.text(self.convert_x((edge_left+edge_right)/2.0, np.min(df_val.columns)), self.convert_y(edge_top+6, np.max(df_val.index)), title, ha='center', va='bottom', zorder = 1)
+        plt.text(self.convert_x((edge_left+edge_right)/2.0, np.min(df_val.columns)), self.convert_y(edge_top, np.max(df_val.index)), title, ha='center', va='bottom', zorder = 1)
+
+        for ch in range(4):
+            plt.text(
+                self.convert_x(edge_left+(ch+0.5)*kvc_seg_width, np.min(df_val.columns)),
+                self.convert_y(edge_bottom, np.max(df_val.index)), 
+                f"seg. {ch+1}", ha='center', va='bottom', zorder = 1)
+
+
         plt.xlabel("x position [mm]")
         plt.ylabel("y position [mm]")
         plt.subplots_adjust(left = 0.1, right = 1.0, top = 0.96, bottom = 0.1)
@@ -185,7 +214,7 @@ if __name__ == '__main__':
     
     for ch in range(4):
         # kvc.plot(f"sum_npe{ch}", cbar_range=(37, 81)) # use a, b
-        tmp_df_val, tmp_annot = kvc.plot(f"sum_npe{ch}", cbar_range=(30, 76)) # use average one photon gain
+        tmp_df_val, tmp_annot = kvc.plot(f"sum_npe{ch}", cbar_range=(30, 59)) # use average one photon gain
         if ch == 0:
             summary_df_val[-48] = tmp_df_val[-48]
             summary_annot[-48]  = tmp_annot[-48]
@@ -205,4 +234,4 @@ if __name__ == '__main__':
 
     print(summary_annot)
 
-    kvc.plot_summary(summary_df_val, summary_annot, (30, 76))
+    kvc.plot_summary(summary_df_val, summary_annot, (30, 59))

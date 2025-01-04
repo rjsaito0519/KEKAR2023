@@ -534,7 +534,7 @@ Int_t main(int argc, char** argv) {
     Int_t tmp_run_num, pos_x, pos_y;
     Double_t n_trig, n_hit;
     std::vector<Double_t> linear_a, linear_b;
-    std::vector<Double_t> indiv_npe_val, indiv_npe_err, onsum_npe_val, onsum_npe_err, offsum_npe_val, offsum_npe_err;
+    std::vector<Double_t> indiv_npe_val, indiv_npe_err, onsum_npe_val, onsum_npe_err, offsum_npe_val, offsum_npe_err, onsum_sigma_val;
 
     output_tree.Branch("run_num", &tmp_run_num, "run_num/I");
     output_tree.Branch("pos_x", &pos_x, "pos_x/I");
@@ -549,6 +549,7 @@ Int_t main(int argc, char** argv) {
     output_tree.Branch("onsum_npe_err", &onsum_npe_err);
     output_tree.Branch("offsum_npe_val", &offsum_npe_val);
     output_tree.Branch("offsum_npe_err", &offsum_npe_err);
+    output_tree.Branch("onsum_sigma_val", &onsum_sigma_val);
 
     for (Int_t i = 0, n_run_num = ana_run_num.size(); i < n_run_num; i++) {
         tmp_run_num = ana_run_num[i];
@@ -567,6 +568,7 @@ Int_t main(int argc, char** argv) {
         indiv_npe_val.clear(); indiv_npe_err.clear();
         onsum_npe_val.clear(); onsum_npe_err.clear();
         offsum_npe_val.clear(); offsum_npe_err.clear();
+        onsum_sigma_val.clear();
 
         // -- efficiency -----
         n_trig = result_container["eff"][0].additional[0];
@@ -588,6 +590,7 @@ Int_t main(int argc, char** argv) {
         for (const auto &result : result_container["onsum_npe"]) {
             onsum_npe_val.push_back( result.par[1] );
             onsum_npe_err.push_back( result.err[1] );
+            onsum_sigma_val.push_back(result.par.size() > 1 ? result.par[2] : 0.0);  // par[1] がなければ 0.0
         }
         for (const auto &result : result_container["offsum_npe"]) {
             offsum_npe_val.push_back( result.par[1] );

@@ -152,6 +152,13 @@ class KVC_thick(pos_scan_tool.pos_scan):
         # 下端
         plt.hlines(self.convert_x(edge_bottom, np.min(df_val.index)), self.convert_y(edge_left, np.max(df_val.columns)), self.convert_y(edge_right, np.max(df_val.columns)), color = "red", ls = "dashed", lw = 1.5, zorder = 1)
 
+        for ch in range(4):
+            plt.text(
+                self.convert_y(edge_left+(ch+0.5)*kvc_seg_width, np.max(df_val.columns)),
+                self.convert_x(edge_top, np.min(df_val.index)),
+                f"seg. {4-ch}", ha='center', va='top', zorder = 1)
+
+
         plt.text(self.convert_y((edge_left+edge_right)/2.0, np.max(df_val.columns)), self.convert_x(edge_bottom-3, np.min(df_val.index)), title, ha='center', va='bottom', zorder = 1)
         plt.xlabel("y position [mm]")
         plt.ylabel("x position [mm]")
@@ -184,6 +191,12 @@ class KVC_thick(pos_scan_tool.pos_scan):
         plt.hlines(self.convert_x(edge_top, np.min(df_val.index)), self.convert_y(edge_left, np.max(df_val.columns)), self.convert_y(edge_right, np.max(df_val.columns)), color = "red", ls = "dashed", lw = 1.5, zorder = 1)
         # 下端
         plt.hlines(self.convert_x(edge_bottom, np.min(df_val.index)), self.convert_y(edge_left, np.max(df_val.columns)), self.convert_y(edge_right, np.max(df_val.columns)), color = "red", ls = "dashed", lw = 1.5, zorder = 1)
+
+        for ch in range(4):
+            plt.text(
+                self.convert_y(edge_left+(ch+0.5)*kvc_seg_width, np.max(df_val.columns)),
+                self.convert_x(edge_top, np.min(df_val.index)),
+                f"seg. {4-ch}", ha='center', va='top', zorder = 1)
 
         plt.text(self.convert_y((edge_left+edge_right)/2.0, np.max(df_val.columns)), self.convert_x(edge_bottom-3, np.min(df_val.index)), title, ha='center', va='bottom', zorder = 1)
         plt.xlabel("y position [mm]")

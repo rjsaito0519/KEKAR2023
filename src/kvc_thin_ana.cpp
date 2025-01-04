@@ -637,7 +637,6 @@ Int_t main(int argc, char** argv) {
     output_tree.Branch("offsum_npe_val", &offsum_npe_val);
     output_tree.Branch("offsum_npe_err", &offsum_npe_err);
     output_tree.Branch("onsum_sigma_val", &onsum_sigma_val);
-    
 
     for (Int_t i = 0, n_run_num = ana_run_num.size(); i < n_run_num; i++) {
         tmp_run_num = ana_run_num[i];
