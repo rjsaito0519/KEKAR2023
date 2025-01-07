@@ -70,10 +70,10 @@ for hv, threshold, do_use in info:
 
 fig = plt.figure(figsize=(8, 8))
 ax  = fig.add_subplot(111)
-for key in data.keys():
+for i, key in enumerate(data.keys()):
     data[key] = np.array(data[key])
     err[key]  = np.array(err[key])
-    ax.errorbar(data[key][:, 0], data[key][:, 1], yerr = err[key], marker = marker[key], ls = "--", label = f"HV = {key} V")
+    ax.errorbar(data[key][:, 0], data[key][:, 1], yerr = err[key], marker = marker[key], ls = "none", color = f"C{i}", markeredgecolor = "k", ecolor= "k", ms = 10, label = f"HV = {key} V", zorder = 5)
 
     model = lfm.LinearModel()
     params = model.guess(x = data[key][:, 0], data = data[key][:, 1],)
@@ -130,10 +130,10 @@ for hv, threshold, do_use in info:
 
 fig = plt.figure(figsize=(8, 8))
 ax  = fig.add_subplot(111)
-for key in data.keys():
+for i, key in enumerate(data.keys()):
     data[key] = np.array(data[key])
     err[key]  = np.array(err[key])
-    ax.errorbar(data[key][:, 0], data[key][:, 1], yerr = err[key], marker = marker[key], ls = "--", label = f"HV = {key} V")
+    ax.errorbar(data[key][:, 0], data[key][:, 1], yerr = err[key], marker = marker[key], ls = "none", color = f"C{i}", markeredgecolor = "k", ecolor= "k", ms = 10, label = f"HV = {key} V", zorder = 5)
 
     model = lfm.LinearModel()
     params = model.guess(x = data[key][:, 0], data = data[key][:, 1],)
