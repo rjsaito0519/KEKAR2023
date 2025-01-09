@@ -73,7 +73,7 @@ def trigger_counter():
         mu_t = (info[key][0][0]+info[key][0][1])/2
         sigma_t = (info[key][0][1]-info[key][0][0])/10
         ax1.set_xlim(mu_t-6*sigma_t,mu_t+6*sigma_t)
-        ax1.fill_betweenx([y_min, y_max*1.1], mu_t-5*sigma_t,mu_t+5*sigma_t, color='C0', alpha=0.1, zorder = 1)
+        ax1.fill_betweenx([y_min, y_max*1.1], mu_t-5*sigma_t,mu_t+5*sigma_t, color='red', alpha=0.08, zorder = 1)
         ax1.annotate("",
             xy=(mu_t-5*sigma_t, y_max),                  # 矢印の先端 (終点)
             xytext=(mu_t+5*sigma_t, y_max),            # 矢印の始点
@@ -105,7 +105,7 @@ def trigger_counter():
         mu_a = (4*info[key][1][0]+3*info[key][1][1])/7
         sigma_a = (info[key][1][1]-info[key][1][0])/7
         ax2.set_xlim(mu_a-4*sigma_a, mu_a+13*sigma_a)
-        ax2.fill_betweenx([y_min, y_max*1.1], mu_a-3*sigma_a, mu_a+4*sigma_a, color='C0', alpha=0.1, zorder = 1)
+        ax2.fill_betweenx([y_min, y_max*1.1], mu_a-3*sigma_a, mu_a+4*sigma_a, color='red', alpha=0.08, zorder = 1)
         ax2.annotate("",
             xy=(mu_a-3*sigma_a, y_max),                  # 矢印の先端 (終点)
             xytext=(mu_a, y_max),            # 矢印の始点
@@ -136,10 +136,10 @@ def trigger_counter():
                 arrowprops=dict(
                     arrowstyle="->",     # 矢印のスタイル
                     lw=2,             # 矢印の線の太さ
-                    color="C3"        # 矢印の色
+                    color="red"        # 矢印の色
                 ),
             )
-            ax2.text(650, 70, r"$2e^-$hit", va = "bottom", ha = "center", fontsize = 24, color="C3")
+            ax2.text(650, 70, r"$2e^-$hit", va = "bottom", ha = "center", fontsize = 24, color="red")
 
             ax2.annotate("",
                 xy=(790, 25),                  # 矢印の先端 (終点)
@@ -147,10 +147,10 @@ def trigger_counter():
                 arrowprops=dict(
                     arrowstyle="->",     # 矢印のスタイル
                     lw=2,             # 矢印の線の太さ
-                    color="C3"        # 矢印の色
+                    color="red"        # 矢印の色
                 ),
             )
-            ax2.text(790, 50, r"$3e^-$hit", va = "bottom", ha = "center", fontsize = 24, color="C3")
+            ax2.text(790, 50, r"$3e^-$hit", va = "bottom", ha = "center", fontsize = 24, color="red")
         elif key == "T4":
             ax2.annotate("",
                 xy=(735, 35),                  # 矢印の先端 (終点)
@@ -158,10 +158,10 @@ def trigger_counter():
                 arrowprops=dict(
                     arrowstyle="->",     # 矢印のスタイル
                     lw=2,             # 矢印の線の太さ
-                    color="C3"        # 矢印の色
+                    color="red"        # 矢印の色
                 ),
             )
-            ax2.text(735, 60, r"$2e^-$hit", va = "bottom", ha = "center", fontsize = 24, color="C3")
+            ax2.text(735, 60, r"$2e^-$hit", va = "bottom", ha = "center", fontsize = 24, color="red")
 
         ax1.set_xlabel("TDC [arb. unit]")
         ax1.set_title(f"{key} TDC")
@@ -198,7 +198,7 @@ def BACSUMt():
     mu_t = (info[key][0][0]+info[key][0][1])/2
     sigma_t = (info[key][0][1]-info[key][0][0])/10
     ax.set_xlim(mu_t-6*sigma_t,mu_t+6*sigma_t)
-    ax.fill_betweenx([y_min, y_max*1.1], mu_t-5*sigma_t,mu_t+5*sigma_t, color='C0', alpha=0.1, zorder = 1)
+    ax.fill_betweenx([y_min, y_max*1.1], mu_t-5*sigma_t,mu_t+5*sigma_t, color='red', alpha=0.1, zorder = 1)
     ax.annotate("",
         xy=(mu_t-5*sigma_t, y_max),                  # 矢印の先端 (終点)
         xytext=(mu_t+5*sigma_t, y_max),            # 矢印の始点
@@ -297,5 +297,6 @@ def linear_corr():
 
 if __name__ == '__main__':
     # BACSUMt()
-    BAC_onsumnpe()
+    # BAC_onsumnpe()
     # linear_corr()
+    trigger_counter()
