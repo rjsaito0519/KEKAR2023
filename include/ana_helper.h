@@ -45,7 +45,7 @@ struct HistPair {
     TH1D* trig; // trigged histogram
 
     HistPair(const TString& object_name, const TString& title, Int_t bins, Double_t range_min, Double_t range_max) {
-        raw  = new TH1D(object_name+"_row",  title, bins, range_min, range_max);
+        raw  = new TH1D(object_name+"_raw",  title, bins, range_min, range_max);
         trig = new TH1D(object_name+"_trig", title, bins, range_min, range_max);
     }
 

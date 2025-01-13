@@ -1,9 +1,12 @@
 import numpy as np
 import matplotlib.pyplot as plt
+import matplotlib.ticker as ptick
 import uproot
 import os
 import lmfit as lf
 import lmfit.models as lfm
+import sys
+from scipy.special import erf
 
 plt.rcParams['font.family'] = 'Times New Roman' #全体のフォントを設定
 plt.rcParams['mathtext.fontset'] = 'stix'
@@ -19,8 +22,19 @@ plt.rcParams["xtick.major.size"] = 10                #x軸主目盛り線の長�
 plt.rcParams["ytick.major.size"] = 10                #y軸主目盛り線の長さ
 plt.rcParams["xtick.minor.size"] = 5                 #x軸補助目盛り線の長さ
 plt.rcParams["ytick.minor.size"] = 5                 #y軸補助目盛り線の長さ
-
 script_dir = os.path.dirname(os.path.abspath(__file__))
+
+def get_hist_data(file, key):
+    hist_data = file[key].to_numpy()
+    bin_values = hist_data[0]
+    bin_edges = hist_data[1]
+    bin_centers = (bin_edges[:-1] + bin_edges[1:]) / 2
+    return bin_centers, bin_edges, bin_values
+
+def erf_func(x, amplitude, mean, sigma):
+    return amplitude * erf((x - mean) / sigma) + 0.5
+
+
 file = uproot.open(os.path.join(script_dir, "../results/root/bac_hv_threshold_scan.root"))
 tree = file["tree"].arrays(library="np")
 
@@ -36,6 +50,52 @@ color = {
     57: "C1",
     58: "C2"
 }
+
+
+# +-------------+
+# | for explain |
+# +-------------+
+explain_file = uproot.open(os.path.join(script_dir, "../results/root/explain_bac_hv_threshold_scan.root"))
+explain_tree = explain_file["tree"].arrays(library="np")
+
+fig = plt.figure(figsize=(10, 8))
+ax1 = fig.add_subplot(211)
+ax2 = fig.add_subplot(212)
+
+# -- hist -----
+center, edge, raw_value = get_hist_data(explain_file, f"BAConsumnpe_278_raw")
+_, _, trig_value = get_hist_data(explain_file, f"BAConsumnpe_278_trig")
+
+ax1.hist(center, bins=edge, weights=raw_value, lw = 1., histtype='step', color="C0", zorder = 3, label = "raw")
+ax1.hist(center, bins=edge, weights=trig_value, lw = 1., histtype='stepfilled', color="C1", alpha = 0.8, zorder = 3, label = "trig.")
+ax1.set_xlim(0, 160)
+ax1.yaxis.set_major_formatter(ptick.EngFormatter())
+ax1.set_xticklabels([])
+ax1.axvline(67.6401, color = "k", ls = "dashed", zorder = 5)
+ax1.legend()
+
+# -- ratio -----
+center, edge, ratio_value = get_hist_data(explain_file, f"onsum_ratio")
+ax2.hist(center, bins=edge, weights=ratio_value, lw = 2., histtype='step', color="C0", zorder = 0)
+ax2.set_xlim(0, 160)
+ax2.set_ylim(-0.05, 1.08)
+
+x = np.linspace(0, 220, 1000)
+y = erf_func(x, 0.5, 67.6401, 5.65509)
+ax2.plot(x, y, color= "red", lw = 1.5, ls = "dashed")
+ax2.axvline(67.6401, color = "k", ls = "dashed", zorder = 5)
+
+ax2.set_xlabel(r"$N_{\rm p.e.}$", fontsize = 30)
+ax2.set_ylabel(r"$N_{\rm trig.}/N_{\rm raw}$", fontsize = 30)
+
+fig.suptitle("BAC 3-layer (SUM NPE)", x = 0.15 + (0.98-0.15)/2)
+
+plt.subplots_adjust(left = 0.15, right = 0.98, top = 0.9, bottom = 0.12, hspace=0.02)
+plt.savefig(os.path.join(script_dir, f"../results/img/bac/explain_bac_3layer_threshold.pdf"), format='pdf', bbox_inches='tight', dpi=600, transparent=True)
+plt.show()
+
+
+sys.exit()
 
 # +---------+
 # | 3 layer |
