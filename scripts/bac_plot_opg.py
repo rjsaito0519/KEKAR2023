@@ -96,7 +96,7 @@ for HV in [56, 57, 58]:
         )
         
     ax.set_xticks(np.arange(1, 16, 2))
-    ax.set_xlabel("MPPC ch")
+    ax.set_xlabel("MPPC number")
     ax.set_ylabel("One Photon Gain [arb. unit]")
     ax.legend(loc='upper left', fontsize = 18, bbox_to_anchor=(1.0, 1))
     plt.subplots_adjust(left = 0.13, right = 0.72, top = 0.98, bottom = 0.15)

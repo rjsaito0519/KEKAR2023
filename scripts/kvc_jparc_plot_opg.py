@@ -112,7 +112,7 @@ for HV in [56, 57, 58]:
         legend_labels.append(label_str)
         
     ax.set_xticks(np.arange(1, 16, 2))
-    ax.set_xlabel("MPPC ch")
+    ax.set_xlabel("MPPC number")
     ax.set_ylabel("One Photon Gain [arb. unit]")
     for i, label in enumerate(legend_labels):
         ax.plot([], [], color=f'C{i}', linestyle='--', label=label)  # ダミー線を作成して凡例に追加
