@@ -54,7 +54,8 @@ for HV in [56, 57, 58]:
     ax2.plot(data[:, 0], data[:, 2], marker[HV], ms = 10, label = f"HV = {HV} V")
 
 ax1.set_ylim(0, 105)
-ax1.set_ylabel("R [%] (w/ beam)")
+# ax1.set_ylabel("R [%] (w/ beam)")
+ax1.set_ylabel("検出効率 [%]", family='BIZ UDGothic')
 ax1.fill_betweenx([0, 105], 72.5, 77.5, color='C3', alpha=0.1, zorder = 0)
 ax1.set_xticks([50, 75, 100, 125, 150])
 ax1.set_xticklabels(["", "", "", "", ""])
