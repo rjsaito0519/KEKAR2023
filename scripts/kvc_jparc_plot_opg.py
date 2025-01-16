@@ -119,5 +119,5 @@ for HV in [56, 57, 58]:
     
     ax.legend(loc='upper left', fontsize = 18, bbox_to_anchor=(1.0, 1.03))
     plt.subplots_adjust(left = 0.13, right = 0.72, top = 0.98, bottom = 0.15)
-    plt.savefig(os.path.join(script_dir, f"../results/img/kvc_jparc_opg_{HV:.0f}.png"), dpi=600, transparent=True)
+    plt.savefig(os.path.join(script_dir, f"../results/img/kvc_jparc_opg_{HV:.0f}.pdf"),  format='pdf', bbox_inches='tight', dpi=600, transparent=True)
     plt.show()
