@@ -55,20 +55,23 @@ for HV in [56, 57, 58]:
 
 ax1.set_ylim(0, 105)
 # ax1.set_ylabel("R [%] (w/ beam)")
-ax1.set_ylabel("検出効率 [%]", family='BIZ UDGothic')
+ax1.set_ylabel("検出効率[%]", family='BIZ UDGothic')
+ax1.yaxis.set_label_coords(-0.13, 0.5)
 ax1.fill_betweenx([0, 105], 72.5, 77.5, color='C3', alpha=0.1, zorder = 0)
 ax1.set_xticks([50, 75, 100, 125, 150])
 ax1.set_xticklabels(["", "", "", "", ""])
 
 ax2.set_ylim(-0.04, 0.84)
-ax2.set_ylabel("R [%] (w/o beam)")
+# ax2.set_ylabel("R [%] (w/o beam)")
+ax2.set_ylabel("ノイズ混入率[%]", family='BIZ UDGothic')
+ax2.yaxis.set_label_coords(-0.13, 0.5)
 ax2.fill_betweenx([-1, 1], 72.5, 77.5, color='C3', alpha=0.1, zorder = 0)
 
 ax2.set_xlabel(r"$V_{\rm th}$ [mV]")
 ax2.legend(fontsize = 24)
 
-ax1.set_title("BAC 3 layer")
-plt.subplots_adjust(left = 0.15, right = 0.98, top = 0.93, bottom = 0.12, hspace=0.02)
+ax1.set_title("BAC 3-layer")
+plt.subplots_adjust(left = 0.17, right = 0.98, top = 0.93, bottom = 0.12, hspace=0.02)
 plt.savefig(os.path.join(script_dir, f"../results/img/bac/bac_3layer_hv_threshold_scan.pdf"), format='pdf', bbox_inches='tight', dpi=600, transparent=True)
 plt.show()
 
@@ -96,19 +99,23 @@ for HV in [56, 57, 58]:
     ax2.plot(data[:, 0], data[:, 2], marker[HV], ms = 10, label = f"HV = {HV} V")
 
 ax1.set_ylim(0, 105)
-ax1.set_ylabel("R [%] (w/ beam)")
+# ax1.set_ylabel("R [%] (w/ beam)")
+ax1.set_ylabel("検出効率[%]", family='BIZ UDGothic')
+ax1.yaxis.set_label_coords(-0.13, 0.5)
 ax1.fill_betweenx([0, 105], 60-2.5, 60+2.5, color='C3', alpha=0.1, zorder = 0)
 ax1.set_xticks([50, 75, 100, 125, 150])
 ax1.set_xticklabels(["", "", "", "", ""])
 
 ax2.set_ylim(-0.04, 0.84)
-ax2.set_ylabel("R [%] (w/o beam)")
+# ax2.set_ylabel("R [%] (w/o beam)")
+ax2.set_ylabel("ノイズ混入率[%]", family='BIZ UDGothic')
+ax2.yaxis.set_label_coords(-0.13, 0.5)
 ax2.fill_betweenx([-1, 1], 60-2.5, 60+2.5, color='C3', alpha=0.1, zorder = 0)
 
 ax2.set_xlabel(r"$V_{\rm th}$ [mV]")
 ax2.legend(fontsize = 24)
 
-ax1.set_title("BAC 2 layer")
-plt.subplots_adjust(left = 0.15, right = 0.98, top = 0.93, bottom = 0.12, hspace=0.02)
+ax1.set_title("BAC 2-layer")
+plt.subplots_adjust(left = 0.17, right = 0.98, top = 0.93, bottom = 0.12, hspace=0.02)
 plt.savefig(os.path.join(script_dir, f"../results/img/bac/bac_2layer_hv_threshold_scan.pdf"), format='pdf', bbox_inches='tight', dpi=600, transparent=True)
 plt.show()

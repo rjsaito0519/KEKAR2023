@@ -226,7 +226,7 @@ def BAC_onsumnpe():
     # +-----+
     # -- histogram -----
     center, edge, value = get_hist_data(file, f"BAConsumnpe_{run_num}_trig")
-    ax1.hist(center, bins=edge, weights=value, lw = 1.5, histtype='step', color="C0", zorder = 2, label = r"SUM $N_{\rm p. e.}$")
+    ax1.hist(center, bins=edge, weights=value, lw = 1.5, histtype='step', color="k", zorder = 2, label = r"SUM $N_{\rm p. e.}$")
     ax1.xaxis.set_major_formatter(ptick.EngFormatter())
     ax1.yaxis.set_major_formatter(ptick.EngFormatter())
 
@@ -250,12 +250,13 @@ def BAC_onsumnpe():
     fit_x = np.linspace(np.min(x), np.max(x), 100)
     fit_y = result.eval_components(x=fit_x)["gaussian"]
     ax1.plot(fit_x, fit_y, color  = "C1", lw = 2.5, label = "Gaussian fit\n" + r"$N_{\rm p. e.}^{\rm mean}$" + " = {:.1f}".format(result.result.params["center"].value))
-    ax1.axvline(result.result.params["center"].value, ls = "dashed", color = "gray", zorder = 0)
+
+    ax1.axvline(20, ls = "dashed", color = "red", zorder = 0)
 
     ax1.legend(fontsize = 24)
     ax1.set_xlim(0, 210)
 
-    ax1.set_title(r"BAC SUM $N_{\rm p. e.}$")
+    ax1.set_title(r"BAC SUM (3-layer)")
     ax1.set_xlabel(r"$N_{\rm p. e.}$")
     plt.subplots_adjust(left = 0.1, right = 0.98, top = 0.9, bottom = 0.12, hspace=0.01)
     img_save_path = os.path.join(script_dir, f"../results/img/explain/NPE_fit.pdf")
@@ -297,6 +298,6 @@ def linear_corr():
 
 if __name__ == '__main__':
     # BACSUMt()
-    # BAC_onsumnpe()
+    BAC_onsumnpe()
     # linear_corr()
-    trigger_counter()
+    # trigger_counter()
