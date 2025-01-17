@@ -12,7 +12,7 @@ plt.rcParams['font.family'] = 'Times New Roman' #全体のフォントを設定
 plt.rcParams['mathtext.fontset'] = 'stix'
 plt.rcParams['font.size'] = 28
 plt.rcParams['axes.linewidth'] = 1.0# 軸の線幅edge linewidth。囲みの太さ
-plt.rcParams['axes.grid'] = False
+plt.rcParams['axes.grid'] = True
 plt.rcParams['axes.axisbelow'] = True
 plt.rcParams["xtick.direction"] = "in"               #x軸の目盛線を内向きへ
 plt.rcParams["ytick.direction"] = "in"               #y軸の目盛線を内向きへ
@@ -42,11 +42,11 @@ def gauss(x, amp, mu, sigma):
 file = uproot.open(os.path.join(script_dir, "../results/root/kvc_thin_pos_scan_analysis_test.root"))
 tree = file["tree"].arrays(library="np")
 
-fig = plt.figure(figsize=(10, 8))
+fig = plt.figure(figsize=(8, 8))
 ax  = fig.add_subplot(111)
 
 center, edge, value = get_hist_data(file, "KVConsumnpe_304_3_trig")
-ax.hist(center, bins=edge, weights=value, lw = 1.5, histtype='step', color="k", zorder = 1)
+ax.hist(center, bins=edge, weights=value, lw = 1.5, histtype='step', color="k", zorder = 1, label = r"SUM $N_{\rm p. e.}$")
 
 # x = np.linspace(0, 33.7597, 5000)
 # y = gauss(x, 7419.88, 49.2767, 10.4676)
@@ -54,15 +54,16 @@ ax.hist(center, bins=edge, weights=value, lw = 1.5, histtype='step', color="k", 
 
 x = np.linspace(33.7597, 64.912, 5000)
 y = gauss(x, 7419.88, 49.2767, 10.4676)
-ax.plot(x, y, color = "C1", ls = "solid", lw = 2, zorder = 3)
+ax.plot(x, y, color = "C1", ls = "solid", lw = 2, zorder = 3, label = "Gaussian fit\n" + r"$N_{\rm p. e.}^{\rm mean}$" + " = 49.3")
 
-ax.set_xlim(0, 99)
+ax.legend(fontsize = 24)
+ax.set_xlim(0, 109)
 ax.axvline(20, ls = "dashed", color = "red")
 ax.yaxis.set_major_formatter(ptick.EngFormatter())
 ax.set_xlabel(r"$N_{\rm p.e.}$")
 
 ax.set_title("KVC SUM seg. 3 (1 cm)")
 
-plt.subplots_adjust(left = 0.13, right = 0.98, top = 0.93, bottom = 0.12)
+plt.subplots_adjust(left = 0.1, right = 0.98, top = 0.9, bottom = 0.12, hspace=0.01)
 plt.savefig(os.path.join(script_dir, f"../results/img/explain/kvc_fit_example.pdf"), format='pdf', bbox_inches='tight', dpi=600, transparent=True)
 plt.show()
