@@ -30,7 +30,7 @@ class BAC(pos_scan_tool.pos_scan):
     def __init__(self, root_file_path):
         super().__init__(root_file_path)
 
-    def plot(self, key, cbar_range = (np.nan, np.nan), is_2layer = False):
+    def plot(self, key, cbar_range = (np.nan, np.nan), is_2layer = False, img_type = "pdf"):
         x_pos = np.array([ -48, -32, -16, 0, 16, 32, 48 ])
         y_pos = np.array([ -36, -18, 0, 18, 36 ])
 
@@ -127,15 +127,15 @@ class BAC(pos_scan_tool.pos_scan):
         if key == "eff":
             color_map = "viridis"
             title = "BAC Efficiency ({}-layer)".format(2 if is_2layer else 3)
-            img_save_path = os.path.join(self.script_dir, "../results/img/bac/bac_{}layer_eff.pdf".format(2 if is_2layer else 3))
+            img_save_path = os.path.join(self.script_dir, "../results/img/bac/bac_{}layer_eff.{}".format(2 if is_2layer else 3, img_type))
         elif key == "sum_npe":
             color_map = "cividis"
             title = "BACSUM NPE ({}-layer)".format(2 if is_2layer else 3)
-            img_save_path = os.path.join(self.script_dir, "../results/img/bac/bac_{}layer_sumnpe.pdf".format(2 if is_2layer else 3))
+            img_save_path = os.path.join(self.script_dir, "../results/img/bac/bac_{}layer_sumnpe.{}".format(2 if is_2layer else 3, img_type))
         else:
             color_map = "cividis"
             title = "BAC ch{} NPE ({}-layer)".format(int(key[-1])+1, 2 if is_2layer else 3)
-            img_save_path = os.path.join(self.script_dir, "../results/img/bac/bac_{}layer_ch{}npe.pdf".format(2 if is_2layer else 3, int(key[-1])+1))
+            img_save_path = os.path.join(self.script_dir, "../results/img/bac/bac_{}layer_ch{}npe.{}".format(2 if is_2layer else 3, int(key[-1])+1, img_type))
             
         os.makedirs(os.path.dirname(img_save_path), exist_ok=True)
         
@@ -161,15 +161,15 @@ class BAC(pos_scan_tool.pos_scan):
         plt.xlabel("x position [mm]")
         plt.ylabel("y position [mm]")
         plt.subplots_adjust(left = 0.1, right = 1.0, top = 0.96, bottom = 0.1)
-        plt.savefig(img_save_path,  format='pdf', bbox_inches='tight', dpi=600, transparent=True)
+        plt.savefig(img_save_path,  format=img_type, bbox_inches='tight', dpi=600, transparent=True)
         plt.show()
 
 if __name__ == '__main__':
     bac = BAC("../results/root/bac_pos_scan_analysis.root")
-    bac.plot("eff", cbar_range=(97, 100), is_2layer=True)
-    bac.plot("eff", cbar_range=(97, 100), is_2layer=False)
-    bac.plot("sum_npe", cbar_range=(43, 93), is_2layer=True)
-    bac.plot("sum_npe", cbar_range=(43, 93), is_2layer=False)
+    bac.plot("eff", cbar_range=(97, 100), is_2layer=True, img_type="png")
+    bac.plot("eff", cbar_range=(97, 100), is_2layer=False, img_type="png")
+    bac.plot("sum_npe", cbar_range=(43, 93), is_2layer=True, img_type="png")
+    bac.plot("sum_npe", cbar_range=(43, 93), is_2layer=False, img_type="png")
     
     for ch in range(4):
         bac.plot(f"indiv_npe{ch}", cbar_range=(3, 34), is_2layer=True)
