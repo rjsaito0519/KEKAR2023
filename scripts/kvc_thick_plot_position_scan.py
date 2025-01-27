@@ -30,7 +30,7 @@ class KVC_thick(pos_scan_tool.pos_scan):
     def __init__(self, root_file_path):
         super().__init__(root_file_path)
 
-    def plot(self, key, cbar_range = (np.nan, np.nan)):
+    def plot(self, key, cbar_range = (np.nan, np.nan), img_type = "pdf"):
         x_pos = np.array([ -48, -32, -16, 0, 16, 32, -48 ])
         y_pos = np.array([ -54, -36, -18, 0, 18 ])
 
@@ -124,11 +124,11 @@ class KVC_thick(pos_scan_tool.pos_scan):
         if key == "eff":
             color_map = "viridis"
             title = "KVC Efficiency (2 cm)"
-            img_save_path = os.path.join(self.script_dir, "../results/img/kvc/kvc_2cm_eff.pdf")
+            img_save_path = os.path.join(self.script_dir, f"../results/img/kvc/kvc_2cm_eff.{img_type}")
         else:
             color_map = "cividis"
             title = "KVC seg{} NPE (2 cm)".format(int(key[-1])+1)
-            img_save_path = os.path.join(self.script_dir, "../results/img/kvc/kvc_2cm_seg{}_sumnpe.pdf".format(int(key[-1])+1))
+            img_save_path = os.path.join(self.script_dir, "../results/img/kvc/kvc_2cm_seg{}_sumnpe.{}".format(int(key[-1])+1, img_type))
             
         os.makedirs(os.path.dirname(img_save_path), exist_ok=True)
         
@@ -163,14 +163,14 @@ class KVC_thick(pos_scan_tool.pos_scan):
         plt.xlabel("y position [mm]")
         plt.ylabel("x position [mm]")
         plt.subplots_adjust(left = 0.1, right = 1.0, top = 0.96, bottom = 0.1)
-        plt.savefig(img_save_path,  format='pdf', bbox_inches='tight', dpi=600, transparent=True)
+        plt.savefig(img_save_path,  format=img_type, bbox_inches='tight', dpi=600, transparent=True)
         plt.show()
 
         return df_val, annot
     
-    def plot_summary(self, df_val, annot, cbar_range):
+    def plot_summary(self, df_val, annot, cbar_range, img_type = "pdf"):
         title = "KVCSUM NPE (2 cm)"
-        img_save_path = os.path.join(self.script_dir, "../results/img/kvc/kvc_2cm_sumnpe.pdf")
+        img_save_path = os.path.join(self.script_dir, f"../results/img/kvc/kvc_2cm_sumnpe.{img_type}")
 
         plt.figure(figsize=(10, 8))
         plt.grid(which="major", alpha=0.3)
@@ -202,12 +202,12 @@ class KVC_thick(pos_scan_tool.pos_scan):
         plt.xlabel("y position [mm]")
         plt.ylabel("x position [mm]")
         plt.subplots_adjust(left = 0.1, right = 1.0, top = 0.96, bottom = 0.1)
-        plt.savefig(img_save_path,  format='pdf', bbox_inches='tight', dpi=600, transparent=True)
+        plt.savefig(img_save_path,  format=img_type, bbox_inches='tight', dpi=600, transparent=True)
         plt.show()
 
 if __name__ == '__main__':
     kvc = KVC_thick("../results/root/kvc_thick_pos_scan_analysis.root")
-    summary_df_val, summary_annot = kvc.plot("eff", cbar_range=(91, 100))
+    summary_df_val, summary_annot = kvc.plot("eff", cbar_range=(91, 100), img_type = "png")
     
     for ch in range(4):
         tmp_df_val, tmp_annot = kvc.plot(f"sum_npe{ch}", cbar_range=(111, 183)) # use average one photon gain
@@ -227,4 +227,4 @@ if __name__ == '__main__':
             summary_annot[-54]  = tmp_annot[-54]        
 
     print(summary_annot)
-    kvc.plot_summary(summary_df_val, summary_annot, (111, 183))
+    kvc.plot_summary(summary_df_val, summary_annot, (111, 183), img_type = "png")
