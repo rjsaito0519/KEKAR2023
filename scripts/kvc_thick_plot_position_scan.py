@@ -206,8 +206,10 @@ class KVC_thick(pos_scan_tool.pos_scan):
         plt.show()
 
 if __name__ == '__main__':
+    img_type = "pdf"
+
     kvc = KVC_thick("../results/root/kvc_thick_pos_scan_analysis.root")
-    summary_df_val, summary_annot = kvc.plot("eff", cbar_range=(91, 100), img_type = "png")
+    summary_df_val, summary_annot = kvc.plot("eff", cbar_range=(91, 100), img_type = img_type)
     
     for ch in range(4):
         tmp_df_val, tmp_annot = kvc.plot(f"sum_npe{ch}", cbar_range=(111, 183)) # use average one photon gain
@@ -227,4 +229,4 @@ if __name__ == '__main__':
             summary_annot[-54]  = tmp_annot[-54]        
 
     print(summary_annot)
-    kvc.plot_summary(summary_df_val, summary_annot, (111, 183), img_type = "png")
+    kvc.plot_summary(summary_df_val, summary_annot, (111, 183), img_type = img_type)

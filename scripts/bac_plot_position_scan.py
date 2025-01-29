@@ -165,11 +165,13 @@ class BAC(pos_scan_tool.pos_scan):
         plt.show()
 
 if __name__ == '__main__':
+    img_type = "pdf"
+
     bac = BAC("../results/root/bac_pos_scan_analysis.root")
-    bac.plot("eff", cbar_range=(97, 100), is_2layer=True, img_type="png")
-    bac.plot("eff", cbar_range=(97, 100), is_2layer=False, img_type="png")
-    bac.plot("sum_npe", cbar_range=(43, 93), is_2layer=True, img_type="png")
-    bac.plot("sum_npe", cbar_range=(43, 93), is_2layer=False, img_type="png")
+    bac.plot("eff", cbar_range=(97, 100), is_2layer=True, img_type=img_type)
+    bac.plot("eff", cbar_range=(97, 100), is_2layer=False, img_type=img_type)
+    bac.plot("sum_npe", cbar_range=(43, 93), is_2layer=True, img_type=img_type)
+    bac.plot("sum_npe", cbar_range=(43, 93), is_2layer=False, img_type=img_type)
     
     for ch in range(4):
         bac.plot(f"indiv_npe{ch}", cbar_range=(3, 34), is_2layer=True)

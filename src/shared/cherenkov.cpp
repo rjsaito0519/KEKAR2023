@@ -304,10 +304,9 @@ namespace ana_helper {
 
         Double_t fit_range_min = par[1]-n_sigma*par[2];
         Double_t fit_range_max = par[1]+n_sigma*par[2];
-        std::cout << fit_range_min << ", " << fit_range_max << std::endl;
         TF1 *f_fit = new TF1(Form("gauss_%s", h->GetName()), "gausn", fit_range_min, fit_range_max);
         f_fit->SetParameters(par[0], par[1], par[2]);
-        TString fit_option = "0";
+        TString fit_option = "0Q";
         if ( h->GetBinContent( h->GetMaximumBin() ) < 50 ) fit_option += 'L';
         h->Fit(f_fit, fit_option.Data(), "", fit_range_min, fit_range_max);
 

@@ -209,8 +209,10 @@ class KVC_thin(pos_scan_tool.pos_scan):
         plt.show()
 
 if __name__ == '__main__':
+    img_type = "pdf"
+
     kvc = KVC_thin("../results/root/kvc_thin_pos_scan_analysis.root")
-    summary_df_val, summary_annot = kvc.plot("eff", cbar_range=(91, 100), img_type = "png")
+    summary_df_val, summary_annot = kvc.plot("eff", cbar_range=(91, 100), img_type = img_type)
     
     for ch in range(4):
         # kvc.plot(f"sum_npe{ch}", cbar_range=(37, 81)) # use a, b
@@ -234,4 +236,4 @@ if __name__ == '__main__':
 
     print(summary_annot)
 
-    kvc.plot_summary(summary_df_val, summary_annot, (30, 59), img_type = "png")
+    kvc.plot_summary(summary_df_val, summary_annot, (30, 59), img_type = img_type)
