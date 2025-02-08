@@ -257,7 +257,7 @@ def BAC_onsumnpe():
     ax1.set_xlim(0, 210)
 
     ax1.set_title(r"BAC SUM (3-layer)")
-    ax1.set_xlabel(r"$N_{\rm p. e.}$")
+    ax1.set_xlabel(r"$N_{\rm p. e.}$", fontsize = 35)
     plt.subplots_adjust(left = 0.1, right = 0.98, top = 0.9, bottom = 0.12, hspace=0.01)
     img_save_path = os.path.join(script_dir, f"../results/img/explain/NPE_fit.pdf")
     os.makedirs(os.path.dirname(img_save_path), exist_ok=True)

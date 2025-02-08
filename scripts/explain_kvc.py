@@ -60,7 +60,7 @@ ax.legend(fontsize = 24)
 ax.set_xlim(0, 109)
 ax.axvline(20, ls = "dashed", color = "red")
 ax.yaxis.set_major_formatter(ptick.EngFormatter())
-ax.set_xlabel(r"$N_{\rm p.e.}$")
+ax.set_xlabel(r"$N_{\rm p.e.}$", fontsize = 35)
 
 ax.set_title("KVC SUM seg. 3 (1 cm)")
 
