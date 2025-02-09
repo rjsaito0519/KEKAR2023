@@ -72,6 +72,9 @@ public:
     Double_t hv_th_scan_kvc_tdc_gate_min = 100000;
     Double_t hv_th_scan_kvc_tdc_gate_max = 140000;
 
+    // tentative
+    Double_t hv_th_scan_sac_tdc_gate_min = 100000;
+    Double_t hv_th_scan_sac_tdc_gate_max = 145000;
 
     Double_t cherenkov_tdc_n_sigma = 5.0;
     
@@ -100,6 +103,34 @@ public:
                {14.129, 0.016},
                {13.954, 0.016},
                {12.742, 0.018}} }       
+    };
+
+    // SAC one photon gain (tentative)
+    std::unordered_map<Int_t, std::vector<std::pair<Double_t, Double_t>>> sac_opg{
+        { 2, {{22.3218, 0},
+              {20.0320, 0},
+              {17.2782, 0},
+              {16.1369, 0},
+              {18.8409, 0},
+              {16.4578, 0},
+              {13.2460, 0},
+              {14.3252, 0}} },
+        { 1, {{19.5891, 0},
+              {18.2662, 0},
+              {15.6305, 0},
+              {14.0492, 0},
+              {17.0543, 0},
+              {14.2855, 0},
+              {12.7492, 0},
+              {12.2378, 0}} },
+        { 0, {{17.3434, 0},
+              {17.1973, 0},
+              {14.0576, 0},
+              {12.7709, 0},
+              {14.9761, 0},
+              {12.5269, 0},
+              {12.0413, 0},
+              {10.8038, 0}} }        
     };
 
     // KVC one photon gain
@@ -227,6 +258,10 @@ public:
         log_flag = true;
         linear_fit_range_max = tmp_linear_fit_range_max;
         threshold_fit_range_max = 700.0;
+    }
+
+    void sac_initialize(Int_t tmp_npe_bin_num = 525) {
+        tdc_bin_num = 32768;
     }
     
 

@@ -66,4 +66,7 @@ ax.set_title("BAC SUM (3-layer)")
 
 plt.subplots_adjust(left = 0.1, right = 0.98, top = 0.9, bottom = 0.12, hspace=0.01)
 plt.savefig(os.path.join(script_dir, f"../results/img/explain/bac_fit_example.png"), format='png', bbox_inches='tight', dpi=600, transparent=True)
+
+plt.savefig(os.path.join(script_dir, f"../results/img/explain/bac_fit_example.pdf"), format='pdf', bbox_inches='tight', dpi=600, transparent=True)
+
 plt.show()
