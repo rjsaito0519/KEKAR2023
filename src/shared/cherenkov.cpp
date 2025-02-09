@@ -7,8 +7,8 @@ namespace ana_helper {
         // -- almost same as trigger_counter_tdc_fit -----
         Config& conf = Config::getInstance();
 
+        h->GetXaxis()->SetRangeUser(conf.default_cherenkov_tdc_gate_min, conf.default_cherenkov_tdc_gate_max);
         if (h->GetEntries() < 10) {
-            h->GetXaxis()->SetRangeUser(conf.default_cherenkov_tdc_gate_min, conf.default_cherenkov_tdc_gate_max);
             h->Draw();
             FitResult result;
             result.additional.push_back(conf.default_cherenkov_tdc_gate_min);
